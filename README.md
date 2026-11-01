@@ -36,7 +36,7 @@ Promover hábitos saudáveis e ampliar o acesso à atividade física, aproximand
 
 ## Documentação
 
-- 📊 **Apresentação do Projeto:** [Acessar apresentação no Canva](https://canva.link/h84recrwu6q3xu5)
+- 📊 **Apresentação do Projeto:** [Acessar apresentação no Canva](https://canva.link/e9a80l6m8j3afdz)
 - 📝 **Planejamento no Notion:** [Acessar planejamento no Notion](https://app.notion.com/p/MOVI-ACADEMIA-COMUNITARIA-3e9a22d7a49f80b39f34ed7cefacf41a?source=copy_link)
 
 ## Contexto acadêmico
