@@ -1,5 +1,12 @@
+# Variáveis de ambiente e credenciais
 .env
+
+# Dependências e arquivos gerados pelo Composer
 /vendor/
+
+# Logs e arquivos enviados pelos usuários
 /storage/logs/*
 /storage/uploads/*
-!.gitkeep
+
+# Preservar os arquivos .gitkeep
+!**/.gitkeep
