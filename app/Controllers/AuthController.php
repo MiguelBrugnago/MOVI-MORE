@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Repositories\UsuarioRepository;
 use App\Security\Csrf;
+use App\Security\LoginLimiter;
 use App\Security\Session;
 use PDOException;
 
@@ -115,6 +116,16 @@ final class AuthController
             exit('E-mail ou senha inválidos.');
         }
 
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        $limiter = new LoginLimiter($email, $ip);
+
+        if ($limiter->bloqueado()) {
+            http_response_code(429);
+            header('Retry-After: 900');
+            exit('Muitas tentativas de login. Tente novamente mais tarde.');
+        }
+
         $repository = new UsuarioRepository();
         $usuario = $repository->buscarPorEmail($email);
 
@@ -123,9 +134,13 @@ final class AuthController
             !(bool) $usuario['ativo'] ||
             !password_verify($senha, $usuario['senha_hash'])
         ) {
+            $limiter->registrarFalha();
+
             http_response_code(401);
             exit('E-mail ou senha inválidos.');
         }
+
+        $limiter->registrarSucesso();
 
         Session::regenerar();
 
