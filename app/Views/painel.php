@@ -1,3 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Security\Csrf;
+
+$token = Csrf::gerarToken();
+?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -9,8 +18,14 @@
 
 <body>
     <h1>Painel MOVI+</h1>
-    <p>Login realizado com sucesso.</p>
+
     <p>Você está autenticado.</p>
+
+    <form method="POST" action="/logout">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
+
+        <button type="submit">Sair da conta</button>
+    </form>
 </body>
 
 </html>

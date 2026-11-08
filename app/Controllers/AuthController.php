@@ -131,6 +131,7 @@ final class AuthController
 
         $_SESSION['usuario_id'] = (int) $usuario['id'];
         $_SESSION['autenticado_em'] = time();
+        $_SESSION['ultima_atividade'] = time();
 
         header('Location: /painel', true, 303);
         exit;

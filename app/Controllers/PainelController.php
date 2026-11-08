@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Security\Session;
+use App\Security\Auth;
 
 final class PainelController
 {
     public function index(): void
     {
-        Session::iniciar();
+        Auth::verificar();
 
-        if (!isset($_SESSION['usuario_id'])) {
-            header('Location: /login', true, 303);
-            exit;
-        }
+        header('Cache-Control: no-store, private');
 
         require __DIR__ . '/../Views/painel.php';
     }

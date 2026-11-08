@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Controllers\HomeController;
 use App\Controllers\AuthController;
 use App\Controllers\PainelController;
+use App\Controllers\LogoutController;
 
 return [
     'GET' => [
@@ -15,6 +16,7 @@ return [
     ],
     'POST' => [
         '/cadastro' => [AuthController::class, 'cadastrar'],
-        '/login' => [AuthController::class, 'login']
+        '/login' => [AuthController::class, 'login'],
+        '/logout' => [LogoutController::class, 'sair']
     ]
 ];
