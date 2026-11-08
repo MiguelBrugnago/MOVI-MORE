@@ -1,12 +1,26 @@
-# Variáveis de ambiente e credenciais
+
 .env
+.env.*
+!.env.example
 
-# Dependências e arquivos gerados pelo Composer
 /vendor/
+/node_modules/
 
-# Logs e arquivos enviados pelos usuários
-/storage/logs/*
-/storage/uploads/*
-
-# Preservar os arquivos .gitkeep
+storage/logs/*
+storage/uploads/*
+storage/sessions/*
 !**/.gitkeep
+
+*.log
+*.bak
+*.dump
+*.sql.gz
+*.sql.zip
+
+*.pem
+*.key
+*.p12
+*.pfx
+
+.DS_Store
+Thumbs.db
