@@ -2,6 +2,24 @@
 
 declare(strict_types=1);
 
-echo "<h1>MOVI+ funcionando!</h1>";
-echo "<p>PHP: " . PHP_VERSION . "</p>";
-echo "<p>Servidor Apache e PHP configurados com sucesso.</p>";
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$rotas = require __DIR__ . '/../routes/web.php';
+
+$caminho = parse_url(
+    $_SERVER['REQUEST_URI'] ?? '/',
+    PHP_URL_PATH
+);
+
+$caminho = $caminho ?: '/';
+
+if (!isset($rotas[$caminho])) {
+    http_response_code(404);
+    echo '404 - Página não encontrada';
+    exit;
+}
+
+[$classe, $metodo] = $rotas[$caminho];
+
+$controller = new $classe();
+$controller->$metodo();
