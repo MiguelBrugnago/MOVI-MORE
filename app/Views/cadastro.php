@@ -23,13 +23,13 @@ $token = Csrf::gerarToken();
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
 
         <label for="nome">Nome</label>
-        <input id="nome" type="text" name="nome" maxlength="150" required>
+        <input id="nome" type="text" name="nome" minlength="3" maxlength="150" autocomplete="name" required>
 
         <label for="email">E-mail</label>
-        <input id="email" type="email" name="email" maxlength="150" required>
+        <input id="email" type="email" name="email" maxlength="150" autocomplete="email" required>
 
         <label for="senha">Senha</label>
-        <input id="senha" type="password" name="senha" minlength="8" maxlength="1024" autocomplete="new-password"
+        <input id="senha" type="password" name="senha" minlength="8" maxlength="32" autocomplete="new-password"
             required>
 
         <button type="submit">Cadastrar</button>

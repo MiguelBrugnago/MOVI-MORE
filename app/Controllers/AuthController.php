@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Repositories\UsuarioRepository;
 use App\Security\Csrf;
+use App\Security\Session;
 use PDOException;
 
 final class AuthController
@@ -22,17 +23,30 @@ final class AuthController
             exit('Requisição inválida.');
         }
 
-        $nome = trim((string) ($_POST['nome'] ?? ''));
-        $email = strtolower(trim((string) ($_POST['email'] ?? '')));
-        $senha = (string) ($_POST['senha'] ?? '');
+        $nomeInformado = $_POST['nome'] ?? null;
+        $emailInformado = $_POST['email'] ?? null;
+        $senhaInformada = $_POST['senha'] ?? null;
 
         if (
-            mb_strlen($nome) < 3 ||
-            mb_strlen($nome) > 150 ||
+            !is_string($nomeInformado) ||
+            !is_string($emailInformado) ||
+            !is_string($senhaInformada)
+        ) {
+            http_response_code(422);
+            exit('Dados de cadastro inválidos.');
+        }
+
+        $nome = trim($nomeInformado);
+        $email = strtolower(trim($emailInformado));
+        $senha = $senhaInformada;
+
+        if (
+            mb_strlen($nome, 'UTF-8') < 3 ||
+            mb_strlen($nome, 'UTF-8') > 150 ||
             !filter_var($email, FILTER_VALIDATE_EMAIL) ||
             strlen($email) > 150 ||
-            strlen($senha) < 8 ||
-            strlen($senha) > 1024
+            mb_strlen($senha, 'UTF-8') < 8 ||
+            mb_strlen($senha, 'UTF-8') > 32
         ) {
             http_response_code(422);
             exit('Dados de cadastro inválidos.');
@@ -50,7 +64,7 @@ final class AuthController
         try {
             $repository->cadastrar($nome, $email, $senhaHash);
         } catch (PDOException $erro) {
-            if ($erro->getCode() === '23000') {
+            if ((string) $erro->getCode() === '23000') {
                 http_response_code(409);
                 exit('Não foi possível concluir o cadastro.');
             }
@@ -63,5 +77,62 @@ final class AuthController
 
         http_response_code(201);
         echo 'Cadastro realizado com sucesso.';
+    }
+
+    public function login(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            http_response_code(405);
+            exit('Método não permitido.');
+        }
+
+        if (!Csrf::validarToken($_POST['csrf_token'] ?? null)) {
+            http_response_code(403);
+            exit('Requisição inválida.');
+        }
+
+        $emailInformado = $_POST['email'] ?? null;
+        $senhaInformada = $_POST['senha'] ?? null;
+
+        if (
+            !is_string($emailInformado) ||
+            !is_string($senhaInformada)
+        ) {
+            http_response_code(422);
+            exit('Dados inválidos.');
+        }
+
+        $email = strtolower(trim($emailInformado));
+        $senha = $senhaInformada;
+
+        if (
+            !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+            strlen($email) > 150 ||
+            $senha === '' ||
+            mb_strlen($senha, 'UTF-8') > 32
+        ) {
+            http_response_code(401);
+            exit('E-mail ou senha inválidos.');
+        }
+
+        $repository = new UsuarioRepository();
+        $usuario = $repository->buscarPorEmail($email);
+
+        if (
+            $usuario === null ||
+            !(bool) $usuario['ativo'] ||
+            !password_verify($senha, $usuario['senha_hash'])
+        ) {
+            http_response_code(401);
+            exit('E-mail ou senha inválidos.');
+        }
+
+        Session::regenerar();
+
+        $_SESSION['usuario_id'] = (int) $usuario['id'];
+        $_SESSION['autenticado_em'] = time();
+
+        header('Location: /painel', true, 303);
+        exit;
     }
 }

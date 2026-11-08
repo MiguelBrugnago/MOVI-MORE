@@ -1,0 +1,2 @@
+ALTER TABLE usuario
+MODIFY COLUMN senha_hash VARCHAR(256) NOT NULL;
