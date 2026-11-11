@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 $nome = htmlspecialchars(
@@ -10,11 +11,13 @@ $nome = htmlspecialchars(
 
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOVI+ | Painel Profissional</title>
 </head>
+
 <body>
 
     <h1>Bem-vindo ao MOVI+, <?= $nome ?>!</h1>
@@ -38,8 +41,18 @@ $nome = htmlspecialchars(
     </a>
 
     <form action="/logout" method="POST">
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= htmlspecialchars(
+                        $_SESSION['csrf_token'] ?? '',
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ) ?>">
+
         <button type="submit">Sair</button>
     </form>
 
 </body>
+
 </html>
