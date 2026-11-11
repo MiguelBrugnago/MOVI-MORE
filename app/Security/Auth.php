@@ -4,9 +4,29 @@ declare(strict_types=1);
 
 namespace App\Security;
 
+use App\Repositories\UsuarioRepository;
+
 final class Auth
 {
     private const TEMPO_INATIVIDADE = 1800;
+
+    public static function usuario(): array
+    {
+        self::verificar();
+
+        $repository = new UsuarioRepository();
+
+        $usuario = $repository->buscarPorId(
+            (int) $_SESSION['usuario_id']
+        );
+
+        if ($usuario === null || !(bool) $usuario['ativo']) {
+            Session::destruir();
+            self::redirecionar();
+        }
+
+        return $usuario;
+    }
 
     public static function verificar(): void
     {

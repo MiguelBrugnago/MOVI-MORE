@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controllers;
@@ -75,6 +76,7 @@ class VinculoController
         $vinculos = $this->repository->listar(
             $usuarioId,
             $modoProfissional
+
         );
 
         $ehProfissional = $this->repository
@@ -83,7 +85,10 @@ class VinculoController
         $mensagem = $_SESSION['mensagem_vinculo'] ?? '';
         unset($_SESSION['mensagem_vinculo']);
 
-        require __DIR__ . '/../Views/vinculos.php';
+        $titulo = 'MOVI+ | Meus Vínculos';
+        $viewPath = __DIR__ . '/../Views/vinculos.php';
+
+        require __DIR__ . '/../Views/layouts/app.php';
     }
 
     public function solicitar(): void

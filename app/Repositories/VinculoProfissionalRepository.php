@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Repositories;
@@ -261,5 +262,58 @@ class VinculoProfissionalRepository
         return $stmt->rowCount() > 0
             ? 'Vínculo encerrado.'
             : 'Este vínculo já foi encerrado.';
+    }
+    public function listarAlunosAtivos(int $usuarioId): array
+    {
+        $sql = "SELECT
+                v.id AS vinculo_id,
+                a.id AS aluno_id,
+                a.nome AS aluno_nome,
+                a.email AS aluno_email,
+                v.iniciado_em
+            FROM vinculo_profissional v
+            JOIN profissional p ON p.id = v.profissional_id
+            JOIN usuario a ON a.id = v.aluno_id
+            WHERE p.usuario_id = :usuario_id
+              AND p.ativo = 1
+              AND a.ativo = 1
+              AND v.status = 'ativo'
+            ORDER BY a.nome ASC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['usuario_id' => $usuarioId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function buscarAlunoVinculado(
+        int $usuarioId,
+        int $alunoId
+    ): ?array {
+        $sql = "SELECT
+                v.id AS vinculo_id,
+                a.id AS aluno_id,
+                a.nome AS aluno_nome,
+                a.email AS aluno_email,
+                v.iniciado_em
+            FROM vinculo_profissional v
+            JOIN profissional p ON p.id = v.profissional_id
+            JOIN usuario a ON a.id = v.aluno_id
+            WHERE p.usuario_id = :usuario_id
+              AND a.id = :aluno_id
+              AND p.ativo = 1
+              AND a.ativo = 1
+              AND v.status = 'ativo'
+            LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        $stmt->execute([
+            'usuario_id' => $usuarioId,
+            'aluno_id' => $alunoId
+        ]);
+
+        $aluno = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $aluno === false ? null : $aluno;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controllers;
@@ -22,10 +23,13 @@ final class PainelController
         $modo = $_GET['modo'] ?? 'aluno';
 
         if ($modo === 'profissional' && $ehProfissional) {
-            require __DIR__ . '/../Views/painel_profissional.php';
-            return;
+            $titulo = 'MOVI+ | Painel Profissional';
+            $viewPath = __DIR__ . '/../Views/painel_profissional.php';
+        } else {
+            $titulo = 'MOVI+ | Painel do Aluno';
+            $viewPath = __DIR__ . '/../Views/painel_aluno.php';
         }
 
-        require __DIR__ . '/../Views/painel_aluno.php';
+        require __DIR__ . '/../Views/layouts/app.php';
     }
 }

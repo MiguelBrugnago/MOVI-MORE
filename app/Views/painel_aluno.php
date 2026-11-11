@@ -2,67 +2,38 @@
 
 declare(strict_types=1);
 
-$ehProfissional = $ehProfissional ?? false;
+/** @var array{id: int, nome: string, email: string, ativo: int} $usuarioLogado */
 
-$nome = htmlspecialchars(
-    (string) ($_SESSION['usuario_nome'] ?? 'Aluno'),
-    ENT_QUOTES,
-    'UTF-8'
-);
+$ehProfissional = $ehProfissional ?? false;
 ?>
 
-<!DOCTYPE html>
-<html lang="pt-BR">
+<h1>
+    Bem-vindo ao MOVI+,
+    <?= htmlspecialchars($usuarioLogado['nome'], ENT_QUOTES, 'UTF-8') ?>!
+</h1>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOVI+ | Painel do Aluno</title>
-</head>
+<h2>Painel do Aluno</h2>
 
-<body>
+<nav>
+    <ul>
+        <li>Meus treinos</li>
+        <li>Minha evolução</li>
+        <li>Minha alimentação</li>
+        <li><a href="/vinculos">Meus profissionais</a></li>
+        <li>Meu perfil</li>
+    </ul>
+</nav>
 
-    <h1>Bem-vindo ao MOVI+, <?= $nome ?>!</h1>
+<p>Gerencie seus treinos e acompanhe sua evolução.</p>
 
-    <h2>Painel do Aluno</h2>
+<?php if ($ehProfissional): ?>
+    <a href="/painel?modo=profissional">
+        Acessar painel profissional
+    </a>
+<?php else: ?>
+    <p>Você ainda não possui um perfil profissional.</p>
 
-    <nav>
-        <ul>
-            <li>Meus treinos</li>
-            <li>Minha evolução</li>
-            <li>Minha alimentação</li>
-            <li>Meus profissionais</li>
-            <li>Meu perfil</li>
-        </ul>
-    </nav>
-
-    <p>Gerencie seus treinos e acompanhe sua evolução.</p>
-
-    <?php if ($ehProfissional): ?>
-        <a href="/painel?modo=profissional">
-            Acessar painel profissional
-        </a>
-    <?php else: ?>
-        <p>Você ainda não possui um perfil profissional.</p>
-
-        <a href="/profissional/cadastro">
-            Cadastrar perfil profissional
-        </a>
-    <?php endif; ?>
-
-    <form action="/logout" method="POST">
-        <input
-            type="hidden"
-            name="csrf_token"
-            value="<?= htmlspecialchars(
-                        $_SESSION['csrf_token'] ?? '',
-                        ENT_QUOTES,
-                        'UTF-8'
-                    ) ?>">
-
-        <button type="submit">Sair</button>
-    </form>
-
-</body>
-
-</html>
+    <a href="/profissional/cadastro">
+        Cadastrar perfil profissional
+    </a>
+<?php endif; ?>

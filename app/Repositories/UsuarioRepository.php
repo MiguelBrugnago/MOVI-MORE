@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Repositories;
@@ -44,5 +45,20 @@ final class UsuarioRepository
         ]);
 
         return (int) $this->pdo->lastInsertId();
+    }
+    public function buscarPorId(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, nome, email, ativo
+         FROM usuario
+         WHERE id = :id
+         LIMIT 1'
+        );
+
+        $stmt->execute(['id' => $id]);
+
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $usuario === false ? null : $usuario;
     }
 }

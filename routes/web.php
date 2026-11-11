@@ -7,6 +7,8 @@ use App\Controllers\AuthController;
 use App\Controllers\PainelController;
 use App\Controllers\LogoutController;
 use App\Controllers\ProfissionalController;
+use App\Controllers\AlunoController;
+use App\Controllers\ExercicioController;
 
 return [
     'GET' => [
@@ -15,7 +17,10 @@ return [
         '/cadastro' => [HomeController::class, 'cadastro'],
         '/painel' => [PainelController::class, 'index'],
         '/profissional/cadastro' => [ProfissionalController::class, 'cadastro'],
-        '/vinculos' => [\App\Controllers\VinculoController::class, 'index']
+        '/vinculos' => [\App\Controllers\VinculoController::class, 'index'],
+        '/alunos' => [AlunoController::class, 'index'],
+        '/alunos/visualizar' => [AlunoController::class, 'visualizar'],
+        '/exercicios' => [ExercicioController::class, 'index'],
     ],
     'POST' => [
         '/cadastro' => [AuthController::class, 'cadastrar'],
