@@ -41,6 +41,16 @@ final class AuthController
         $email = strtolower(trim($emailInformado));
         $senha = $senhaInformada;
 
+        $confirmacao = $_POST['confirmar_senha'] ?? null;
+
+if (
+    !is_string($confirmacao) ||
+    $senha !== $confirmacao
+) {
+    http_response_code(422);
+    exit('As senhas não coincidem.');
+}
+
         if (
             mb_strlen($nome, 'UTF-8') < 3 ||
             mb_strlen($nome, 'UTF-8') > 150 ||
