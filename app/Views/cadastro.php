@@ -29,10 +29,17 @@ session_write_close();
 
         <label for="email">E-mail</label>
         <input id="email" type="email" name="email" maxlength="150" autocomplete="email" required>
-
+        
         <label for="senha">Senha</label>
-        <input id="senha" type="password" name="senha" minlength="8" maxlength="32" autocomplete="new-password"
-            required>
+        <input id="senha" type="password" name="senha"
+               minlength="8" maxlength="32"
+               autocomplete="new-password" required>
+
+        <label for="confirmar_senha">Confirmar senha</label>
+        <input id="confirmar_senha" type="password"
+               name="confirmar_senha"
+               minlength="8" maxlength="32"
+               autocomplete="new-password" required>
 
         <button type="submit">Cadastrar</button>
     </form>
