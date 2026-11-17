@@ -34,8 +34,21 @@ session_write_close();
         <input id="senha" type="password" name="senha" minlength="8" maxlength="32" autocomplete="new-password"
             required>
 
+        <label for="confirmar_senha">Confirmar senha</label>
+<input
+    id="confirmar_senha"
+    type="password"
+    name="confirmar_senha"
+    minlength="8"
+    maxlength="32"
+    autocomplete="new-password"
+    required
+>
+<p id="erro-senha" role="alert"></p>
+
         <button type="submit">Cadastrar</button>
     </form>
+    <script src="/assets/js/cadastro.js" defer></script>
 </body>
 
 </html>
