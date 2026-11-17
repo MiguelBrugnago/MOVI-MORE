@@ -29,18 +29,13 @@ final class LoginLimiter
 
     public function bloqueado(): bool
     {
-        $inicio = date(
-            'Y-m-d H:i:s',
-            time() - self::JANELA_SEGUNDOS
-        );
-
         $sql = '
             SELECT COUNT(*)
             FROM tentativa_login
             WHERE identificador = :email
               AND ip_hash = :ip
               AND sucesso = 0
-              AND criado_em >= :inicio
+              AND criado_em >= TIMESTAMPADD(SECOND, :janela, CURRENT_TIMESTAMP)
         ';
 
         $stmt = $this->pdo->prepare($sql);
@@ -48,7 +43,7 @@ final class LoginLimiter
         $stmt->execute([
             'email' => $this->identificador,
             'ip' => $this->ipHash,
-            'inicio' => $inicio
+            'janela' => -self::JANELA_SEGUNDOS
         ]);
 
         $tentativasCombinacao = (int) $stmt->fetchColumn();
@@ -62,14 +57,14 @@ final class LoginLimiter
             FROM tentativa_login
             WHERE ip_hash = :ip
               AND sucesso = 0
-              AND criado_em >= :inicio
+              AND criado_em >= TIMESTAMPADD(SECOND, :janela, CURRENT_TIMESTAMP)
         ';
 
         $stmt = $this->pdo->prepare($sql);
 
         $stmt->execute([
             'ip' => $this->ipHash,
-            'inicio' => $inicio
+            'janela' => -self::JANELA_SEGUNDOS
         ]);
 
         $tentativasIp = (int) $stmt->fetchColumn();
@@ -115,16 +110,11 @@ final class LoginLimiter
     {
         $sql = '
             DELETE FROM tentativa_login
-            WHERE criado_em < :limite
+            WHERE criado_em < CURRENT_TIMESTAMP - INTERVAL 1 DAY
         ';
 
         $stmt = $this->pdo->prepare($sql);
 
-        $stmt->execute([
-            'limite' => date(
-                'Y-m-d H:i:s',
-                time() - 86400
-            )
-        ]);
+        $stmt->execute();
     }
 }

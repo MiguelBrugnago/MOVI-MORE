@@ -9,8 +9,12 @@ use RuntimeException;
 
 class Database
 {
+    private static ?PDO $conexao = null;
+
     public static function conectar(): PDO
     {
+        if (self::$conexao !== null)
+            return self::$conexao;
         $host = getenv('DB_HOST') ?: 'db';
         $porta = 3306;
 
@@ -26,7 +30,7 @@ class Database
 
         $dsn = "mysql:host={$host};port={$porta};dbname={$banco};charset=utf8mb4";
 
-        return new PDO(
+        return self::$conexao = new PDO(
             $dsn,
             $usuario,
             $senha,

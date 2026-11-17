@@ -8,6 +8,8 @@ declare(strict_types=1);
 use App\Security\Auth;
 
 $usuarioLogado = Auth::usuario();
+\App\Security\Csrf::gerarToken();
+session_write_close();
 
 $titulo = $titulo ?? 'MOVI+';
 ?>
@@ -19,12 +21,15 @@ $titulo = $titulo ?? 'MOVI+';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?></title>
+    <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 
 <body>
 
     <header>
         <a href="/painel"><strong>MOVI+</strong></a>
+        <nav aria-label="Principal"><a href="/exercicios">Exercícios</a> · <a href="/rotinas">Rotinas e treinos</a>
+        </nav>
 
         <?php require __DIR__ . '/../partials/conta_conectada.php'; ?>
     </header>

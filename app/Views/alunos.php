@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 <?php else: ?>
 
-    <table>
+    <table class="tabela-responsiva">
         <thead>
             <tr>
                 <th>Nome</th>
@@ -38,7 +38,7 @@ declare(strict_types=1);
         <tbody>
             <?php foreach ($alunos as $aluno): ?>
                 <tr>
-                    <td>
+                    <td data-label="Nome">
                         <?= htmlspecialchars(
                             (string) $aluno['aluno_nome'],
                             ENT_QUOTES,
@@ -46,7 +46,7 @@ declare(strict_types=1);
                         ) ?>
                     </td>
 
-                    <td>
+                    <td data-label="E-mail">
                         <?= htmlspecialchars(
                             (string) $aluno['aluno_email'],
                             ENT_QUOTES,
@@ -54,7 +54,7 @@ declare(strict_types=1);
                         ) ?>
                     </td>
 
-                    <td>
+                    <td data-label="Início do acompanhamento">
                         <?= htmlspecialchars(
                             (string) ($aluno['iniciado_em'] ?? '-'),
                             ENT_QUOTES,
@@ -62,7 +62,7 @@ declare(strict_types=1);
                         ) ?>
                     </td>
 
-                    <td>
+                    <td data-label="Ações">
                         <a href="/alunos/visualizar?id=<?= (int) $aluno['aluno_id'] ?>">
                             Visualizar
                         </a>

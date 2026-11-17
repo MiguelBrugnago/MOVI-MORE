@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Security\Csrf;
 
 $token = Csrf::gerarToken();
+session_write_close();
 ?>
 
 <!DOCTYPE html>
@@ -14,6 +15,7 @@ $token = Csrf::gerarToken();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - MOVI+</title>
+    <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 
 <body>

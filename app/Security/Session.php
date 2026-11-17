@@ -34,7 +34,12 @@ final class Session
             'samesite' => 'Lax'
         ]);
 
+        $inicio = hrtime(true);
         session_start();
+        $milissegundos = (hrtime(true) - $inicio) / 1e6;
+        if ($milissegundos > 250) {
+            error_log(sprintf('MOVI: espera de sessao %.1f ms', $milissegundos));
+        }
     }
 
     public static function regenerar(): void

@@ -1,10 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controllers;
 
 use App\Repositories\ProfissionalRepository;
 use App\Security\Auth;
+use App\Security\Csrf;
 use PDOException;
 
 final class ProfissionalController
@@ -25,28 +27,28 @@ final class ProfissionalController
 
         $erro = null;
 
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        }
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $token = (string) ($_POST['csrf_token'] ?? '');
-
-            if (!hash_equals((string) $_SESSION['csrf_token'], $token)) {
+            if (!Csrf::validarToken($_POST['csrf_token'] ?? null)) {
                 http_response_code(403);
                 exit('Token CSRF inválido.');
             }
 
-            $tipo = trim((string) ($_POST['tipo'] ?? ''));
-            $registro = trim((string) ($_POST['registro'] ?? ''));
-            $especialidade = trim((string) ($_POST['especialidade'] ?? ''));
-            $descricao = trim((string) ($_POST['descricao'] ?? ''));
+            $campos = [];
+            foreach (['tipo', 'registro', 'especialidade', 'descricao'] as $campo) {
+                $valor = $_POST[$campo] ?? '';
+                if (!is_string($valor) || !mb_check_encoding($valor, 'UTF-8')) {
+                    http_response_code(422);
+                    exit('Dados do perfil profissional inválidos.');
+                }
+                $campos[] = trim($valor);
+            }
+            [$tipo, $registro, $especialidade, $descricao] = $campos;
 
             if ($tipo === '' || strlen($tipo) > 60) {
                 $erro = 'Informe um tipo de profissional válido.';
             } elseif (
                 strlen($registro) > 80 ||
-                strlen($especialidade) > 120
+                strlen($especialidade) > 120 || strlen($descricao) > 65535
             ) {
                 $erro = 'Um dos campos excedeu o tamanho permitido.';
             } else {
@@ -60,7 +62,7 @@ final class ProfissionalController
                     );
 
                     if ($cadastrado) {
-                        header('Location: /painel?modo=profissional');
+                        header('Location: /painel?modo=profissional', true, 303);
                         exit;
                     }
 
@@ -71,6 +73,8 @@ final class ProfissionalController
             }
         }
 
+        Csrf::gerarToken();
+        session_write_close();
         require __DIR__ . '/../Views/cadastro_profissional.php';
     }
 }

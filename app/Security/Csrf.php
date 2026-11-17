@@ -8,6 +8,10 @@ final class Csrf
 {
     public static function gerarToken(): string
     {
+        // A renderização pode reutilizar o token depois de liberar o lock da sessão.
+        if (isset($_SESSION['csrf_token']) && is_string($_SESSION['csrf_token'])) {
+            return $_SESSION['csrf_token'];
+        }
         Session::iniciar();
 
         if (!isset($_SESSION['csrf_token'])) {

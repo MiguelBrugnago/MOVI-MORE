@@ -12,156 +12,118 @@ function escaparVinculo(string $texto): string
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="pt-BR">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vínculos - MOVI+</title>
-</head>
 
-<body>
+<h1>Meus vínculos</h1>
 
-    <h1>Meus vínculos</h1>
+<nav>
+    <a href="/painel">Voltar ao painel</a>
+    |
+    <a href="/vinculos">Área do aluno</a>
 
-    <nav>
-        <a href="/painel">Voltar ao painel</a>
+    <?php if ($ehProfissional): ?>
         |
-        <a href="/vinculos">Área do aluno</a>
-
-        <?php if ($ehProfissional): ?>
-            |
-            <a href="/vinculos?modo=profissional">
-                Área do profissional
-            </a>
-        <?php endif; ?>
-    </nav>
-
-    <?php if ($mensagem !== ''): ?>
-        <p><?= escaparVinculo($mensagem) ?></p>
+        <a href="/vinculos?modo=profissional">
+            Área do profissional
+        </a>
     <?php endif; ?>
+</nav>
 
-    <h2>
+<?php if ($mensagem !== ''): ?>
+    <p><?= escaparVinculo($mensagem) ?></p>
+<?php endif; ?>
+
+<h2>
+    <?= $modoProfissional
+        ? 'Convidar aluno'
+        : 'Solicitar acompanhamento' ?>
+</h2>
+
+<form action="/vinculos/solicitar" method="POST">
+    <input type="hidden" name="csrf_token" value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">
+
+    <input type="hidden" name="modo" value="<?= $modo ?>">
+
+    <label for="email">
         <?= $modoProfissional
-            ? 'Convidar aluno'
-            : 'Solicitar acompanhamento' ?>
-    </h2>
+            ? 'E-mail do aluno'
+            : 'E-mail do profissional' ?>
+    </label>
 
-    <form action="/vinculos/solicitar" method="POST">
-        <input
-            type="hidden"
-            name="csrf_token"
-            value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">
+    <input type="email" id="email" name="email" required>
 
-        <input type="hidden" name="modo" value="<?= $modo ?>">
+    <button type="submit">Enviar solicitação</button>
+</form>
 
-        <label for="email">
-            <?= $modoProfissional
-                ? 'E-mail do aluno'
-                : 'E-mail do profissional' ?>
-        </label>
+<h2>Solicitações e acompanhamentos</h2>
 
-        <input
-            type="email"
-            id="email"
-            name="email"
-            required>
+<?php if (empty($vinculos)): ?>
+    <p>Nenhum vínculo encontrado.</p>
+<?php endif; ?>
 
-        <button type="submit">Enviar solicitação</button>
-    </form>
+<?php foreach ($vinculos as $vinculo): ?>
+    <?php
+    $nome = $modoProfissional
+        ? $vinculo['aluno_nome']
+        : $vinculo['profissional_nome'];
 
-    <h2>Solicitações e acompanhamentos</h2>
+    $email = $modoProfissional
+        ? $vinculo['aluno_email']
+        : $vinculo['profissional_email'];
 
-    <?php if (empty($vinculos)): ?>
-        <p>Nenhum vínculo encontrado.</p>
+    $recebida = $vinculo['status'] === 'pendente'
+        && (
+            ($modoProfissional &&
+                $vinculo['solicitado_por'] === 'aluno')
+            ||
+            (!$modoProfissional &&
+                $vinculo['solicitado_por'] === 'profissional')
+        );
+    ?>
+
+    <hr>
+
+    <h3><?= escaparVinculo((string) $nome) ?></h3>
+
+    <p><?= escaparVinculo((string) $email) ?></p>
+
+    <p>
+        Status:
+        <strong>
+            <?= escaparVinculo((string) $vinculo['status']) ?>
+        </strong>
+    </p>
+
+    <?php if ($recebida): ?>
+        <form action="/vinculos/responder" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">
+
+            <input type="hidden" name="modo" value="<?= $modo ?>">
+
+            <input type="hidden" name="vinculo_id" value="<?= (int) $vinculo['id'] ?>">
+
+            <button type="submit" name="acao" value="aceitar">
+                Aceitar
+            </button>
+
+            <button type="submit" name="acao" value="recusar">
+                Recusar
+            </button>
+        </form>
     <?php endif; ?>
 
-    <?php foreach ($vinculos as $vinculo): ?>
-        <?php
-        $nome = $modoProfissional
-            ? $vinculo['aluno_nome']
-            : $vinculo['profissional_nome'];
+    <?php if ($vinculo['status'] === 'ativo'): ?>
+        <form action="/vinculos/encerrar" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">
 
-        $email = $modoProfissional
-            ? $vinculo['aluno_email']
-            : $vinculo['profissional_email'];
+            <input type="hidden" name="modo" value="<?= $modo ?>">
 
-        $recebida = $vinculo['status'] === 'pendente'
-            && (
-                ($modoProfissional &&
-                    $vinculo['solicitado_por'] === 'aluno')
-                ||
-                (!$modoProfissional &&
-                    $vinculo['solicitado_por'] === 'profissional')
-            );
-        ?>
+            <input type="hidden" name="vinculo_id" value="<?= (int) $vinculo['id'] ?>">
 
-        <hr>
+            <button type="submit">
+                Encerrar vínculo
+            </button>
+        </form>
+    <?php endif; ?>
 
-        <h3><?= escaparVinculo((string) $nome) ?></h3>
-
-        <p><?= escaparVinculo((string) $email) ?></p>
-
-        <p>
-            Status:
-            <strong>
-                <?= escaparVinculo((string) $vinculo['status']) ?>
-            </strong>
-        </p>
-
-        <?php if ($recebida): ?>
-            <form action="/vinculos/responder" method="POST">
-                <input
-                    type="hidden"
-                    name="csrf_token"
-                    value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">
-
-                <input type="hidden" name="modo" value="<?= $modo ?>">
-
-                <input
-                    type="hidden"
-                    name="vinculo_id"
-                    value="<?= (int) $vinculo['id'] ?>">
-
-                <button
-                    type="submit"
-                    name="acao"
-                    value="aceitar">
-                    Aceitar
-                </button>
-
-                <button
-                    type="submit"
-                    name="acao"
-                    value="recusar">
-                    Recusar
-                </button>
-            </form>
-        <?php endif; ?>
-
-        <?php if ($vinculo['status'] === 'ativo'): ?>
-            <form action="/vinculos/encerrar" method="POST">
-                <input
-                    type="hidden"
-                    name="csrf_token"
-                    value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">
-
-                <input type="hidden" name="modo" value="<?= $modo ?>">
-
-                <input
-                    type="hidden"
-                    name="vinculo_id"
-                    value="<?= (int) $vinculo['id'] ?>">
-
-                <button type="submit">
-                    Encerrar vínculo
-                </button>
-            </form>
-        <?php endif; ?>
-
-    <?php endforeach; ?>
-
-</body>
-
-</html>
+<?php endforeach; ?>

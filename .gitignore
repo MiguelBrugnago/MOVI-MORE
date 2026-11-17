@@ -1,4 +1,5 @@
 .env
+storage/backups/
 .env.*
 !.env.example
 
@@ -23,3 +24,5 @@ storage/sessions/*
 
 .DS_Store
 Thumbs.db
+
+docs/AUDITORIA.md

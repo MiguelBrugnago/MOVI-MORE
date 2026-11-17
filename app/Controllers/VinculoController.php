@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Repositories\VinculoProfissionalRepository;
 use App\Security\Auth;
+use App\Security\Csrf;
 
 class VinculoController
 {
@@ -40,19 +41,22 @@ class VinculoController
 
     private function verificarCsrf(): void
     {
-        $token = (string) ($_POST['csrf_token'] ?? '');
-        $esperado = (string) ($_SESSION['csrf_token'] ?? '');
-
-        if (
-            $esperado === '' ||
-            !hash_equals($esperado, $token)
-        ) {
+        if (!Csrf::validarToken($_POST['csrf_token'] ?? null)) {
             http_response_code(403);
             exit('Token de segurança inválido.');
         }
     }
 
-    private function voltar(string $mensagem): void
+    private function vinculoId(): int
+    {
+        $id = filter_input(INPUT_POST, 'vinculo_id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($id === false || $id === null) {
+            $this->voltar('Vínculo inválido.');
+        }
+        return $id;
+    }
+
+    private function voltar(string $mensagem): never
     {
         $_SESSION['mensagem_vinculo'] = $mensagem;
 
@@ -60,7 +64,7 @@ class VinculoController
             ? '?modo=profissional'
             : '';
 
-        header('Location: /vinculos' . $modo);
+        header('Location: /vinculos' . $modo, true, 303);
         exit;
     }
 
@@ -69,9 +73,7 @@ class VinculoController
         $usuarioId = $this->verificarAcesso();
         $modoProfissional = $this->modoProfissional();
 
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        }
+        Csrf::gerarToken();
 
         $vinculos = $this->repository->listar(
             $usuarioId,
@@ -96,9 +98,13 @@ class VinculoController
         $usuarioId = $this->verificarAcesso();
         $this->verificarCsrf();
 
+        $email = $_POST['email'] ?? null;
+        if (!is_string($email) || strlen($email) > 150 || !filter_var(trim($email), FILTER_VALIDATE_EMAIL)) {
+            $this->voltar('Informe um e-mail válido.');
+        }
         $mensagem = $this->repository->solicitar(
             $usuarioId,
-            (string) ($_POST['email'] ?? ''),
+            trim($email),
             $this->modoProfissional()
         );
 
@@ -110,14 +116,14 @@ class VinculoController
         $usuarioId = $this->verificarAcesso();
         $this->verificarCsrf();
 
-        $acao = (string) ($_POST['acao'] ?? '');
+        $acao = $_POST['acao'] ?? null;
 
         if (!in_array($acao, ['aceitar', 'recusar'], true)) {
             $this->voltar('Ação inválida.');
         }
 
         $mensagem = $this->repository->responder(
-            (int) ($_POST['vinculo_id'] ?? 0),
+            $this->vinculoId(),
             $usuarioId,
             $this->modoProfissional(),
             $acao === 'aceitar'
@@ -132,7 +138,7 @@ class VinculoController
         $this->verificarCsrf();
 
         $mensagem = $this->repository->encerrar(
-            (int) ($_POST['vinculo_id'] ?? 0),
+            $this->vinculoId(),
             $usuarioId,
             $this->modoProfissional()
         );
