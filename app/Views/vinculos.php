@@ -113,6 +113,20 @@ function escaparVinculo(string $texto): string
     <?php endif; ?>
 
     <?php if ($vinculo['status'] === 'ativo'): ?>
+        <?php if (!$modoProfissional): ?>
+        <h4>Compartilhamento com este profissional</h4>
+        <p>O vínculo por si só não libera seus dados. Autorize cada categoria separadamente; o acesso será somente leitura.</p>
+        <?php foreach (['fisico'=>'Perfil esportivo, medidas e evolução corporal','saude'=>'Condições, lesões, restrições e observações pessoais','treinos'=>'Histórico e estatísticas de treinos'] as $categoria=>$rotulo):
+            $permitido = !empty($permissoes[$vinculo['id']][$categoria]); ?>
+        <form action="/perfil" method="post">
+            <input type="hidden" name="csrf_token" value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">
+            <input type="hidden" name="acao" value="permissao"><input type="hidden" name="id" value="<?= (int)$vinculo['id'] ?>">
+            <input type="hidden" name="categoria" value="<?= $categoria ?>"><input type="hidden" name="permitir" value="<?= $permitido ? '0' : '1' ?>">
+            <p><?= $rotulo ?>: <strong><?= $permitido ? 'Autorizado' : 'Não autorizado' ?></strong></p>
+            <button><?= $permitido ? 'Revogar acesso' : 'Autorizar acesso' ?></button>
+        </form>
+        <?php endforeach; ?>
+        <?php endif; ?>
         <form action="/vinculos/encerrar" method="POST">
             <input type="hidden" name="csrf_token" value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">
 

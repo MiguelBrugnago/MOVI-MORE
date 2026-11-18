@@ -131,7 +131,7 @@ $http('/alunos',303);
 $novo = $cliente();
 [$cadastro] = $novo('/cadastro',200);
 $novoEmail = 'cadastro-'.bin2hex(random_bytes(6)).'@example.test';
-$novo('/cadastro',201,['csrf_token'=>$token($cadastro),'nome'=>'Cadastro HTTP','email'=>$novoEmail,'senha'=>$senha]);
+$novo('/cadastro',201,['csrf_token'=>$token($cadastro),'nome'=>'Cadastro HTTP','email'=>$novoEmail,'senha'=>$senha,'confirmar_senha'=>$senha]);
 $login($novo,$novoEmail);
 
 // MySQL e PHP em fusos diferentes: a janela deve usar o relógio que gravou a tentativa.

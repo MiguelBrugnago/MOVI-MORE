@@ -278,3 +278,9 @@ header p {
 .treino-dialogo { width: min(calc(100% - 2rem), 30rem); border: 1px solid #9cb5be; border-radius: .85rem; color: #182b35; padding: 1.2rem; }
 .treino-dialogo::backdrop { background: #182b3570; }
 [data-save-status]:empty, [data-rest-status]:empty { display: none; }
+.fisico-form { max-width: none; }
+.fisico-form fieldset { border: 1px solid #cbd8df; border-radius: 10px; padding: 20px; background: white; min-width: 0; }
+.fisico-form legend { font-weight: 700; }
+.fisico-form .treino-campos { margin-block: 14px; grid-template-columns: repeat(auto-fit,minmax(min(100%,220px),1fr)); }
+.fisico-grafico svg { display: block; width: 100%; height: auto; }
+.fisico-erro { padding: 16px; border-left: 4px solid #b03725; background: #fff1ed; }
