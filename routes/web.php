@@ -12,6 +12,9 @@ use App\Controllers\ExercicioController;
 
 return [
     'GET' => [
+        '/treinos/analise' => [\App\Controllers\AnaliseTreinoController::class, 'index'],
+        '/treinos/mapa-muscular' => [\App\Controllers\AnaliseTreinoController::class, 'index'],
+        '/treinos/progressao' => [\App\Controllers\AnaliseTreinoController::class, 'index'],
         '/perfil' => [\App\Controllers\PerfilController::class, 'index'],
         '/perfil/avaliacoes' => [\App\Controllers\PerfilController::class, 'historico'],
         '/perfil/avaliacoes/nova' => [\App\Controllers\PerfilController::class, 'formulario'],
@@ -55,3 +58,4 @@ return [
         '/vinculos/encerrar' => [\App\Controllers\VinculoController::class, 'encerrar'],
     ]
 ];
+

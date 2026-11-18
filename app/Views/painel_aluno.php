@@ -17,6 +17,7 @@ $ehProfissional = $ehProfissional ?? false;
 <nav>
     <ul>
         <li><a href="/rotinas">Meus treinos</a></li>
+        <li><a href="/treinos/analise">Análise e mapa muscular</a></li>
         <li><a href="/perfil/evolucao">Minha evolução corporal</a></li>
         <li><a href="/perfil/avaliacoes">Minhas avaliações</a></li>
         <li>Minha alimentação</li>
