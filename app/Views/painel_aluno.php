@@ -16,11 +16,12 @@ $ehProfissional = $ehProfissional ?? false;
 
 <nav>
     <ul>
-        <li>Meus treinos</li>
-        <li>Minha evolução</li>
+        <li><a href="/rotinas">Meus treinos</a></li>
+        <li><a href="/perfil/evolucao">Minha evolução corporal</a></li>
+        <li><a href="/perfil/avaliacoes">Minhas avaliações</a></li>
         <li>Minha alimentação</li>
         <li><a href="/vinculos">Meus profissionais</a></li>
-        <li>Meu perfil</li>
+        <li><a href="/perfil">Meu perfil físico</a></li>
     </ul>
 </nav>
 

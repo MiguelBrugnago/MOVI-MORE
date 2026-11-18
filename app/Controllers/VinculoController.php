@@ -84,6 +84,9 @@ class VinculoController
         $ehProfissional = $this->repository
             ->profissionalDoUsuario($usuarioId) !== null;
 
+        $permissoes = [];
+        foreach ($vinculos as $vinculo) $permissoes[$vinculo['id']] = $this->repository->permissoes((int)$vinculo['id']);
+
         $mensagem = $_SESSION['mensagem_vinculo'] ?? '';
         unset($_SESSION['mensagem_vinculo']);
 

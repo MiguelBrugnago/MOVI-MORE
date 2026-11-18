@@ -17,7 +17,8 @@ declare(strict_types=1);
         <li><a href="/alunos">Meus alunos</a></li>
         <li><a href="/vinculos?modo=profissional">Solicitações de vínculo</a></li>
         <li>Gerenciar treinos</li>
-        <li>Acompanhar evolução</li>
+        <li><a href="/alunos">Acompanhar evolução dos alunos</a></li>
+        <li><a href="/perfil">Meu perfil físico</a></li>
         <li>Meu perfil profissional</li>
     </ul>
 </nav>

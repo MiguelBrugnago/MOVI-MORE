@@ -26,7 +26,7 @@ Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UN
 
 | Situação | Recursos |
 |---|---|
-| Implementadas | Cadastro e login; cadastro profissional; gerenciamento de alunos e solicitações/vínculos; biblioteca pública e exercícios personalizados; pesquisa, filtros e detalhes; criação, edição, arquivamento e restauração de rotinas; configuração de séries, repetições, cargas e descanso; execução de sessões e treinos livres; histórico paginado e estatísticas de evolução. |
+| Implementadas | Cadastro e login; cadastro profissional; gerenciamento de alunos e solicitações/vínculos; biblioteca pública e exercícios personalizados; pesquisa, filtros e detalhes; criação, edição, arquivamento e restauração de rotinas; configuração de séries, repetições, cargas e descanso; execução de sessões e treinos livres; histórico paginado e estatísticas de evolução; perfil físico, avaliações corporais, gráficos e comparação; acompanhamento profissional com permissões por categoria. |
 | Parciais | A mídia aparece quando existe cadastro válido de imagem ou GIF. O descanso tem alerta visual enquanto a página está aberta. Rascunhos pendentes sobrevivem a falhas na mesma aba, mas não há sincronização offline depois de fechá-la. |
 | Planejadas | Recomendações automáticas, gamificação com ranking e conquistas, espaços públicos e recursos ampliados de comunidade e acessibilidade. |
 
@@ -56,7 +56,7 @@ MOVI+/
 │   └── Views/         # Templates PHP
 ├── assets/            # Logotipo e imagens do projeto
 ├── database/
-│   ├── migrations/    # 001–016, evolução do schema
+│   ├── migrations/    # 001–017, evolução do schema
 │   ├── scripts/       # Migrador, importação e validação do catálogo
 │   └── seeds/         # 37 arquivos SQL de dados oficiais e relações
 ├── public/
@@ -138,7 +138,7 @@ O banco usa MySQL 8.4, `utf8mb4` e PDO. No Compose, o host de conexão da aplica
 
 ### Histórico de migrations
 
-O repositório possui migrations sequenciais **001–016**:
+O repositório possui migrations sequenciais **001–017**:
 
 | Faixa | Conteúdo |
 |---|---|
@@ -147,6 +147,7 @@ O repositório possui migrations sequenciais **001–016**:
 | 010–014 | Integridade do catálogo, unidades, códigos e reconciliação/prefixo MOVI+. |
 | 015 | Rotinas e execução: séries, descanso, metas copiadas, métricas e índices. |
 | 016 | Ajuste do evento de limpeza de tentativas para calcular o corte usando o relógio do MySQL. |
+| 017 | Campos complementares do perfil físico e índices para avaliações/medidas. Preserva registros e estruturas anteriores. |
 
 Execute o migrador pela aplicação:
 
@@ -292,3 +293,48 @@ Ciência da Computação — UNOESC · Prática IV · 2026.
 ## Licença
 
 O repositório não contém arquivo de licença. Portanto, não há uma licença de software declarada; consulte os autores antes de reutilizar ou redistribuir o projeto.
+
+## Perfil físico e acompanhamento profissional
+
+### Auditoria e decisões de integração
+
+A estrutura anterior já continha `usuario.data_nascimento`, `perfil` (gênero, objetivo, experiência, frequência e biografia), `avaliacao`, `medida`, `condicao`, `usuario_condicao`, `restricao`, `usuario_restricao`, `meta`, `permissao_acesso` e `auditoria_acesso`. Não havia fluxo de perfil/avaliações nem uso das permissões nas telas de acompanhamento. O vínculo e a autenticação existentes foram reutilizados. `Auth::usuario()` valida sessão e conta ativa; os IDs de proprietário vêm exclusivamente da sessão. O layout comum e os estilos de cartões/formulários foram mantidos.
+
+A migration **017**, dependente de 001–016, acrescenta somente `perfil.altura_cm`, `tempo_treinamento_meses`, `disponibilidade`, `ambiente_preferido` e dois índices. Não duplica peso, gordura, massa magra, metas ou condições. As migrations anteriores permanecem intactas. Nutrição, gamificação e mapa muscular continuam fora desta etapa.
+
+### Uso
+
+- **Perfil físico** (`/perfil`): dados opcionais, objetivo esportivo, disponibilidade e informações voluntárias de condições/restrições. Peso e gordura são apresentados a partir da avaliação mais recente; o botão **Registrar peso e medidas** cria um registro histórico.
+- **Avaliações** (`/perfil/avaliacoes`): nova avaliação, detalhes, correção e exclusão confirmada. Cada cadastro gera uma avaliação independente, inclusive na mesma data. A data usa o calendário de São Paulo. Campos numéricos aceitam até três casas decimais; na interface, o navegador apresenta o separador conforme o idioma.
+- **Evolução corporal** (`/perfil/evolucao`): 30 dias, 90 dias, seis meses, um ano ou histórico completo; gráficos SVG locais e comparação entre quaisquer duas avaliações do período. Tabelas mantêm os valores acessíveis sem JavaScript. Variação de gordura é expressa em pontos percentuais.
+- **Meus vínculos**: o aluno autoriza/revoga separadamente perfil/medidas (`fisico`), condições/restrições/observações (`saude`) e histórico/estatísticas de treino (`treinos`). Todas as categorias começam bloqueadas. Uma nova solicitação após encerramento exige novas autorizações.
+- **Meus alunos → Acompanhamento**: profissional ativo, conta ativa e vínculo ativo são obrigatórios. Cada categoria exige consentimento; o acesso é somente leitura e registra recurso/ação em `auditoria_acesso`, sem copiar dados de saúde ao log. Histórico de treinos reutiliza a paginação e as estatísticas existentes.
+
+As medidas usam `medida.tipo` = `peso`, `gordura`, `braco`, `antebraco`, `torax`, `cintura`, `abdomen`, `quadril`, `coxa`, `panturrilha`, com unidades `kg`, `%` ou `cm`. A massa gorda e a massa magra são **estimativas calculadas**, nunca medidas clínicas, e usam exclusivamente peso e gordura da mesma avaliação. Valores ausentes não são zero. Tipos legados desconhecidos são preservados ao corrigir uma avaliação, mas não interpretados nos gráficos. Avaliações com `profissional_id` preenchido permanecem somente para consulta.
+
+Os nomes de condições/restrições reutilizam os catálogos existentes, sem expor um catálogo global de declarações na interface. Observações privadas de restrição ficam em `usuario_restricao.observacao`; observações pessoais usam `perfil.biografia`. As permissões físicas não expõem esses textos nem as observações das avaliações.
+
+### Aplicação da atualização
+
+Na instalação de desenvolvimento, com backup restaurável e histórico 001–016 conferido:
+
+```sh
+docker compose exec app composer install --no-interaction
+docker compose exec app php database/scripts/migrar.php
+```
+
+O migrador aplica apenas a 017 pendente e verifica os hashes anteriores. Não é necessário reiniciar o banco, reimportar seeds ou remover volumes. Não execute em produção sem um processo próprio de implantação. Para instalação limpa, siga a sequência Docker descrita acima.
+
+### Testes desta etapa
+
+No ambiente isolado com `DB_NAME=movi_treinos_teste`, execute:
+
+```sh
+php tests/perfil_unitario.php
+php tests/perfil_http.php
+php tests/treinos_integracao.php
+```
+
+`perfil_unitario.php` não acessa o banco. `perfil_http.php` requer a aplicação servida por Apache em `http://127.0.0.1:80` no mesmo container; cria exclusivamente contas sintéticas e se recusa a rodar fora do schema de testes. Cobre CRUD, manutenção do histórico, cálculos, datas, entradas malformadas, CSRF, XSS, IDs de outras contas, leitura profissional, permissões independentes, revogação e renovação de vínculo. Para a regressão HTTP de treinos, mantenha o servidor de teste em 8088 conforme as instruções anteriores.
+
+A verificação desta implementação usou um projeto Compose separado (`movi-perfil-verificacao`), MySQL 8.4 próprio e aplicação na porta local 8089, sem alterar os containers/banco preexistentes. As migrations 001–017, seeds, testes de perfil e regressões de treinos foram executados nesse ambiente. O teste de cadastro da suíte anterior foi atualizado para enviar `confirmar_senha`, campo já obrigatório no controller.

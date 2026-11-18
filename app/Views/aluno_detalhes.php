@@ -47,10 +47,27 @@ declare(strict_types=1);
 <hr>
 
 <h3>Treinos do aluno</h3>
-<p>Funcionalidade prevista para uma próxima etapa.</p>
+<?php $somenteLeitura = true; require __DIR__ . '/fisico_comum.php'; ?>
+<?php if (!$treinosPermitidos): ?><p>O aluno ainda não autorizou o acesso aos treinos.</p><?php else: ?>
+<p><?= (int)($estatisticas[0]['total'] ?? 0) ?> treinos concluídos · <?= (int)($estatisticas[2]['series'] ?? 0) ?> séries concluídas.</p>
+<?php if (!$treinos): ?><p>Nenhum treino concluído.</p><?php endif; ?>
+<?php foreach ($treinos as $t): ?><article><h4><?= $esc($t['nome']) ?></h4><p><?= $esc($t['finalizado_em']) ?> · <?= $numero(isset($t['duracao']) ? $t['duracao']/60 : null) ?> minutos</p>
+<?php foreach ($t['exercicios'] as $x): ?><p><?= $esc($x['nome']) ?> · <?= (int)$x['series'] ?> séries · volume <?= $numero($x['volume']) ?> kg</p><?php endforeach; ?></article><?php endforeach; ?>
+<?php if ($maisTreinos): ?><a href="?id=<?= (int)$aluno['aluno_id'] ?>&amp;periodo=<?= $esc($periodo) ?>&amp;antes=<?= (int)end($treinos)['id'] ?>">Treinos anteriores</a><?php endif; ?>
+<?php endif; ?>
 
 <h3>Evolução física</h3>
-<p>Funcionalidade prevista para uma próxima etapa.</p>
+<?php if (!$fisicoPermitido): ?><p>O aluno ainda não autorizou o acesso ao perfil físico e às avaliações.</p><?php else: ?>
+<article><h4>Perfil e avaliação mais recente</h4><dl>
+<?php foreach (['objetivo'=>'Objetivo','experiencia'=>'Experiência','frequencia_semanal'=>'Dias por semana','tempo_treinamento_meses'=>'Meses de treinamento','disponibilidade'=>'Disponibilidade','ambiente_preferido'=>'Ambiente preferido','altura_cm'=>'Altura (cm)'] as $chave=>$rotulo): ?><dt><?= $rotulo ?></dt><dd><?= $esc($perfil[$chave] ?? 'Não informado') ?></dd><?php endforeach; ?>
+</dl><?php if ($recente): ?><p>Avaliação de <?= $esc($recente['avaliado_em']) ?></p><dl><?php foreach ($metricas as $chave=>[$nome,$unidade]): ?><dt><?= $esc($nome) ?> (<?= $unidade ?>)</dt><dd><?= $numero($recente['medidas'][$chave] ?? null) ?></dd><?php endforeach; ?></dl><?php else: ?><p>Nenhuma avaliação registrada.</p><?php endif; ?></article>
+<?php require __DIR__ . '/fisico_evolucao.php'; require __DIR__ . '/fisico_historico.php'; ?>
+<?php endif; ?>
+<?php if ($saudePermitida): ?><article><h3>Informações de saúde autorizadas</h3>
+<p class="treino-nota"><?= $esc($observacaoPessoal) ?></p>
+<?php foreach ($observacoesSaude as $nota): ?><p class="treino-nota"><?= $esc($nota['data']) ?>: <?= $esc($nota['texto']) ?></p><?php endforeach; ?>
+<?php foreach ($declaracoes as $grupo): foreach ($grupo as $d): ?><p><?= $esc($d['nome']) ?> <?= $esc($d['observacao'] ?? '') ?></p><?php endforeach; endforeach; ?>
+<?php if (empty($declaracoes['condicoes']) && empty($declaracoes['restricoes'])): ?><p>Nenhuma condição ou restrição informada.</p><?php endif; ?></article><?php endif; ?>
 
 <h3>Alimentação</h3>
 <p>Funcionalidade prevista para uma próxima etapa.</p>

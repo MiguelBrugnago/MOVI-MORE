@@ -12,6 +12,11 @@ use App\Controllers\ExercicioController;
 
 return [
     'GET' => [
+        '/perfil' => [\App\Controllers\PerfilController::class, 'index'],
+        '/perfil/avaliacoes' => [\App\Controllers\PerfilController::class, 'historico'],
+        '/perfil/avaliacoes/nova' => [\App\Controllers\PerfilController::class, 'formulario'],
+        '/perfil/avaliacoes/ver' => [\App\Controllers\PerfilController::class, 'formulario'],
+        '/perfil/evolucao' => [\App\Controllers\PerfilController::class, 'evolucao'],
         '/' => [HomeController::class, 'index'],
         '/login' => [HomeController::class, 'login'],
         '/cadastro' => [HomeController::class, 'cadastro'],
@@ -31,6 +36,8 @@ return [
         '/treinos/ver' => [\App\Controllers\RotinaController::class, 'treino'],
     ],
     'POST' => [
+        '/perfil' => [\App\Controllers\PerfilController::class, 'salvar'],
+        '/perfil/avaliacoes' => [\App\Controllers\PerfilController::class, 'salvar'],
         '/rotinas' => [\App\Controllers\RotinaController::class, 'criar'],
         '/rotinas/salvar' => [\App\Controllers\RotinaController::class, 'salvar'],
         '/treinos/personalizados' => [\App\Controllers\RotinaController::class, 'salvarPersonalizado'],

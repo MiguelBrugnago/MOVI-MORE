@@ -9,6 +9,45 @@ use PDO;
 
 class VinculoProfissionalRepository
 {
+    public function permissoes(int $vinculo): array
+    {
+        $s = $this->pdo->prepare('SELECT categoria_dados,permitido FROM permissao_acesso WHERE vinculo_profissional_id=?');
+        $s->execute([$vinculo]);
+        return $s->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+
+    public function permitir(int $aluno, int $vinculo, string $categoria, bool $permitir): void
+    {
+        if (!in_array($categoria, ['fisico','saude','treinos'], true)) throw new \InvalidArgumentException('Categoria inválida.');
+        $this->pdo->beginTransaction();
+        try {
+            $s = $this->pdo->prepare("SELECT id FROM vinculo_profissional WHERE id=? AND aluno_id=? AND status='ativo' FOR UPDATE");
+            $s->execute([$vinculo,$aluno]);
+            if (!$s->fetchColumn()) throw new \DomainException('Vínculo não encontrado.',404);
+            $s = $this->pdo->prepare('INSERT INTO permissao_acesso (vinculo_profissional_id,categoria_dados,permitido,concedido_em,revogado_em)
+                VALUES (?,?,?,IF(?=1,NOW(),NULL),IF(?=0,NOW(),NULL)) ON DUPLICATE KEY UPDATE
+                permitido=VALUES(permitido),concedido_em=VALUES(concedido_em),revogado_em=VALUES(revogado_em)');
+            $s->execute([$vinculo,$categoria,(int)$permitir,(int)$permitir,(int)$permitir]);
+            $this->pdo->commit();
+        } catch (\Throwable $e) { $this->pdo->rollBack(); throw $e; }
+    }
+
+    public function autorizado(int $profissionalUsuario, int $aluno, string $categoria): bool
+    {
+        $s = $this->pdo->prepare("SELECT 1 FROM vinculo_profissional v JOIN profissional p ON p.id=v.profissional_id
+            JOIN usuario u ON u.id=p.usuario_id JOIN usuario a ON a.id=v.aluno_id
+            JOIN permissao_acesso pa ON pa.vinculo_profissional_id=v.id
+            WHERE p.usuario_id=? AND v.aluno_id=? AND v.status='ativo' AND p.ativo=1 AND u.ativo=1 AND a.ativo=1
+            AND pa.categoria_dados=? AND pa.permitido=1 AND pa.revogado_em IS NULL AND pa.concedido_em>=v.iniciado_em");
+        $s->execute([$profissionalUsuario,$aluno,$categoria]);
+        return (bool)$s->fetchColumn();
+    }
+
+    public function registrarLeitura(int $usuario, int $aluno, string $recurso): void
+    {
+        $s = $this->pdo->prepare("INSERT INTO auditoria_acesso (usuario_id,aluno_id,recurso,acao) VALUES (?,?,?,'consultar')");
+        $s->execute([$usuario,$aluno,$recurso]);
+    }
     private PDO $pdo;
 
     public function __construct()
@@ -138,6 +177,9 @@ class VinculoProfissionalRepository
             if (in_array($existente['status'], ['pendente', 'ativo'], true)) {
                 return 'Já existe uma solicitação ou vínculo ativo.';
             }
+
+            $revogar = $this->pdo->prepare('UPDATE permissao_acesso SET permitido=0,revogado_em=NOW() WHERE vinculo_profissional_id=?');
+            $revogar->execute([$existente['id']]);
 
             $sql = "UPDATE vinculo_profissional
                     SET status = 'pendente',

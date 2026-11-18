@@ -28,7 +28,7 @@ $titulo = $titulo ?? 'MOVI+';
 
     <header>
         <a href="/painel"><strong>MOVI+</strong></a>
-        <nav aria-label="Principal"><a href="/exercicios">Exercícios</a> · <a href="/rotinas">Rotinas e treinos</a>
+        <nav aria-label="Principal"><a href="/exercicios">Exercícios</a> · <a href="/rotinas">Rotinas e treinos</a> · <a href="/perfil">Perfil físico</a>
         </nav>
 
         <?php require __DIR__ . '/../partials/conta_conectada.php'; ?>
