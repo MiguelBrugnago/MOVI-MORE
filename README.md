@@ -26,7 +26,7 @@ Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UN
 
 | Situação | Recursos |
 |---|---|
-| Implementadas | Cadastro e login; cadastro profissional; gerenciamento de alunos e solicitações/vínculos; biblioteca pública e exercícios personalizados; pesquisa, filtros e detalhes; criação, edição, arquivamento e restauração de rotinas; configuração de séries, repetições, cargas e descanso; execução de sessões e treinos livres; histórico paginado e estatísticas de evolução; perfil físico, avaliações corporais, gráficos e comparação; acompanhamento profissional com permissões por categoria. |
+| Implementadas | Cadastro e login; cadastro profissional; gerenciamento de alunos e solicitações/vínculos; biblioteca pública e exercícios personalizados; pesquisa, filtros e detalhes; criação, edição, arquivamento e restauração de rotinas; configuração de séries, repetições, cargas e descanso; execução de sessões e treinos livres; histórico paginado e estatísticas de evolução; mapa muscular e análise de treinamento por período; perfil físico, avaliações corporais, gráficos e comparação; acompanhamento profissional com permissões por categoria. |
 | Parciais | A mídia aparece quando existe cadastro válido de imagem ou GIF. O descanso tem alerta visual enquanto a página está aberta. Rascunhos pendentes sobrevivem a falhas na mesma aba, mas não há sincronização offline depois de fechá-la. |
 | Planejadas | Recomendações automáticas, gamificação com ranking e conquistas, espaços públicos e recursos ampliados de comunidade e acessibilidade. |
 
@@ -338,3 +338,97 @@ php tests/treinos_integracao.php
 `perfil_unitario.php` não acessa o banco. `perfil_http.php` requer a aplicação servida por Apache em `http://127.0.0.1:80` no mesmo container; cria exclusivamente contas sintéticas e se recusa a rodar fora do schema de testes. Cobre CRUD, manutenção do histórico, cálculos, datas, entradas malformadas, CSRF, XSS, IDs de outras contas, leitura profissional, permissões independentes, revogação e renovação de vínculo. Para a regressão HTTP de treinos, mantenha o servidor de teste em 8088 conforme as instruções anteriores.
 
 A verificação desta implementação usou um projeto Compose separado (`movi-perfil-verificacao`), MySQL 8.4 próprio e aplicação na porta local 8089, sem alterar os containers/banco preexistentes. As migrations 001–017, seeds, testes de perfil e regressões de treinos foram executados nesse ambiente. O teste de cadastro da suíte anterior foi atualizado para enviar `confirmar_senha`, campo já obrigatório no controller.
+
+## Mapa muscular e análise avançada de treinamento
+
+### Entrega e auditoria — 18/11/2026
+
+Implementados mapa frontal/posterior, detalhes por músculo, séries diretas/indiretas/equivalentes, volume externo separado por exercício e lado, distribuição por grupo, frequência semanal, progressão de carga, melhores cargas por quantidade exata de repetições, evolução de recordes e comparação com o período anterior. Os gráficos usam `meter` nativo com rótulos e valores; os dados e detalhes permanecem consultáveis sem JavaScript. JavaScript abre o detalhe ao selecionar o SVG, inclusive por teclado. Não há dependência externa de gráficos ou framework.
+
+A auditoria encontrou as estruturas necessárias nas migrations 001–017: `musculo` (código, `svg_id` e hierarquia), `exercicio_musculo` (papel e `peso_estimado`), `grupo_muscular`, `tipo_registro`, `treino`, `treino_exercicio` e `serie`. Não há entidades de treino/exercício em Models; a persistência existente usa repositories e arrays. As estatísticas anteriores e seus fluxos foram preservados. Autenticação, consentimento `treinos`, vínculo ativo, conta/profissional ativos e auditoria de leitura reutilizam as classes existentes.
+
+As seeds não documentam uma semântica numérica para `peso_estimado`; as relações consultadas no banco legado usam NULL. Não foi reinterpretado esse campo nem alterada a classificação do catálogo. Exercícios personalizados sem associação muscular aparecem no diagnóstico de qualidade de dados e nos totais, sem receber músculos inventados.
+
+**Banco local preexistente:** a consulta encontrou um schema legado sem `schema_migracao`, `tipo_registro`, `musculo.codigo` e `serie.ignorada`. Ele não corresponde à versão atual do repositório. Nenhum dado, seed ou migration foi aplicado nesse banco. A aplicação atual já depende das estruturas ausentes; as novas análises retornam uma mensagem genérica de indisponibilidade quando a consulta não pode ser realizada. A validação funcional ocorreu exclusivamente em outro MySQL, no projeto Compose `movi-analise-verificacao`, com `DB_NAME=movi_treinos_teste` e app em `127.0.0.1:8091`.
+
+### Navegação e acesso
+
+| Rota GET | Uso |
+|---|---|
+| `/treinos/analise` | Painel completo de análise. |
+| `/treinos/mapa-muscular` | Mesmo painel, usado pela navegação para a seção `#mapa`. |
+| `/treinos/progressao` | Mesmo painel, usado pela navegação para `#progressao`. |
+
+O painel do aluno e a navegação de treinos oferecem acesso. Em **Meus alunos → Acompanhamento**, o link aparece somente com consentimento para treinos. As três rotas aceitam `aluno=ID`, mas verificam novamente a autorização no servidor, antes de consultar qualquer treino; mudar o ID ou a rota não contorna a permissão. A consulta profissional registra `analise_muscular` em `auditoria_acesso` e não permite editar os dados. As respostas são privadas e `no-store`.
+
+Filtros: `periodo=7|30|90|semana|personalizado`, `de`/`ate` em `YYYY-MM-DD`, `metrica=equivalentes|series|diretas|indiretas` e `exercicio=ID`. Intervalos personalizados são inclusivos, limitados a 366 dias, sem datas futuras. Consultas SQL usam início inclusivo e fim exclusivo, convertendo os limites de São Paulo com `FROM_UNIXTIME`. IDs, arrays indevidos e filtros inválidos recebem 422; acesso sem consentimento recebe 403; sem sessão, redirecionamento ao login.
+
+### Regras de cálculo
+
+- **Elegibilidade:** treino `concluido`, série `concluida=1`, `ignorada=0`, excluindo `aquecimento` e `preparatoria`. Tipo NULL segue a regra existente de série normal. Sessões canceladas, excluídas ou em andamento nunca entram. Sessões concluídas sem séries de trabalho contam na frequência, mas não no estímulo.
+- **Séries registradas:** contagem das séries elegíveis por músculo associado. Uma série multiarticular pode aparecer em vários músculos, mas conta apenas uma vez no total geral e no grupo principal cadastrado do exercício.
+- **Diretas/indiretas:** contagens correspondentes a `primario` e `secundario`. `estabilizador` fica separado. São estimativas baseadas no catálogo, não comprovação de recrutamento individual.
+- **Séries equivalentes:** soma de séries × fator heurístico: primário **1**, secundário **0,5**, estabilizador **0**. Constantes em `AnaliseTreinoService::FATORES`. Fatores não são percentuais de carga e não são normalizados entre músculos. `peso_estimado` preenchido ou papel desconhecido aparece na lista de revisão; nenhum valor do catálogo é reescrito. Pais e filhos não são somados automaticamente.
+- **Volume externo:** soma de carga × repetições apenas para natureza `externa`, unidade `repetições`, carga não negativa e repetições positivas. Carga ausente não vira zero. Assistência, peso corporal, carga adicional e contagens de passos/andares não são misturados nesse volume. A atribuição por músculo multiplica pelo fator acima. O painel mantém resultados por exercício/lado, sem produzir um total indiscriminado entre aparelhos e modalidades ou duplicar a carga de exercícios unilaterais.
+- **Frequência:** sessões/semana = sessões × 7 ÷ dias do intervalo; dias/semana = dias distintos com sessão × 7 ÷ dias. Por músculo, usa dias distintos com série associada. Semanas são ISO em São Paulo; as extremidades podem ser parciais. O tempo soma duração de sessão, incluindo descanso.
+- **Comparação:** intervalos adjacentes com a mesma quantidade de dias. Para semana atual, compara os mesmos dias da semana anterior. Variação absoluta = atual − anterior; percentual = diferença ÷ anterior × 100, apenas quando ambos existem e anterior não é zero. Ausência permanece `—`/não aplicável.
+- **Progressão e recordes:** maiores cargas por sessão e lado; a série detalhada conserva carga e contagem juntas. Melhores cargas por número exato de repetições não são estimativas de 1RM. Novos recordes são comparados ao máximo de todo o histórico anterior ao intervalo, incluindo empates (que não criam recorde). Carga adicional é identificada como tal; assistência é excluída dos recordes de carga. A tabela detalhada exibe as 500 séries mais recentes com aviso; agregações, melhores marcas e gráficos abrangem todo o período.
+- **Cores:** 0 neutro; acima de 0 e abaixo de 5; 5 a menos de 10; 10 a menos de 20; 20 ou mais. Limites configuráveis em `AnaliseTreinoService::FAIXAS`, utilizados também pela legenda. Aplicam-se à métrica selecionada no intervalo, não a metas fisiológicas.
+
+### SVG, origem e correspondência
+
+Não havia SVG corporal no repositório. O novo desenho é original desta implementação, composto de polígonos em `MapaMuscular.php` e renderizado inline pela view, sem ilustrações copiadas ou bibliotecas de terceiros. É um esquema geométrico, não um atlas anatômico: músculos profundos usam faixas e a legenda informa essa limitação. As duas metades representam o mesmo músculo, sem inferir lateralidade do estímulo.
+
+`musculo.svg_id` é usado quando corresponde a uma chave conhecida do desenho; quando vazio/desconhecido, usa-se `musculo.codigo`. Isso permite integrar instalações e reimportações de seeds sem editar dados históricos ou preencher campos que as seeds atuais voltariam a esvaziar. Os 52 códigos do catálogo de teste possuem correspondência individual; deltoides e trapézios mantêm suas porções. Romboides não existem como músculo nesse catálogo e não foram inventados. Músculos adicionados futuramente sem desenho continuam consultáveis na lista e são identificados como sem região SVG.
+
+O agrupamento visual em `MapaMuscular` organiza a anatomia quando `musculo.grupo` está vazio; ele não modifica o grupo principal de exercícios no banco. SVG, legenda, lista de músculos e detalhes usam as mesmas métricas. Cores não indicam crescimento, recuperação nem diagnóstico clínico. As regiões são links com nomes acessíveis; os detalhes usam elementos `details/summary`, oferecendo alternativa aos pequenos alvos do desenho em celulares.
+
+### Arquivos desta etapa
+
+Criados:
+
+- `app/Controllers/AnaliseTreinoController.php` — autorização, filtros e montagem da resposta.
+- `app/Repositories/AnaliseTreinoRepository.php` — agregações por sessão/exercício/lado, catálogo, relações e progressão.
+- `app/Services/AnaliseTreinoService.php` — períodos, cálculos, comparações e níveis de cor.
+- `app/Services/MapaMuscular.php` — desenho original e correspondência por código.
+- `app/Views/treino_analise.php` — mapa, filtros, gráficos e tabelas.
+- `public/assets/css/analise.css` — estilos restritos ao novo painel, sem reescrever o layout global.
+- `public/assets/js/analise.js` — seleção acessível das regiões.
+- `tests/analise_unitario.php`, `tests/analise_integracao.php`, `tests/analise_http.php` — testes permanentes.
+
+Modificados: `routes/web.php`, `app/Views/treinos/comum.php`, `app/Views/painel_aluno.php`, `app/Views/aluno_detalhes.php` e este `README.md`.
+
+**Migrations novas: nenhuma.** No ambiente isolado foram executadas as migrations existentes 001–017 e as 37 seeds. O índice existente `ix_treino_historico (usuario_id,status,finalizado_em,id)` atende ao filtro; EXPLAIN confirmou acesso `range`. Consultas não variam com a quantidade de músculos: relações são buscadas em lote e séries são agregadas no SQL antes do cálculo muscular. Somente a consulta de máximo anterior consulta o histórico além dos limites, retornando um agregado por lado.
+
+### Testes executados e resultados
+
+Todos os comandos abaixo foram executados com sucesso no ambiente isolado:
+
+```sh
+php tests/analise_unitario.php
+php tests/analise_integracao.php
+php tests/analise_http.php
+php tests/perfil_unitario.php
+php tests/perfil_http.php
+php tests/treinos_integracao.php
+# Com servidor PHP de teste já iniciado em 127.0.0.1:8088:
+php tests/treinos_http.php
+```
+
+Os testes de integração/HTTP recusam bancos diferentes de `movi_treinos_teste`. Prepare o ambiente isolado conforme a seção de testes anterior, com migrations e seeds, antes de executá-los. A suíte de análise HTTP exige Apache no mesmo container em `127.0.0.1:80`. A integração de análise usa transação e rollback; os testes HTTP criam apenas contas sintéticas no banco de teste.
+
+Cobertura nova: estado vazio; uma/várias sessões; multiarticular; músculo sem série; exercício sem relação; correspondência de todos os códigos SVG; datas inválidas e limites de dia; diretas/indiretas/equivalentes; cores e limites; carga ausente; aquecimento/preparatórias/ignoradas/pendentes; treino cancelado/excluído/aberto; unidade de passos; assistência e carga adicional; comparação e divisão por zero; recordes anteriores; proprietário; XSS; autenticação; profissional sem vínculo; consentimento de outra categoria; autorização; revogação; vínculo encerrado; profissional e aluno inativos; auditoria de leitura.
+
+Regressões executadas: cadastro, login e limite de tentativas; profissionais/vínculos; rotinas; séries; finalização; histórico e estatísticas; perfil físico; avaliações e acompanhamento. Nenhuma falha foi observada nessas suítes. PHP lint de `app`, `public`, `routes`, `database` e `tests` passou; `node --check public/assets/js/analise.js` e `git diff --check` passaram. Composer validou os manifests, com o aviso preexistente de licença não especificada; não foram adicionadas dependências.
+
+No navegador: seleção por Enter e clique em região abre os detalhes; layout conferido em 390×844 e 1280×900; sem transbordamento horizontal do documento no tamanho móvel e sem erros JavaScript observados. A conferência visual identificou contraste insuficiente na primeira versão dos detalhes; corrigido com tema grafite/verde restrito ao painel. Toque físico em aparelho real e auditoria completa com leitor de tela não foram executados.
+
+Medições locais (não são garantia de carga de produção): nova integração com fixtures e regras de modalidade em aproximadamente 48 ms; cálculo sobre o usuário da regressão com 1.002 sessões no intervalo e 2 linhas agregadas de exercícios em 21,5 ms. O teste de regressão também gravou 150 séries. Esse cenário não substitui benchmark com milhares de sessões densas.
+
+### Pendências e continuidade
+
+A implementação foi validada no esquema atual, mas o banco de desenvolvimento principal precisa de reconciliação antes do uso local completo. Não execute as migrations históricas indiscriminadamente nesse legado: o migrador recusa schema preenchido sem histórico e existem mudanças históricas de catálogo. Faça backup restaurável, ensaie a atualização em cópia, compare estrutura e catálogo e resolva o histórico conforme a seção de recuperação. Nenhuma adoção fictícia de migrations foi feita nesta etapa.
+
+Limitações intencionais: estimativa por heurística; ausência de semântica confiável para `peso_estimado`; SVG esquemático; relações musculares sem lado; sem recomendação automática de volume ou 1RM. Nutrição e gamificação não foram implementadas. Próximos passos recomendados: reconciliar o banco legado, revisar fatores com profissionais e documentar sua fonte, aprimorar o desenho anatômico e testar toque/leitores de tela, além de medir desempenho com históricos densos antes de considerar cache.
+
+O trabalho permaneceu na branch `main` já selecionada. Não houve commit, push, merge, rebase, troca/criação de branch ou alteração de autoria/histórico Git. Os containers e o volume originais foram preservados.

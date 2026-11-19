@@ -49,6 +49,7 @@ declare(strict_types=1);
 <h3>Treinos do aluno</h3>
 <?php $somenteLeitura = true; require __DIR__ . '/fisico_comum.php'; ?>
 <?php if (!$treinosPermitidos): ?><p>O aluno ainda não autorizou o acesso aos treinos.</p><?php else: ?>
+<p><a href="/treinos/analise?aluno=<?= (int)$aluno['aluno_id'] ?>">Mapa muscular, análises e progressão do aluno</a></p>
 <p><?= (int)($estatisticas[0]['total'] ?? 0) ?> treinos concluídos · <?= (int)($estatisticas[2]['series'] ?? 0) ?> séries concluídas.</p>
 <?php if (!$treinos): ?><p>Nenhum treino concluído.</p><?php endif; ?>
 <?php foreach ($treinos as $t): ?><article><h4><?= $esc($t['nome']) ?></h4><p><?= $esc($t['finalizado_em']) ?> · <?= $numero(isset($t['duracao']) ? $t['duracao']/60 : null) ?> minutos</p>
