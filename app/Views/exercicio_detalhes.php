@@ -6,7 +6,7 @@
  * @var array $musculos
  * @var array $rotinas
  */
-$esc = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); ?>
+$esc = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); ?>
 <a href="/exercicios">Voltar à biblioteca</a>
 <h1><?= $esc($exercicio['nome']) ?></h1>
 <p><?= $esc($exercicio['descricao']) ?></p>
@@ -24,8 +24,10 @@ $esc = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); ?>
 <?php if ($exercicio['criterio_carga']): ?>
     <p><?= $esc($exercicio['criterio_carga']) ?></p><?php endif; ?>
 <?php foreach ($midias as $m):
-    $url = $m['localizacao'];
-    if (!preg_match('~^(?:https://[^/]|/(?!/))[^\x00-\x20\\\\]*$~D', $url)) continue; ?>
+        $url = $m['localizacao'];
+        if (!preg_match('~^(?:https://[^/]|/(?!/))[^\x00-\x20\\\\]*$~D', $url)) {
+            continue;
+        } ?>
     <img src="<?= $esc($url) ?>" alt="<?= $esc($m['descricao_acessivel']) ?>" loading="lazy" decoding="async" style="max-width:100%;height:auto">
 <?php endforeach ?>
 <h2>Músculos</h2>

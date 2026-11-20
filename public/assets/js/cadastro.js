@@ -6,13 +6,9 @@ const erro = document.querySelector('#erro-senha');
 function validarSenhas() {
     const diferentes = senha.value !== confirmar.value;
 
-    confirmar.setCustomValidity(
-        diferentes ? 'As senhas não coincidem.' : ''
-    );
+    confirmar.setCustomValidity(diferentes ? 'As senhas não coincidem.' : '');
 
-    erro.textContent = diferentes
-        ? 'As senhas não coincidem.'
-        : '';
+    erro.textContent = diferentes ? 'As senhas não coincidem.' : '';
 
     return !diferentes;
 }

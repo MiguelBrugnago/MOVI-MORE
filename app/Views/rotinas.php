@@ -34,7 +34,7 @@ require __DIR__ . '/treinos/comum.php';
                 <?php $hidden([]); ?>
                 <label>Nome<input name="nome" minlength="2" maxlength="150" required></label>
                 <?php $texto('descricao', 'Descrição', null);
-                $select('dia_semana', 'Dia da semana', $dias, null); ?>
+        $select('dia_semana', 'Dia da semana', $dias, null); ?>
                 <button>Criar rotina</button>
             </form>
         </details>
@@ -65,7 +65,7 @@ require __DIR__ . '/treinos/comum.php';
                     <?php $hidden(['rotina_id' => $rotina['id'], 'acao' => 'editar']); ?>
                     <label>Nome<input name="nome" value="<?= $esc($rotina['nome']) ?>" minlength="2" maxlength="150" required></label>
                     <?php $texto('descricao', 'Descrição', $rotina['descricao']);
-                    $select('dia_semana', 'Dia da semana', $dias, $rotina['dia_semana']); ?>
+            $select('dia_semana', 'Dia da semana', $dias, $rotina['dia_semana']); ?>
                     <button>Salvar rotina</button>
                 </form>
             </details>
@@ -77,7 +77,7 @@ require __DIR__ . '/treinos/comum.php';
                 <?php if (!$rotina['ativa']): ?>
                     <p><?= count($series[$x['id']] ?? []) ?> séries · <?= $esc($x['observacao']) ?></p>
             </article><?php continue;
-                    endif ?>
+                endif ?>
         <div class="treino-acoes">
             <a href="/treinos/exercicios?rotina=<?= (int)$rotina['id'] ?>&amp;item=<?= (int)$x['id'] ?>">Substituir exercício</a>
             <form method="post" action="/rotinas/salvar" class="treino-acoes"><?php $hidden($ids); ?>
@@ -92,7 +92,7 @@ require __DIR__ . '/treinos/comum.php';
                 <?php $hidden($ids + ['acao' => 'item_salvar']); ?>
                 <div class="treino-campos">
                     <?php $num('descanso_segundos', 'Descanso (s)', $x['descanso_segundos'], 0, 86400);
-                    $num('grupo', 'Número do superset', $x['grupo'], 1, 99999); ?>
+            $num('grupo', 'Número do superset', $x['grupo'], 1, 99999); ?>
                 </div>
                 <p>Use o mesmo número nos exercícios do grupo. Deixe em branco para retirar o exercício do grupo.</p>
                 <?php $texto('observacao', 'Observações', $x['observacao']); ?>
@@ -109,8 +109,12 @@ require __DIR__ . '/treinos/comum.php';
                     <?php $hidden($ids + ($s ? ['serie_id' => $s['id']] : [])); ?>
                     <div class="treino-campos">
                         <?php $select('tipo', 'Tipo', RegistroTreino::TIPOS, $s['tipo'] ?? 'normal');
-                        foreach (RegistroTreino::METAS as $k => [$flag, $label, $min, $max, $dec]) if (!empty($x[$flag])) $num($k, $label, $s[$k] ?? null, $min, $max, $dec);
-                        $num('rir_alvo', 'RIR alvo', $s['rir_alvo'] ?? null, 0, 20); ?>
+            foreach (RegistroTreino::METAS as $k => [$flag, $label, $min, $max, $dec]) {
+                if (!empty($x[$flag])) {
+                    $num($k, $label, $s[$k] ?? null, $min, $max, $dec);
+                }
+            }
+            $num('rir_alvo', 'RIR alvo', $s['rir_alvo'] ?? null, 0, 20); ?>
                     </div>
                     <div class="treino-acoes">
                         <button name="acao" value="<?= $s ? 'serie_salvar' : 'serie_adicionar' ?>"><?= $s ? 'Salvar série' : 'Adicionar série' ?></button>

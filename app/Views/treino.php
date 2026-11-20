@@ -78,8 +78,8 @@ require __DIR__ . '/treinos/resumo_serie.php';
                     <summary>Ajustar descanso e observações</summary>
                     <form method="post" action="/treinos/salvar">
                         <?php $hidden($ids + ['acao' => 'item_notas']);
-                        $num('descanso_segundos', 'Descanso (s)', $x['descanso_segundos'], 0, 86400);
-                        $texto('observacao', 'Observações', $x['observacao']); ?>
+                $num('descanso_segundos', 'Descanso (s)', $x['descanso_segundos'], 0, 86400);
+                $texto('observacao', 'Observações', $x['observacao']); ?>
                         <button>Salvar exercício</button>
                     </form>
                 </details>
@@ -103,7 +103,7 @@ require __DIR__ . '/treinos/resumo_serie.php';
     <?php if ($editavel): ?>
         <form method="post" action="/treinos/salvar" class="treino-card">
             <?php $hidden(['treino_id' => $id]);
-            $texto('observacao', 'Observações do treino', $treino['observacao']); ?>
+        $texto('observacao', 'Observações do treino', $treino['observacao']); ?>
             <div class="treino-acoes">
                 <button name="acao" value="notas">Salvar observações</button>
                 <?php if ($ativo): ?>

@@ -116,7 +116,7 @@ function escaparVinculo(string $texto): string
         <?php if (!$modoProfissional): ?>
         <h4>Compartilhamento com este profissional</h4>
         <p>O vínculo por si só não libera seus dados. Autorize cada categoria separadamente; o acesso será somente leitura.</p>
-        <?php foreach (['fisico'=>'Perfil esportivo, medidas e evolução corporal','saude'=>'Condições, lesões, restrições e observações pessoais','treinos'=>'Histórico e estatísticas de treinos'] as $categoria=>$rotulo):
+        <?php foreach (['fisico' => 'Perfil esportivo, medidas e evolução corporal', 'saude' => 'Condições, lesões, restrições e observações pessoais', 'treinos' => 'Histórico e estatísticas de treinos'] as $categoria => $rotulo):
             $permitido = !empty($permissoes[$vinculo['id']][$categoria]); ?>
         <form action="/perfil" method="post">
             <input type="hidden" name="csrf_token" value="<?= escaparVinculo($_SESSION['csrf_token']) ?>">

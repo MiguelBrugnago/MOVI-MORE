@@ -13,6 +13,7 @@
  */
 require __DIR__ . '/treinos/comum.php';
 $destino = $r ? ['rotina' => $r, 'item' => $item] : ['treino' => $t];
+// Só a inclusão na rotina aceita vários exercícios de uma vez.
 $multiplos = $r && !$item;
 ?>
 <section class="treino-area">
