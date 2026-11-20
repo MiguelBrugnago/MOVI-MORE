@@ -1,0 +1,29 @@
+services:
+  db:
+    image: mysql:8.4
+    command: ["--event-scheduler=ON"]
+    environment:
+      MYSQL_DATABASE: movi_treinos_teste
+      MYSQL_ROOT_PASSWORD: movi-teste-local
+    # Instância exclusiva de teste, sem portas publicadas nem volume do projeto principal.
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 2s
+      timeout: 3s
+      retries: 40
+  app:
+    build:
+      context: ..
+      dockerfile: .docker/php/Dockerfile
+    volumes:
+      - ../:/var/www/html:ro
+    environment:
+      DB_HOST: db
+      DB_NAME: movi_treinos_teste
+      DB_USER: root
+      DB_PASSWORD: movi-teste-local
+    depends_on:
+      db:
+        condition: service_healthy
