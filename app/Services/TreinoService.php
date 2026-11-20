@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\TreinoRepository as Repo;
+use App\Models\Exercicio;
+use App\Models\Rotina;
+use App\Models\Treino;
 use DomainException;
 
 final class TreinoService
 {
-    public function __construct(private Repo $db) {}
+    public function __construct(private Repo $db)
+    {
+    }
 
     private function exercicio(int $e, int $u): array
     {
-        return $this->db->um('SELECT tr.*,e.id,e.nome FROM exercicio e LEFT JOIN tipo_registro tr ON tr.id=e.tipo_registro_id
-            WHERE e.id=? AND e.ativo=1 AND (e.usuario_id IS NULL OR e.usuario_id=?)', [$e, $u])
+        return $this->db->exercicioDisponivel($e, $u)
             ?? throw new DomainException('Exercício indisponível.', 404);
     }
 
@@ -27,18 +31,21 @@ final class TreinoService
     public function rotina(int $u, array $p, string $acao): int
     {
         return $this->db->transacao(function () use ($u, $p, $acao) {
-            $meta = static fn() => [
+            $meta = static fn () => [
                 'nome' => RegistroTreino::texto($p['nome'] ?? null, 150, 2),
                 'descricao' => RegistroTreino::texto($p['descricao'] ?? null, 4000),
                 'dia_semana' => RegistroTreino::numero($p['dia_semana'] ?? null, 1, 7),
             ];
-            if ($acao === 'criar') return $this->db->inserir('rotina', ['usuario_id' => $u] + $meta());
+            if ($acao === 'criar') {
+                return $this->db->inserir('rotina', ['usuario_id' => $u] + $meta());
+            }
             $id = self::id($p, 'rotina_id');
             $r = $this->db->rotina($id, $u, true) ?? throw new DomainException('Rotina não encontrada.', 404);
             if ($acao === 'arquivar' || $acao === 'restaurar') {
                 $this->db->atualizar('rotina', $id, ['ativa' => (int)($acao === 'restaurar')]);
                 return $id;
             }
+            // Copia exercícios e séries na mesma transação da nova rotina.
             if ($acao === 'duplicar') {
                 $novo = $this->db->inserir('rotina', ['usuario_id' => $u, 'nome' => $r['nome'], 'descricao' => $r['descricao'], 'objetivo' => $r['objetivo'], 'dia_semana' => $r['dia_semana']]);
                 $series = $this->db->series($id, true);
@@ -52,43 +59,35 @@ final class TreinoService
                 }
                 return $novo;
             }
-            if (!$r['ativa']) throw new DomainException('Restaure a rotina para editá-la.', 409);
-            if ($acao === 'editar') $this->db->atualizar('rotina', $id, $meta());
-            elseif ($acao === 'adicionar') {
+            if (!$r['ativa']) {
+                throw new DomainException('Restaure a rotina para editá-la.', 409);
+            }
+            if ($acao === 'editar') {
+                $this->db->atualizar('rotina', $id, $meta());
+            } elseif ($acao === 'adicionar') {
                 $ids = $p['exercicios'] ?? [$p['exercicio_id'] ?? null];
-                if (!is_array($ids) || !$ids) throw new \InvalidArgumentException('Selecione exercícios.');
-                foreach ($ids as $e) {
-                    $e = self::id(['e' => $e], 'e');
-                    $this->exercicio($e, $u);
-                    $this->anexar('rotina_exercicio', 'rotina_id', $id, 'ordem', ['exercicio_id' => $e]);
+                if (!is_array($ids) || !$ids) {
+                    throw new \InvalidArgumentException('Selecione exercícios.');
                 }
-            } else $this->itemRotina($id, $u, $p, $acao);
+                $rotina = new Rotina((bool) $r['ativa']);
+                foreach ($ids as $e) {
+                    $dados = $this->exercicio(self::id(['e' => $e], 'e'), $u);
+                    $rotina->adicionar(new Exercicio((int) $dados['id'], $dados['nome']));
+                }
+                foreach ($rotina->exercicios() as $exercicio) {
+                    $this->db->anexar('rotina_exercicio', 'rotina_id', $id, 'ordem', ['exercicio_id' => $exercicio->id()]);
+                }
+            } else {
+                $this->itemRotina($id, $u, $p, $acao);
+            }
             return $id;
         });
-    }
-
-    private function anexar(string $tabela, string $chave, int $pai, string $pos, array $dados): int
-    {
-        $ordem = $this->db->consultar("SELECT COALESCE(MAX($pos),0)+1 FROM $tabela WHERE $chave=?", [$pai])->fetchColumn();
-        return $this->db->inserir($tabela, [$chave => $pai, $pos => $ordem] + $dados);
-    }
-
-    private function mover(string $tabela, string $chave, int $pai, string $pos, array $x, bool $subir): void
-    {
-        [$op, $dir] = $subir ? ['<', 'DESC'] : ['>', 'ASC'];
-        $vizinho = $this->db->um("SELECT id,$pos FROM $tabela WHERE $chave=? AND $pos $op ? ORDER BY $pos $dir LIMIT 1", [$pai, $x[$pos]]);
-        if (!$vizinho) return;
-        $temporario = $this->db->consultar("SELECT LEAST(COALESCE(MIN($pos),0),0)-1 FROM $tabela WHERE $chave=?", [$pai])->fetchColumn();
-        $this->db->atualizar($tabela, (int)$x['id'], [$pos => $temporario]);
-        $this->db->atualizar($tabela, (int)$vizinho['id'], [$pos => $x[$pos]]);
-        $this->db->atualizar($tabela, (int)$x['id'], [$pos => $vizinho[$pos]]);
     }
 
     private function itemRotina(int $id, int $u, array $p, string $acao): void
     {
         $item = self::id($p, 'item_id');
-        $x = $this->db->um('SELECT x.*,tr.usa_carga,tr.usa_repeticoes,tr.usa_duracao,tr.usa_distancia
-            FROM rotina_exercicio x JOIN exercicio e ON e.id=x.exercicio_id LEFT JOIN tipo_registro tr ON tr.id=e.tipo_registro_id WHERE x.id=? AND x.rotina_id=?', [$item, $id])
+        $x = $this->db->item($item, $id, true)
             ?? throw new DomainException('Item não encontrado.', 404);
         switch ($acao) {
             case 'item_salvar':
@@ -103,32 +102,35 @@ final class TreinoService
                 $novo = $this->exercicio($e, $u);
                 if ($e !== (int)$x['exercicio_id']) {
                     $this->db->atualizar('rotina_exercicio', $item, ['exercicio_id' => $e]);
+                    // A carga anterior e as metas incompatíveis não passam ao novo exercício.
                     $limpar = ['carga_alvo' => null];
-                    foreach (RegistroTreino::METAS as $k => [$flag]) if (empty($novo[$flag])) $limpar[$k] = null;
-                    $campos = implode('=NULL,', array_keys($limpar)) . '=NULL';
-                    $this->db->consultar("UPDATE rotina_serie SET $campos WHERE rotina_exercicio_id=?", [$item]);
+                    foreach (RegistroTreino::METAS as $k => [$flag]) {
+                        if (empty($novo[$flag])) {
+                            $limpar[$k] = null;
+                        }
+                    }
+                    $this->db->limparMetas($item, array_keys($limpar));
                 }
                 break;
             case 'item_remover':
-                $this->db->consultar('DELETE FROM rotina_serie WHERE rotina_exercicio_id=?', [$item]);
-                $this->db->consultar('DELETE FROM rotina_exercicio WHERE id=?', [$item]);
+                $this->db->removerItemRotina($item);
                 break;
             case 'item_subir':
             case 'item_descer':
-                $this->mover('rotina_exercicio', 'rotina_id', $id, 'ordem', $x, $acao === 'item_subir');
+                $this->db->mover('rotina_exercicio', 'rotina_id', $id, 'ordem', $x, $acao === 'item_subir');
                 break;
             case 'serie_adicionar':
-                $this->anexar('rotina_serie', 'rotina_exercicio_id', $item, 'numero', RegistroTreino::metas($p, $x));
+                $this->db->anexar('rotina_serie', 'rotina_exercicio_id', $item, 'numero', RegistroTreino::metas($p, $x));
                 break;
             default:
                 $s = self::id($p, 'serie_id');
-                $serie = $this->db->um('SELECT * FROM rotina_serie WHERE id=? AND rotina_exercicio_id=?', [$s, $item])
+                $serie = $this->db->serieDoItem($s, $item, true)
                     ?? throw new DomainException('Série não encontrada.', 404);
                 match ($acao) {
                     'serie_salvar' => $this->db->atualizar('rotina_serie', $s, RegistroTreino::metas($p, $x)),
-                    'serie_remover' => $this->db->consultar('DELETE FROM rotina_serie WHERE id=?', [$s]),
-                    'serie_duplicar' => $this->anexar('rotina_serie', 'rotina_exercicio_id', $item, 'numero', array_diff_key($serie, array_flip(['id', 'numero', 'rotina_exercicio_id']))),
-                    'serie_subir', 'serie_descer' => $this->mover('rotina_serie', 'rotina_exercicio_id', $item, 'numero', $serie, $acao === 'serie_subir'),
+                    'serie_remover' => $this->db->removerSerieRotina($s),
+                    'serie_duplicar' => $this->db->anexar('rotina_serie', 'rotina_exercicio_id', $item, 'numero', array_diff_key($serie, array_flip(['id', 'numero', 'rotina_exercicio_id']))),
+                    'serie_subir', 'serie_descer' => $this->db->mover('rotina_serie', 'rotina_exercicio_id', $item, 'numero', $serie, $acao === 'serie_subir'),
                     default => throw new \InvalidArgumentException('Ação inválida.'),
                 };
         }
@@ -138,8 +140,10 @@ final class TreinoService
     {
         $id = RegistroTreino::numero($p['id'] ?? null, 1, 2147483647);
         return $this->db->transacao(function () use ($u, $p, $id) {
-            $atual = $id ? $this->db->um('SELECT id,tipo_registro_id FROM exercicio WHERE id=? AND usuario_id=? AND ativo=1 FOR UPDATE', [$id, $u]) : null;
-            if ($id && !$atual) throw new DomainException('Exercício não encontrado.', 404);
+            $atual = $id ? $this->db->personalizado($id, $u) : null;
+            if ($id && !$atual) {
+                throw new DomainException('Exercício não encontrado.', 404);
+            }
             $dados = [
                 'nome' => RegistroTreino::texto($p['nome'] ?? null, 150, 2),
                 'descricao' => RegistroTreino::texto($p['descricao'] ?? null, 4000) ?? '',
@@ -147,10 +151,14 @@ final class TreinoService
             ];
             foreach (['equipamento', 'grupo_muscular', 'tipo_registro'] as $tabela) {
                 $campo = $tabela . '_id';
-                // Keep the measurement semantics of previous sessions and planned sets.
-                if ($atual && $tabela === 'tipo_registro') continue;
+                // Preserva a modalidade dos históricos e das metas já registradas.
+                if ($atual && $tabela === 'tipo_registro') {
+                    continue;
+                }
                 $ref = self::id($p, $campo);
-                if (!$this->db->um("SELECT id FROM $tabela WHERE id=?", [$ref])) throw new DomainException('Classificação indisponível.', 422);
+                if (!$this->db->classificacaoExiste($tabela, $ref)) {
+                    throw new DomainException('Classificação indisponível.', 422);
+                }
                 $dados[$campo] = $ref;
             }
             if ($id) {
@@ -165,16 +173,18 @@ final class TreinoService
     {
         $id = RegistroTreino::numero($p['rotina_id'] ?? null, 1, 2147483647);
         return $this->db->transacao(function () use ($u, $id, $p) {
-            $this->db->um('SELECT id FROM usuario WHERE id=? FOR UPDATE', [$u]);
+            $this->db->bloquearUsuario($u);
             $r = $id ? $this->db->rotina($id, $u, true) : null;
-            if ($id && (!$r || !$r['ativa'])) throw new DomainException('Rotina indisponível.', 404);
-            if ($ativo = $this->db->ativo($u)) return (int)$ativo['id'];
-            $this->db->consultar(
-                "INSERT INTO treino (usuario_id,rotina_id,nome,status,iniciado_em) VALUES (?,?,?,'em_andamento',NOW())",
-                [$u, $id, $r['nome'] ?? RegistroTreino::texto($p['nome'] ?? null, 150) ?? 'Treino livre']
-            );
-            $t = (int)$this->db->consultar('SELECT LAST_INSERT_ID()')->fetchColumn();
+            if ($id && (!$r || !$r['ativa'])) {
+                throw new DomainException('Rotina indisponível.', 404);
+            }
+            if ($ativo = $this->db->ativo($u)) {
+                return (int)$ativo['id'];
+            }
+            $nome = $r['nome'] ?? RegistroTreino::texto($p['nome'] ?? null, 150) ?? 'Treino livre';
+            $t = $this->db->iniciarTreino($u, $id, $nome);
             if ($id) {
+                // O treino guarda as metas da rotina como estavam no início da sessão.
                 $series = $this->db->series($id, true);
                 foreach ($this->db->itens($id, true) as $x) {
                     $item = $this->db->inserir('treino_exercicio', ['treino_id' => $t, 'nome_snapshot' => $x['nome']] + array_intersect_key($x, array_flip(['exercicio_id', 'ordem', 'descanso_segundos', 'grupo', 'observacao'])));
@@ -197,28 +207,20 @@ final class TreinoService
         $id = self::id($p, 'treino_id');
         return $this->db->transacao(function () use ($u, $p, $acao, $id) {
             $t = $this->db->treino($id, $u, true) ?? throw new DomainException('Treino não encontrado.', 404);
-            $status = $t['status'];
-            if (($acao === 'finalizar' && $status === 'concluido') || ($acao === 'cancelar' && $status === 'cancelado')
-                || ($acao === 'excluir' && $status === 'excluido')
-            ) return $id;
-            if ($status !== 'em_andamento' && !($status === 'concluido' && in_array($acao, ['serie', 'notas', 'excluir'], true))) {
-                throw new DomainException('Operação indisponível para este treino.', 409);
+            $treino = new Treino($t['status']);
+            $status = $treino->status();
+            if (!$treino->autorizar($acao)) {
+                return $id;
             }
             switch ($acao) {
                 case 'finalizar':
-                    if (!$this->db->um('SELECT s.id FROM serie s JOIN treino_exercicio x ON x.id=s.treino_exercicio_id WHERE x.treino_id=? AND s.concluida=1 LIMIT 1', [$id])) {
-                        throw new DomainException('Conclua pelo menos uma série para finalizar.', 422);
-                    }
-                    $this->db->consultar(
-                        "UPDATE treino SET status='concluido',finalizado_em=NOW(),descanso_ate=NULL,observacao=? WHERE id=?",
-                        [RegistroTreino::texto($p['observacao'] ?? $t['observacao'], 4000), $id]
-                    );
+                    $treino->finalizar($this->db->possuiSerieConcluida($id));
+                    $this->db->finalizarTreino($id, RegistroTreino::texto($p['observacao'] ?? $t['observacao'], 4000));
                     break;
                 case 'cancelar':
-                    $this->db->consultar("UPDATE treino SET status='cancelado',finalizado_em=NOW(),descanso_ate=NULL WHERE id=?", [$id]);
+                    $this->db->cancelarTreino($id);
                     break;
                 case 'excluir':
-                    if ($status !== 'concluido') throw new DomainException('Finalize ou descarte o treino ativo.', 409);
                     $this->db->atualizar('treino', $id, ['status' => 'excluido']);
                     break;
                 case 'notas':
@@ -227,18 +229,16 @@ final class TreinoService
                 case 'exercicio':
                     $e = self::id($p, 'exercicio_id');
                     $ex = $this->exercicio($e, $u);
-                    $this->anexar('treino_exercicio', 'treino_id', $id, 'ordem', ['exercicio_id' => $e, 'nome_snapshot' => $ex['nome']]);
+                    $this->db->anexar('treino_exercicio', 'treino_id', $id, 'ordem', ['exercicio_id' => $e, 'nome_snapshot' => $ex['nome']]);
                     break;
                 case 'descanso':
                     $tempo = RegistroTreino::numero($p['segundos'] ?? null, 0, 86400) ?? 0;
-                    $this->descanso($id, $tempo);
+                    $this->db->descanso($id, $tempo);
                     break;
                 case 'serie':
                 case 'item_notas':
                     $item = self::id($p, 'item_id');
-                    $x = $this->db->um('SELECT x.*,tr.usa_carga,tr.usa_repeticoes,tr.usa_duracao,tr.usa_distancia
-                        FROM treino_exercicio x JOIN exercicio e ON e.id=x.exercicio_id LEFT JOIN tipo_registro tr ON tr.id=e.tipo_registro_id
-                        WHERE x.id=? AND x.treino_id=?', [$item, $id]) ?? throw new DomainException('Exercício não encontrado.', 404);
+                    $x = $this->db->item($item, $id, false) ?? throw new DomainException('Exercício não encontrado.', 404);
                     if ($acao === 'item_notas') {
                         $this->db->atualizar('treino_exercicio', $item, [
                             'observacao' => RegistroTreino::texto($p['observacao'] ?? null, 4000),
@@ -246,30 +246,7 @@ final class TreinoService
                         ]);
                         break;
                     }
-                    $s = RegistroTreino::numero($p['serie_id'] ?? null, 1, 2147483647);
-                    $estado = $p['estado'] ?? 'concluida';
-                    if (!in_array($estado, ['pendente', 'concluida', 'ignorada'], true)) throw new \InvalidArgumentException('Estado inválido.');
-                    if (($p['modo'] ?? null) === 'rascunho' && (!$s || $estado !== 'pendente' || $status !== 'em_andamento')) {
-                        throw new DomainException('Rascunhos exigem séries pendentes em treino ativo.', 409);
-                    }
-                    $dados = RegistroTreino::execucao($p, $x, $estado);
-                    if ($s) {
-                        $antiga = $this->db->um('SELECT concluida,ignorada FROM serie WHERE id=? AND treino_exercicio_id=?', [$s, $item])
-                            ?? throw new DomainException('Série não encontrada.', 404);
-                        if (($p['modo'] ?? null) === 'rascunho' && ($antiga['concluida'] || $antiga['ignorada'])) {
-                            throw new DomainException('O estado da série mudou. Reabra o treino para atualizar.', 409);
-                        }
-                        $this->db->atualizar('serie', $s, $dados);
-                        $novaConclusao = !$antiga['concluida'];
-                    } else {
-                        if ($status !== 'em_andamento') throw new DomainException('Edite uma série existente.', 409);
-                        $chave = $p['chave'] ?? null;
-                        if (!is_string($chave) || !preg_match('/^[a-f0-9]{32}$/D', $chave)) throw new \InvalidArgumentException('Identificador da requisição inválido.');
-                        if ($this->db->um('SELECT id FROM serie WHERE treino_exercicio_id=? AND chave=?', [$item, $chave])) return $id;
-                        $this->anexar('serie', 'treino_exercicio_id', $item, 'numero', $dados + ['chave' => $chave]);
-                        $novaConclusao = true;
-                    }
-                    if ($status === 'em_andamento' && $dados['concluida'] && $novaConclusao && $x['descanso_segundos']) $this->descanso($id, (int)$x['descanso_segundos']);
+                    $this->salvarSerie($id, $item, $x, $p, $status);
                     break;
                 default:
                     throw new \InvalidArgumentException('Ação inválida.');
@@ -278,8 +255,42 @@ final class TreinoService
         });
     }
 
-    private function descanso(int $id, int $tempo): void
+    private function salvarSerie(int $id, int $item, array $x, array $p, string $status): void
     {
-        $this->db->consultar('UPDATE treino SET descanso_ate=IF(?=0,NULL,TIMESTAMPADD(SECOND,?,NOW())) WHERE id=?', [$tempo, $tempo, $id]);
+        $s = RegistroTreino::numero($p['serie_id'] ?? null, 1, 2147483647);
+        $estado = $p['estado'] ?? 'concluida';
+        if (!in_array($estado, ['pendente', 'concluida', 'ignorada'], true)) {
+            throw new \InvalidArgumentException('Estado inválido.');
+        }
+        if (($p['modo'] ?? null) === 'rascunho' && (!$s || $estado !== 'pendente' || $status !== 'em_andamento')) {
+            throw new DomainException('Rascunhos exigem séries pendentes em treino ativo.', 409);
+        }
+        $dados = RegistroTreino::execucao($p, $x, $estado);
+        if ($s) {
+            $antiga = $this->db->serieDoItem($s, $item)
+                ?? throw new DomainException('Série não encontrada.', 404);
+            if (($p['modo'] ?? null) === 'rascunho' && ($antiga['concluida'] || $antiga['ignorada'])) {
+                throw new DomainException('O estado da série mudou. Reabra o treino para atualizar.', 409);
+            }
+            $this->db->atualizar('serie', $s, $dados);
+            $novaConclusao = !$antiga['concluida'];
+        } else {
+            if ($status !== 'em_andamento') {
+                throw new DomainException('Edite uma série existente.', 409);
+            }
+            $chave = $p['chave'] ?? null;
+            if (!is_string($chave) || !preg_match('/^[a-f0-9]{32}$/D', $chave)) {
+                throw new \InvalidArgumentException('Identificador da requisição inválido.');
+            }
+            // A chave evita inserir novamente uma série enviada pela mesma requisição.
+            if ($this->db->seriePorChave($item, $chave)) {
+                return;
+            }
+            $this->db->anexar('serie', 'treino_exercicio_id', $item, 'numero', $dados + ['chave' => $chave]);
+            $novaConclusao = true;
+        }
+        if ($status === 'em_andamento' && $dados['concluida'] && $novaConclusao && $x['descanso_segundos']) {
+            $this->db->descanso($id, (int)$x['descanso_segundos']);
+        }
     }
 }
