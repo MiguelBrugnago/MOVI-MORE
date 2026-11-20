@@ -5,8 +5,9 @@ declare(strict_types=1);
 $inicioRequisicao = hrtime(true);
 register_shutdown_function(static function () use ($inicioRequisicao): void {
     $ms = (hrtime(true) - $inicioRequisicao) / 1e6;
-    if ($ms > 500)
+    if ($ms > 500) {
         error_log(sprintf('MOVI: requisicao PHP lenta %.1f ms', $ms));
+    }
 });
 
 require_once __DIR__ . '/../vendor/autoload.php';

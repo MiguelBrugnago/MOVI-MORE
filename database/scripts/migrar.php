@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-if (PHP_SAPI !== 'cli') exit(1);
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 $pdo = null;
@@ -16,7 +18,9 @@ try {
 
     $arquivos = glob(dirname(__DIR__) . '/migrations/*.sql') ?: [];
     sort($arquivos, SORT_STRING);
-    if (!$arquivos) throw new RuntimeException('Nenhuma migration encontrada.');
+    if (!$arquivos) {
+        throw new RuntimeException('Nenhuma migration encontrada.');
+    }
     $migrations = [];
     foreach ($arquivos as $i => $caminho) {
         $nome = basename($caminho);
@@ -24,18 +28,25 @@ try {
             throw new RuntimeException("Numeração duplicada, inválida ou fora de sequência: $nome");
         }
         $sql = file_get_contents($caminho);
-        if ($sql === false || trim($sql) === '') throw new RuntimeException("SQL ausente ou vazio: $nome");
+        if ($sql === false || trim($sql) === '') {
+            throw new RuntimeException("SQL ausente ou vazio: $nome");
+        }
+        // Até os comentários entram no hash da migration. Só as quebras de linha são normalizadas.
         $migrations[$nome] = [$sql, hash('sha256', str_replace(["\r\n", "\r"], "\n", $sql))];
     }
 
     $pdo = App\Config\Database::conectar();
     $banco = $pdo->query('SELECT DATABASE()')->fetchColumn();
-    if (!$banco) throw new RuntimeException('Nenhum banco selecionado.');
+    if (!$banco) {
+        throw new RuntimeException('Nenhum banco selecionado.');
+    }
     $lock = hash('sha256', 'movi:migrar:' . $banco);
     $s = $pdo->prepare('SELECT GET_LOCK(?, 0)');
     $s->execute([$lock]);
     $bloqueado = (int)$s->fetchColumn() === 1;
-    if (!$bloqueado) throw new RuntimeException('Já existe uma execução de migrations neste banco.');
+    if (!$bloqueado) {
+        throw new RuntimeException('Já existe uma execução de migrations neste banco.');
+    }
 
     $temHistorico = (bool)$pdo->query("SELECT COUNT(*) FROM information_schema.TABLES
         WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='schema_migracao'")->fetchColumn();
@@ -73,8 +84,9 @@ try {
         if (($linha['estado'] ?? 'aplicada') !== 'aplicada') {
             throw new RuntimeException("Execução incompleta: $nome. Restaure ou reconcilie a estrutura antes de continuar.");
         }
-        if (!isset($linha['sha256'])) $semHash[] = $nome;
-        elseif (!hash_equals($linha['sha256'], $migrations[$nome][1])) {
+        if (!isset($linha['sha256'])) {
+            $semHash[] = $nome;
+        } elseif (!hash_equals($linha['sha256'], $migrations[$nome][1])) {
             throw new RuntimeException("Checksum divergente: $nome. Recupere o arquivo aplicado originalmente.");
         }
     }
@@ -88,7 +100,9 @@ try {
         }
         $pdo->beginTransaction();
         $s = $pdo->prepare('UPDATE schema_migracao SET sha256=? WHERE arquivo=? AND sha256 IS NULL');
-        foreach ($semHash as $nome) $s->execute([$migrations[$nome][1], $nome]);
+        foreach ($semHash as $nome) {
+            $s->execute([$migrations[$nome][1], $nome]);
+        }
         $pdo->commit();
         echo "Hashes de referência registrados para o histórico conferido pelo operador. Nenhum SQL de migration executado.\n";
     } elseif (count($historico) > 0 && count($historico) < 9 && isset($migrations['009_simplificar_catalogo.sql'])) {
@@ -104,6 +118,7 @@ try {
                     throw new RuntimeException('A 016 requer o evento de limpeza existente com DEFINER igual à conta da aplicação. Confira o guia do banco para legados.');
                 }
             }
+            // O MySQL pode confirmar DDL por etapas. A marca permite detectar uma interrupção na próxima execução.
             $inicio->execute([$nome, $hash]);
             $pdo->exec($sql);
             $fim->execute([$nome]);
@@ -111,7 +126,9 @@ try {
         }
     }
 } catch (Throwable $erro) {
-    if ($pdo?->inTransaction()) $pdo->rollBack();
+    if ($pdo?->inTransaction()) {
+        $pdo->rollBack();
+    }
     fwrite(STDERR, $erro->getMessage() . "\nDDL pode ter commit implícito. Não apague o registro de execução sem verificar o schema.\n");
     $falhou = true;
 } finally {
