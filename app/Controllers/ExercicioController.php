@@ -12,11 +12,12 @@ final class ExercicioController
 {
     public function index(): void
     {
-        Auth::verificar();
+        Auth::usuario();
         header('Cache-Control: no-store, private');
         $filtros = [];
-        foreach (['q', 'grupo', 'equipamento', 'modalidade', 'ordem'] as $k)
+        foreach (['q', 'grupo', 'equipamento', 'modalidade', 'ordem'] as $k) {
             $filtros[$k] = is_string($_GET[$k] ?? null) ? mb_substr(trim($_GET[$k]), 0, 150) : '';
+        }
         $filtros['pagina'] = max(1, (int) (filter_input(INPUT_GET, 'pagina', FILTER_VALIDATE_INT) ?: 1));
         $repo = new ExercicioRepository();
         $resultado = $repo->pesquisar((int) $_SESSION['usuario_id'], $filtros);
@@ -25,9 +26,10 @@ final class ExercicioController
         $viewPath = __DIR__ . '/../Views/exercicios.php';
         require __DIR__ . '/../Views/layouts/app.php';
     }
+
     public function visualizar(): void
     {
-        Auth::verificar();
+        Auth::usuario();
         header('Cache-Control: no-store, private');
         $repo = new ExercicioRepository();
         $exercicio = $repo->buscarPorId((int) (filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: 0), (int) $_SESSION['usuario_id']);

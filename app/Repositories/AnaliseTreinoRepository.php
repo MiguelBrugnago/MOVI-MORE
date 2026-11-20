@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Repositories;
@@ -6,7 +7,9 @@ namespace App\Repositories;
 /** Consultas limitadas por proprietário e intervalo; sem consulta por músculo. */
 final class AnaliseTreinoRepository
 {
-    public function __construct(private TreinoRepository $db) {}
+    public function __construct(private TreinoRepository $db)
+    {
+    }
 
     public function catalogo(): array
     {
@@ -18,7 +21,7 @@ final class AnaliseTreinoRepository
         return $this->db->todos("SELECT em.* FROM exercicio_musculo em WHERE EXISTS (
             SELECT 1 FROM treino t JOIN treino_exercicio x ON x.treino_id=t.id
             WHERE x.exercicio_id=em.exercicio_id AND t.usuario_id=? AND t.status='concluido'
-            AND t.finalizado_em>=FROM_UNIXTIME(?) AND t.finalizado_em<FROM_UNIXTIME(?))", [$u,$inicio,$fim]);
+            AND t.finalizado_em>=FROM_UNIXTIME(?) AND t.finalizado_em<FROM_UNIXTIME(?))", [$u, $inicio, $fim]);
     }
 
     public function sessoes(int $u, int $inicio, int $fim): array
@@ -26,7 +29,7 @@ final class AnaliseTreinoRepository
         return $this->db->todos("SELECT id,UNIX_TIMESTAMP(finalizado_em) fim,
             GREATEST(0,TIMESTAMPDIFF(SECOND,iniciado_em,finalizado_em)) duracao FROM treino
             WHERE usuario_id=? AND status='concluido' AND finalizado_em>=FROM_UNIXTIME(?)
-            AND finalizado_em<FROM_UNIXTIME(?) ORDER BY finalizado_em,id", [$u,$inicio,$fim]);
+            AND finalizado_em<FROM_UNIXTIME(?) ORDER BY finalizado_em,id", [$u, $inicio, $fim]);
     }
 
     public function execucoes(int $u, int $inicio, int $fim): array
@@ -43,7 +46,7 @@ final class AnaliseTreinoRepository
             WHERE t.usuario_id=? AND t.status='concluido' AND t.finalizado_em>=FROM_UNIXTIME(?)
             AND t.finalizado_em<FROM_UNIXTIME(?) AND s.concluida=1 AND s.ignorada=0 AND " . TreinoRepository::SERIE_TRABALHO . "
             GROUP BY t.id,t.finalizado_em,e.id,g.nome,tr.natureza_carga,tr.unidade_contagem,e.unilateral,eq.nome,s.lado
-            ORDER BY t.finalizado_em,t.id,e.id,s.lado", [$u,$inicio,$fim]);
+            ORDER BY t.finalizado_em,t.id,e.id,s.lado", [$u, $inicio, $fim]);
     }
 
     public function seriesExercicio(int $u, int $e, int $inicio, int $fim): array
@@ -54,7 +57,7 @@ final class AnaliseTreinoRepository
             JOIN tipo_registro tr ON tr.id=e.tipo_registro_id WHERE t.usuario_id=? AND e.id=?
             AND t.status='concluido' AND t.finalizado_em>=FROM_UNIXTIME(?) AND t.finalizado_em<FROM_UNIXTIME(?)
             AND s.concluida=1 AND s.ignorada=0 AND " . TreinoRepository::SERIE_TRABALHO . "
-            ORDER BY t.finalizado_em DESC,t.id DESC,x.ordem,s.numero LIMIT 501", [$u,$e,$inicio,$fim]);
+            ORDER BY t.finalizado_em DESC,t.id DESC,x.ordem,s.numero LIMIT 501", [$u, $e, $inicio, $fim]);
     }
 
     public function melhoresPorRepeticoes(int $u, int $e, int $inicio, int $fim): array
@@ -65,7 +68,7 @@ final class AnaliseTreinoRepository
             WHERE t.usuario_id=? AND e.id=? AND t.status='concluido' AND t.finalizado_em>=FROM_UNIXTIME(?)
             AND t.finalizado_em<FROM_UNIXTIME(?) AND s.concluida=1 AND s.ignorada=0 AND " . TreinoRepository::SERIE_TRABALHO . "
             AND tr.natureza_carga IN ('externa','adicional') AND tr.unidade_contagem='repetições'
-            AND s.repeticoes>0 AND s.peso>=0 GROUP BY s.repeticoes,s.lado ORDER BY s.repeticoes,s.lado", [$u,$e,$inicio,$fim]);
+            AND s.repeticoes>0 AND s.peso>=0 GROUP BY s.repeticoes,s.lado ORDER BY s.repeticoes,s.lado", [$u, $e, $inicio, $fim]);
     }
 
     public function recordeAnterior(int $u, int $e, int $inicio): array
@@ -75,6 +78,6 @@ final class AnaliseTreinoRepository
             JOIN exercicio e ON e.id=x.exercicio_id JOIN tipo_registro tr ON tr.id=e.tipo_registro_id
             WHERE t.usuario_id=? AND e.id=? AND t.status='concluido' AND t.finalizado_em<FROM_UNIXTIME(?)
             AND s.concluida=1 AND s.ignorada=0 AND " . TreinoRepository::SERIE_TRABALHO . "
-            AND tr.natureza_carga IN ('externa','adicional') AND s.peso>=0 GROUP BY s.lado", [$u,$e,$inicio]);
+            AND tr.natureza_carga IN ('externa','adicional') AND s.peso>=0 GROUP BY s.lado", [$u, $e, $inicio]);
     }
 }

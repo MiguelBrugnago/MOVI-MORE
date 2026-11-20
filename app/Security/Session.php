@@ -46,6 +46,7 @@ final class Session
     {
         self::iniciar();
 
+        // Troca o identificador e descarta a sessão anterior após a autenticação.
         session_regenerate_id(true);
     }
 

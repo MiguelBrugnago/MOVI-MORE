@@ -11,7 +11,7 @@ final class PainelController
 {
     public function index(): void
     {
-        Auth::verificar();
+        Auth::usuario();
 
         header('Cache-Control: no-store, private');
 
