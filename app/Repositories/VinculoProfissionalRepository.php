@@ -18,18 +18,20 @@ class VinculoProfissionalRepository
 
     public function permitir(int $aluno, int $vinculo, string $categoria, bool $permitir): void
     {
-        if (!in_array($categoria, ['fisico','saude','treinos'], true)) throw new \InvalidArgumentException('Categoria inválida.');
-        $this->pdo->beginTransaction();
-        try {
+        if (!in_array($categoria, ['fisico', 'saude', 'treinos'], true)) {
+            throw new \InvalidArgumentException('Categoria inválida.');
+        }
+        $this->transacao(function () use ($aluno, $vinculo, $categoria, $permitir) {
             $s = $this->pdo->prepare("SELECT id FROM vinculo_profissional WHERE id=? AND aluno_id=? AND status='ativo' FOR UPDATE");
-            $s->execute([$vinculo,$aluno]);
-            if (!$s->fetchColumn()) throw new \DomainException('Vínculo não encontrado.',404);
+            $s->execute([$vinculo, $aluno]);
+            if (!$s->fetchColumn()) {
+                throw new \DomainException('Vínculo não encontrado.', 404);
+            }
             $s = $this->pdo->prepare('INSERT INTO permissao_acesso (vinculo_profissional_id,categoria_dados,permitido,concedido_em,revogado_em)
                 VALUES (?,?,?,IF(?=1,NOW(),NULL),IF(?=0,NOW(),NULL)) ON DUPLICATE KEY UPDATE
                 permitido=VALUES(permitido),concedido_em=VALUES(concedido_em),revogado_em=VALUES(revogado_em)');
-            $s->execute([$vinculo,$categoria,(int)$permitir,(int)$permitir,(int)$permitir]);
-            $this->pdo->commit();
-        } catch (\Throwable $e) { $this->pdo->rollBack(); throw $e; }
+            $s->execute([$vinculo, $categoria, (int)$permitir, (int)$permitir, (int)$permitir]);
+        });
     }
 
     public function autorizado(int $profissionalUsuario, int $aluno, string $categoria): bool
@@ -39,15 +41,31 @@ class VinculoProfissionalRepository
             JOIN permissao_acesso pa ON pa.vinculo_profissional_id=v.id
             WHERE p.usuario_id=? AND v.aluno_id=? AND v.status='ativo' AND p.ativo=1 AND u.ativo=1 AND a.ativo=1
             AND pa.categoria_dados=? AND pa.permitido=1 AND pa.revogado_em IS NULL AND pa.concedido_em>=v.iniciado_em");
-        $s->execute([$profissionalUsuario,$aluno,$categoria]);
+        $s->execute([$profissionalUsuario, $aluno, $categoria]);
         return (bool)$s->fetchColumn();
     }
 
     public function registrarLeitura(int $usuario, int $aluno, string $recurso): void
     {
         $s = $this->pdo->prepare("INSERT INTO auditoria_acesso (usuario_id,aluno_id,recurso,acao) VALUES (?,?,?,'consultar')");
-        $s->execute([$usuario,$aluno,$recurso]);
+        $s->execute([$usuario, $aluno, $recurso]);
     }
+
+    private function transacao(callable $acao): mixed
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $resultado = $acao();
+            $this->pdo->commit();
+            return $resultado;
+        } catch (\Throwable $erro) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $erro;
+        }
+    }
+
     private PDO $pdo;
 
     public function __construct()
@@ -95,7 +113,12 @@ class VinculoProfissionalRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function solicitar(
+    public function solicitar(int $usuarioId, string $email, bool $modoProfissional): string
+    {
+        return $this->transacao(fn () => $this->solicitarNaTransacao($usuarioId, $email, $modoProfissional));
+    }
+
+    private function solicitarNaTransacao(
         int $usuarioId,
         string $email,
         bool $modoProfissional
@@ -151,7 +174,7 @@ class VinculoProfissionalRepository
         }
 
         $sql = "SELECT usuario_id FROM profissional
-                WHERE id = :id";
+                WHERE id = :id FOR UPDATE";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $profissionalId]);
@@ -163,7 +186,7 @@ class VinculoProfissionalRepository
         $sql = "SELECT id, status
                 FROM vinculo_profissional
                 WHERE profissional_id = :profissional_id
-                  AND aluno_id = :aluno_id";
+                  AND aluno_id = :aluno_id FOR UPDATE";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
@@ -178,6 +201,7 @@ class VinculoProfissionalRepository
                 return 'Já existe uma solicitação ou vínculo ativo.';
             }
 
+            // Revogação e nova solicitação precisam confirmar ou falhar juntas.
             $revogar = $this->pdo->prepare('UPDATE permissao_acesso SET permitido=0,revogado_em=NOW() WHERE vinculo_profissional_id=?');
             $revogar->execute([$existente['id']]);
 
@@ -210,7 +234,12 @@ class VinculoProfissionalRepository
         return 'Solicitação enviada com sucesso.';
     }
 
-    public function responder(
+    public function responder(int $vinculoId, int $usuarioId, bool $modoProfissional, bool $aceitar): string
+    {
+        return $this->transacao(fn () => $this->responderNaTransacao($vinculoId, $usuarioId, $modoProfissional, $aceitar));
+    }
+
+    private function responderNaTransacao(
         int $vinculoId,
         int $usuarioId,
         bool $modoProfissional,
@@ -219,7 +248,7 @@ class VinculoProfissionalRepository
         $sql = "SELECT v.*, p.usuario_id AS usuario_profissional
                 FROM vinculo_profissional v
                 JOIN profissional p ON p.id = v.profissional_id
-                WHERE v.id = :id";
+                WHERE v.id = :id FOR UPDATE";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $vinculoId]);
@@ -264,7 +293,12 @@ class VinculoProfissionalRepository
         return $aceitar ? 'Solicitação aceita.' : 'Solicitação recusada.';
     }
 
-    public function encerrar(
+    public function encerrar(int $vinculoId, int $usuarioId, bool $modoProfissional): string
+    {
+        return $this->transacao(fn () => $this->encerrarNaTransacao($vinculoId, $usuarioId, $modoProfissional));
+    }
+
+    private function encerrarNaTransacao(
         int $vinculoId,
         int $usuarioId,
         bool $modoProfissional
@@ -272,7 +306,7 @@ class VinculoProfissionalRepository
         $sql = "SELECT v.*, p.usuario_id AS usuario_profissional
                 FROM vinculo_profissional v
                 JOIN profissional p ON p.id = v.profissional_id
-                WHERE v.id = :id";
+                WHERE v.id = :id FOR UPDATE";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $vinculoId]);
@@ -305,6 +339,7 @@ class VinculoProfissionalRepository
             ? 'Vínculo encerrado.'
             : 'Este vínculo já foi encerrado.';
     }
+
     public function listarAlunosAtivos(int $usuarioId): array
     {
         $sql = "SELECT
@@ -327,6 +362,7 @@ class VinculoProfissionalRepository
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
     public function buscarAlunoVinculado(
         int $usuarioId,
         int $alunoId

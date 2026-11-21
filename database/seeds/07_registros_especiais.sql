@@ -1,7 +1,7 @@
 UPDATE exercicio
 SET
     tipo_registro_id = CASE
-        WHEN nome_ingles = 'Stair Machine (Floors)' THEN (
+        WHEN codigo = 'movi_4377a52b' THEN (
             SELECT
                 id
             FROM
@@ -9,7 +9,7 @@ SET
             WHERE
                 codigo = 'andares_duracao'
         )
-        WHEN nome_ingles = 'Stair Machine (Steps)' THEN (
+        WHEN codigo = 'movi_4377a52c' THEN (
             SELECT
                 id
             FROM
@@ -27,15 +27,18 @@ SET
         )
     END
 WHERE
-    nome_ingles IN ('Stair Machine (Floors)', 'Stair Machine (Steps)')
-    OR (
-        modalidade = 'calistenia'
-        AND tipo_registro_id = (
-            SELECT
-                id
-            FROM
-                tipo_registro
-            WHERE
-                codigo = 'duracao'
+    usuario_id IS NULL
+    AND (
+        codigo IN ('movi_4377a52b', 'movi_4377a52c')
+        OR (
+            modalidade = 'calistenia'
+            AND tipo_registro_id = (
+                SELECT
+                    id
+                FROM
+                    tipo_registro
+                WHERE
+                    codigo = 'duracao'
+            )
         )
     );

@@ -78,6 +78,9 @@ final class RotinaController
             $this->erro(422, $e->getMessage(), $voltar);
         } catch (DomainException $e) {
             $this->erro($e->getCode(), $e->getMessage(), $voltar);
+        } catch (\PDOException $e) {
+            error_log('Persistência do treino: ' . $e->getCode());
+            $this->erro(503, 'Não foi possível salvar. Tente novamente em instantes.', $voltar);
         }
     }
 
@@ -90,13 +93,15 @@ final class RotinaController
         $item = TreinoService::id($_POST, 'item_id');
         $x = $db->itens($id, false, $item)[0] ?? null;
         $serie = filter_input(INPUT_POST, 'serie_id', FILTER_VALIDATE_INT) ?: 0;
-        if (!$x)
+        if (!$x) {
             return [];
+        }
         $s = $serie
             ? $db->um('SELECT * FROM serie WHERE id=? AND treino_exercicio_id=?', [$serie, $item])
             : $db->um('SELECT * FROM serie WHERE chave=? AND treino_exercicio_id=?', [$_POST['chave'], $item]);
-        if (!$s)
+        if (!$s) {
             return [];
+        }
         $anterior = $ativo && (!$serie || (!$s['concluida'] && !$s['ignorada'])) ? $db->anterior($u, $id) : [];
         require __DIR__ . '/../Views/treinos/campos.php';
         require __DIR__ . '/../Views/treinos/resumo_serie.php';
@@ -134,6 +139,7 @@ final class RotinaController
     {
         $this->salvar('criar');
     }
+
     public function adicionar(): void
     {
         $this->salvar('adicionar');
@@ -143,8 +149,9 @@ final class RotinaController
     {
         $this->post(static function (TreinoService $s, int $u) use ($fixa) {
             $acao = $fixa ?? $_POST['acao'] ?? '';
-            if (!is_string($acao))
+            if (!is_string($acao)) {
                 throw new InvalidArgumentException('Ação inválida.');
+            }
             $id = $s->rotina($u, $_POST, $acao);
             return $acao === 'arquivar' ? '/rotinas' : '/rotinas?id=' . $id;
         }, '/rotinas?id=' . (int) filter_input(INPUT_POST, 'rotina_id', FILTER_VALIDATE_INT));
@@ -152,13 +159,14 @@ final class RotinaController
 
     public function iniciar(): void
     {
-        $this->post(static fn(TreinoService $s, int $u) => '/treinos/ver?id=' . $s->iniciar($u, $_POST), '/rotinas');
+        $this->post(static fn (TreinoService $s, int $u) => '/treinos/ver?id=' . $s->iniciar($u, $_POST), '/rotinas');
     }
 
     public function finalizar(): void
     {
         $this->sessao('finalizar');
     }
+
     public function serie(): void
     {
         $this->sessao('serie');
@@ -169,8 +177,9 @@ final class RotinaController
         $voltar = '/treinos/ver?id=' . (int) filter_input(INPUT_POST, 'treino_id', FILTER_VALIDATE_INT);
         $this->post(static function (TreinoService $s, int $u) use ($fixa) {
             $acao = $fixa ?? $_POST['acao'] ?? '';
-            if (!is_string($acao))
+            if (!is_string($acao)) {
                 throw new InvalidArgumentException('Ação inválida.');
+            }
             $id = $s->sessao($u, $_POST, $acao);
             return match ($acao) {
                 'excluir' => '/treinos/historico',
@@ -216,8 +225,9 @@ final class RotinaController
         }
         $repo = new ExercicioRepository();
         $f = array_fill_keys(['q', 'grupo', 'equipamento', 'modalidade', 'musculo', 'ambiente'], '');
-        foreach ($f as $k => $v)
+        foreach ($f as $k => $v) {
             $f[$k] = mb_substr(trim(is_string($_GET[$k] ?? null) ? $_GET[$k] : ''), 0, 160, 'UTF-8');
+        }
         $f += ['pagina' => max(1, $this->get('pagina')), 'ordem' => 'az'];
         $catalogo = $repo->pesquisar($u, $f);
         $opcoes = $repo->filtros() + [
@@ -247,7 +257,7 @@ final class RotinaController
 
     public function salvarPersonalizado(): void
     {
-        $this->post(fn(TreinoService $s, int $u) => '/treinos/personalizados?id=' . $s->personalizado($u, $_POST), '/treinos/personalizados');
+        $this->post(fn (TreinoService $s, int $u) => '/treinos/personalizados?id=' . $s->personalizado($u, $_POST), '/treinos/personalizados');
     }
 
     public function historico(): void

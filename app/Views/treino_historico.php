@@ -25,7 +25,7 @@ require __DIR__ . '/treinos/comum.php'; ?>
             <?php if ($t['exercicios']): ?>
                 <p><?= $esc(implode(' · ', array_column($t['exercicios'], 'nome'))) ?></p>
                 <p><?= (int)array_sum(array_column($t['exercicios'], 'series')) ?> séries concluídas
-                    <?php if (array_filter(array_column($t['exercicios'], 'volume'), static fn($v) => $v !== null)): ?>
+                    <?php if (array_filter(array_column($t['exercicios'], 'volume'), static fn ($v) => $v !== null)): ?>
                         · <?= number_format(array_sum(array_column($t['exercicios'], 'volume')), 2, ',', '.') ?> kg × rep.
                     <?php endif ?></p>
             <?php endif ?>

@@ -3,7 +3,7 @@
 /** @var array{q: string, grupo: string, equipamento: string, modalidade: string, ordem: string, pagina: int} $filtros */
 /** @var array<string, list<array{id: int|string, nome: string}>> $opcoes */
 /** @var array{total: int, pagina: int, paginas: int, itens: list<array<string, mixed>>} $resultado */
-$esc = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+$esc = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 ?>
 <h1>Biblioteca de exercícios</h1>
 <p>Encontre um movimento e adicione à sua rotina.</p>

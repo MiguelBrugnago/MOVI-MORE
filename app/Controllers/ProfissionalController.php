@@ -13,7 +13,7 @@ final class ProfissionalController
 {
     public function cadastro(): void
     {
-        Auth::verificar();
+        Auth::usuario();
 
         header('Cache-Control: no-store, private');
 

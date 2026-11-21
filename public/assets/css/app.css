@@ -2,18 +2,18 @@
     font-family: system-ui, sans-serif;
     color: #182b35;
     background: #f5f8fa;
-    line-height: 1.5
+    line-height: 1.5;
 }
 
 * {
-    box-sizing: border-box
+    box-sizing: border-box;
 }
 
 body {
     margin: 0 auto;
     padding: clamp(16px, 3vw, 36px);
     max-width: 1240px;
-    overflow-wrap: anywhere
+    overflow-wrap: anywhere;
 }
 
 header {
@@ -23,24 +23,24 @@ header {
     gap: 16px;
     flex-wrap: wrap;
     padding-bottom: 16px;
-    border-bottom: 1px solid #cbd8df
+    border-bottom: 1px solid #cbd8df;
 }
 
 main {
-    min-width: 0
+    min-width: 0;
 }
 
 h1 {
-    font-size: clamp(1.6rem, 4vw, 2.3rem)
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
 }
 
 h2 {
-    font-size: 1.2rem
+    font-size: 1.2rem;
 }
 
 a {
     color: #075d72;
-    text-underline-offset: 3px
+    text-underline-offset: 3px;
 }
 
 a:focus-visible,
@@ -48,7 +48,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible {
     outline: 3px solid #cf6a19;
-    outline-offset: 3px
+    outline-offset: 3px;
 }
 
 button,
@@ -60,7 +60,7 @@ textarea {
     min-height: 44px;
     border: 1px solid #98aeb9;
     border-radius: 6px;
-    padding: 9px 12px
+    padding: 9px 12px;
 }
 
 input,
@@ -68,48 +68,48 @@ select,
 textarea {
     width: 100%;
     background: white;
-    color: inherit
+    color: inherit;
 }
 
-input[type=hidden] {
-    display: none
+input[type='hidden'] {
+    display: none;
 }
 
 label {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    min-width: 0
+    min-width: 0;
 }
 
 form {
     display: grid;
     gap: 14px;
     margin: 18px 0;
-    max-width: 640px
+    max-width: 640px;
 }
 
 button {
     background: #075d72;
     color: white;
-    cursor: pointer
+    cursor: pointer;
 }
 
 button:disabled {
-    opacity: .55;
-    cursor: default
+    opacity: 0.55;
+    cursor: default;
 }
 
 .filtros {
     max-width: none;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
-    align-items: end
+    align-items: end;
 }
 
 .catalogo {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
-    gap: 16px
+    gap: 16px;
 }
 
 article {
@@ -118,18 +118,18 @@ article {
     border-radius: 10px;
     padding: 18px;
     margin-bottom: 16px;
-    min-width: 0
+    min-width: 0;
 }
 
 .catalogo article {
-    margin: 0
+    margin: 0;
 }
 
 .paginacao {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin: 24px 0
+    margin: 24px 0;
 }
 
 .paginacao a {
@@ -139,31 +139,31 @@ article {
     min-width: 44px;
     min-height: 44px;
     border: 1px solid #98aeb9;
-    border-radius: 6px
+    border-radius: 6px;
 }
 
 .paginacao [aria-current] {
     background: #075d72;
-    color: white
+    color: white;
 }
 
 nav ul {
     display: flex;
     flex-wrap: wrap;
     gap: 12px 24px;
-    padding-left: 20px
+    padding-left: 20px;
 }
 
 nav a {
     display: inline-block;
-    padding: 8px 0
+    padding: 8px 0;
 }
 
 table {
     border-collapse: collapse;
     width: 100%;
     display: block;
-    overflow-x: auto
+    overflow-x: auto;
 }
 
 th,
@@ -171,53 +171,53 @@ td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #cbd8df;
-    overflow-wrap: anywhere
+    overflow-wrap: anywhere;
 }
 
 img,
 video {
     max-width: 100%;
-    height: auto
+    height: auto;
 }
 
 dd {
-    margin: 0 0 14px
+    margin: 0 0 14px;
 }
 
 dt {
-    font-weight: 700
+    font-weight: 700;
 }
 
 header form {
-    margin: 0
+    margin: 0;
 }
 
 header p {
-    margin: 0
+    margin: 0;
 }
 
-@media(max-width:600px) {
+@media (max-width: 600px) {
     header {
-        align-items: flex-start
+        align-items: flex-start;
     }
 
     th,
     td {
-        padding: 8px
+        padding: 8px;
     }
 
     nav ul {
-        display: block
+        display: block;
     }
 
     button {
-        width: 100%
+        width: 100%;
     }
 }
 
-@media(max-width:600px) {
+@media (max-width: 600px) {
     .tabela-responsiva thead {
-        display: none
+        display: none;
     }
 
     .tabela-responsiva,
@@ -225,7 +225,7 @@ header p {
     .tabela-responsiva tr,
     .tabela-responsiva td {
         display: block;
-        width: 100%
+        width: 100%;
     }
 
     .tabela-responsiva tr {
@@ -233,54 +233,167 @@ header p {
         background: white;
         padding: 12px;
         margin: 12px 0;
-        border-radius: 8px
+        border-radius: 8px;
     }
 
     .tabela-responsiva td {
         border: 0;
-        padding: 6px 0
+        padding: 6px 0;
     }
 
     .tabela-responsiva td:before {
         content: attr(data-label);
         display: block;
-        font-weight: 700
+        font-weight: 700;
     }
 
     .tabela-responsiva a {
         display: inline-block;
         min-height: 44px;
-        padding: 10px 0
+        padding: 10px 0;
     }
 }
 /* Treinos */
-.treino-nav, .treino-acoes { display: flex; gap: .65rem; flex-wrap: wrap; align-items: center; }
-.treino-nav { margin-top: 1rem; }
-.treino-nav a, .treino-link { display: inline-flex; align-items: center; min-height: 44px; padding: .4rem .75rem; border: 1px solid #9cb5be; border-radius: .55rem; background: white; }
-.treino-area { max-width: 960px; margin: 0 auto 3rem; }
-.treino-card, .treino-destaque { background: white; border: 1px solid #cbd8df; border-radius: .85rem; padding: clamp(.85rem, 2vw, 1.35rem); margin: 1rem 0; }
-.treino-destaque { background: #e6f4f5; }
-.treino-area form { max-width: none; }
-.treino-area form.treino-acoes { margin: .4rem 0; }
-.treino-area summary { cursor: pointer; min-height: 44px; padding: .6rem .25rem; font-weight: 650; }
-.treino-serie { margin-block: .5rem; border: 1px solid #d5dfe4; border-radius: .55rem; padding-inline: .6rem; }
-.treino-serie[data-estado=concluida] { border-inline-start: .35rem solid #147851; }
-.treino-serie[data-estado=ignorada] { border-inline-start: .35rem solid #98aeb9; }
-.treino-campos { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%, 145px),1fr)); align-items: end; gap: .75rem; }
-.treino-nota { white-space: pre-wrap; }
-.treino-opcao { flex-direction: row; align-items: center; min-height: 44px; }
-.treino-opcao input { width: 1.15rem; min-height: 0; height: 1.15rem; flex-shrink: 0; }
-.treino-barra { display: grid; grid-template-columns: 6rem minmax(0,1fr) 3rem; align-items: center; gap: .5rem; }
-.treino-barra meter { width: 100%; height: 1.45rem; }
-.treino-grafico { grid-template-columns: minmax(5rem,8rem) minmax(0,1fr) minmax(3rem,auto); }
-.treino-area table { width: 100%; border-collapse: collapse; }
-.treino-area td, .treino-area th { text-align: start; padding: .4rem; border-bottom: 1px solid #cbd8df; }
-.treino-dialogo { width: min(calc(100% - 2rem), 30rem); border: 1px solid #9cb5be; border-radius: .85rem; color: #182b35; padding: 1.2rem; }
-.treino-dialogo::backdrop { background: #182b3570; }
-[data-save-status]:empty, [data-rest-status]:empty { display: none; }
-.fisico-form { max-width: none; }
-.fisico-form fieldset { border: 1px solid #cbd8df; border-radius: 10px; padding: 20px; background: white; min-width: 0; }
-.fisico-form legend { font-weight: 700; }
-.fisico-form .treino-campos { margin-block: 14px; grid-template-columns: repeat(auto-fit,minmax(min(100%,220px),1fr)); }
-.fisico-grafico svg { display: block; width: 100%; height: auto; }
-.fisico-erro { padding: 16px; border-left: 4px solid #b03725; background: #fff1ed; }
+.treino-nav,
+.treino-acoes {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.treino-nav {
+    margin-top: 1rem;
+}
+.treino-nav a,
+.treino-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid #9cb5be;
+    border-radius: 0.55rem;
+    background: white;
+}
+.treino-area {
+    max-width: 960px;
+    margin: 0 auto 3rem;
+}
+.treino-card,
+.treino-destaque {
+    background: white;
+    border: 1px solid #cbd8df;
+    border-radius: 0.85rem;
+    padding: clamp(0.85rem, 2vw, 1.35rem);
+    margin: 1rem 0;
+}
+.treino-destaque {
+    background: #e6f4f5;
+}
+.treino-area form {
+    max-width: none;
+}
+.treino-area form.treino-acoes {
+    margin: 0.4rem 0;
+}
+.treino-area summary {
+    cursor: pointer;
+    min-height: 44px;
+    padding: 0.6rem 0.25rem;
+    font-weight: 650;
+}
+.treino-serie {
+    margin-block: 0.5rem;
+    border: 1px solid #d5dfe4;
+    border-radius: 0.55rem;
+    padding-inline: 0.6rem;
+}
+.treino-serie[data-estado='concluida'] {
+    border-inline-start: 0.35rem solid #147851;
+}
+.treino-serie[data-estado='ignorada'] {
+    border-inline-start: 0.35rem solid #98aeb9;
+}
+.treino-campos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+    align-items: end;
+    gap: 0.75rem;
+}
+.treino-nota {
+    white-space: pre-wrap;
+}
+.treino-opcao {
+    flex-direction: row;
+    align-items: center;
+    min-height: 44px;
+}
+.treino-opcao input {
+    width: 1.15rem;
+    min-height: 0;
+    height: 1.15rem;
+    flex-shrink: 0;
+}
+.treino-barra {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr) 3rem;
+    align-items: center;
+    gap: 0.5rem;
+}
+.treino-barra meter {
+    width: 100%;
+    height: 1.45rem;
+}
+.treino-grafico {
+    grid-template-columns: minmax(5rem, 8rem) minmax(0, 1fr) minmax(3rem, auto);
+}
+.treino-area table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.treino-area td,
+.treino-area th {
+    text-align: start;
+    padding: 0.4rem;
+    border-bottom: 1px solid #cbd8df;
+}
+.treino-dialogo {
+    width: min(calc(100% - 2rem), 30rem);
+    border: 1px solid #9cb5be;
+    border-radius: 0.85rem;
+    color: #182b35;
+    padding: 1.2rem;
+}
+.treino-dialogo::backdrop {
+    background: #182b3570;
+}
+[data-save-status]:empty,
+[data-rest-status]:empty {
+    display: none;
+}
+.fisico-form {
+    max-width: none;
+}
+.fisico-form fieldset {
+    border: 1px solid #cbd8df;
+    border-radius: 10px;
+    padding: 20px;
+    background: white;
+    min-width: 0;
+}
+.fisico-form legend {
+    font-weight: 700;
+}
+.fisico-form .treino-campos {
+    margin-block: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+.fisico-grafico svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+.fisico-erro {
+    padding: 16px;
+    border-left: 4px solid #b03725;
+    background: #fff1ed;
+}

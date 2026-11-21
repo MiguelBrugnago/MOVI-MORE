@@ -9,7 +9,9 @@ use Throwable;
 
 final class TreinoRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function consultar(string $sql, array $args = []): \PDOStatement
     {
@@ -28,9 +30,10 @@ final class TreinoRepository
         return $this->consultar($sql, $args)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /** Table and column names come exclusively from application code. */
+    /** Tabelas e colunas vêm do código; valores são sempre parametrizados. */
     public function inserir(string $tabela, array $dados): int
     {
+        $this->validarIdentificadores($tabela, $dados);
         $cols = implode(',', array_keys($dados));
         $params = implode(',', array_fill(0, count($dados), '?'));
         $this->consultar("INSERT INTO $tabela ($cols) VALUES ($params)", array_values($dados));
@@ -39,8 +42,22 @@ final class TreinoRepository
 
     public function atualizar(string $tabela, int $id, array $dados): void
     {
-        $cols = implode(',', array_map(static fn($k) => "$k=?", array_keys($dados)));
+        $this->validarIdentificadores($tabela, $dados);
+        $cols = implode(',', array_map(static fn ($k) => "$k=?", array_keys($dados)));
         $this->consultar("UPDATE $tabela SET $cols WHERE id=?", [...array_values($dados), $id]);
+    }
+
+    private function validarIdentificadores(string $tabela, array $dados): void
+    {
+        if ($dados === []) {
+            throw new \InvalidArgumentException('Informe campos para persistir.');
+        }
+        // Placeholders protegem valores, mas não nomes interpolados na instrução SQL.
+        foreach ([$tabela, ...array_keys($dados)] as $nome) {
+            if (!is_string($nome) || !preg_match('/^[a-z][a-z0-9_]*$/D', $nome)) {
+                throw new \InvalidArgumentException('Identificador SQL inválido.');
+            }
+        }
     }
 
     public function transacao(callable $acao): mixed
@@ -51,9 +68,143 @@ final class TreinoRepository
             $this->pdo->commit();
             return $resultado;
         } catch (Throwable $erro) {
-            $this->pdo->rollBack();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
             throw $erro;
         }
+    }
+
+    public function anexar(string $tabela, string $chave, int $pai, string $pos, array $dados): int
+    {
+        $this->validarOrdenacao($tabela, $chave, $pos);
+        $ordem = $this->consultar("SELECT COALESCE(MAX($pos),0)+1 FROM $tabela WHERE $chave=?", [$pai])->fetchColumn();
+        return $this->inserir($tabela, [$chave => $pai, $pos => $ordem] + $dados);
+    }
+
+    public function mover(string $tabela, string $chave, int $pai, string $pos, array $x, bool $subir): void
+    {
+        $this->validarOrdenacao($tabela, $chave, $pos);
+        [$op, $dir] = $subir ? ['<', 'DESC'] : ['>', 'ASC'];
+        $vizinho = $this->um("SELECT id,$pos FROM $tabela WHERE $chave=? AND $pos $op ? ORDER BY $pos $dir LIMIT 1", [$pai, $x[$pos]]);
+        if (!$vizinho) {
+            return;
+        }
+        // A posição temporária evita colisão com a restrição única durante a troca.
+        $temporario = $this->consultar("SELECT LEAST(COALESCE(MIN($pos),0),0)-1 FROM $tabela WHERE $chave=?", [$pai])->fetchColumn();
+        $this->atualizar($tabela, (int)$x['id'], [$pos => $temporario]);
+        $this->atualizar($tabela, (int)$vizinho['id'], [$pos => $x[$pos]]);
+        $this->atualizar($tabela, (int)$x['id'], [$pos => $vizinho[$pos]]);
+    }
+
+    private function validarOrdenacao(string $tabela, string $chave, string $pos): void
+    {
+        $permitidos = [
+            ['rotina_exercicio', 'rotina_id', 'ordem'],
+            ['treino_exercicio', 'treino_id', 'ordem'],
+            ['rotina_serie', 'rotina_exercicio_id', 'numero'],
+            ['serie', 'treino_exercicio_id', 'numero'],
+        ];
+        if (!in_array([$tabela, $chave, $pos], $permitidos, true)) {
+            throw new \InvalidArgumentException('Ordenação inválida.');
+        }
+    }
+
+    public function possuiSerieConcluida(int $treino): bool
+    {
+        return $this->um('SELECT s.id FROM serie s
+            JOIN treino_exercicio x ON x.id=s.treino_exercicio_id
+            WHERE x.treino_id=? AND s.concluida=1 AND s.ignorada=0 LIMIT 1', [$treino]) !== null;
+    }
+
+    public function exercicioDisponivel(int $exercicio, int $usuario): ?array
+    {
+        return $this->um('SELECT tr.*,e.id,e.nome FROM exercicio e
+            LEFT JOIN tipo_registro tr ON tr.id=e.tipo_registro_id
+            WHERE e.id=? AND e.ativo=1 AND (e.usuario_id IS NULL OR e.usuario_id=?)', [$exercicio, $usuario]);
+    }
+
+    public function item(int $item, int $pai, bool $rotina): ?array
+    {
+        $tabela = $rotina ? 'rotina_exercicio' : 'treino_exercicio';
+        $chave = $rotina ? 'rotina_id' : 'treino_id';
+        return $this->um("SELECT x.*,tr.usa_carga,tr.usa_repeticoes,tr.usa_duracao,tr.usa_distancia
+            FROM $tabela x JOIN exercicio e ON e.id=x.exercicio_id
+            LEFT JOIN tipo_registro tr ON tr.id=e.tipo_registro_id WHERE x.id=? AND x.$chave=?", [$item, $pai]);
+    }
+
+    public function limparMetas(int $item, array $campos): void
+    {
+        $this->validarIdentificadores('rotina_serie', array_fill_keys($campos, null));
+        $atribuicoes = implode('=NULL,', $campos) . '=NULL';
+        $this->consultar("UPDATE rotina_serie SET $atribuicoes WHERE rotina_exercicio_id=?", [$item]);
+    }
+
+    public function removerItemRotina(int $item): void
+    {
+        // O serviço já bloqueou a rotina e abriu a transação que inclui ambas as exclusões.
+        $this->consultar('DELETE FROM rotina_serie WHERE rotina_exercicio_id=?', [$item]);
+        $this->consultar('DELETE FROM rotina_exercicio WHERE id=?', [$item]);
+    }
+
+    public function serieDoItem(int $serie, int $item, bool $rotina = false): ?array
+    {
+        $tabela = $rotina ? 'rotina_serie' : 'serie';
+        $chave = $rotina ? 'rotina_exercicio_id' : 'treino_exercicio_id';
+        return $this->um("SELECT * FROM $tabela WHERE id=? AND $chave=?", [$serie, $item]);
+    }
+
+    public function removerSerieRotina(int $serie): void
+    {
+        $this->consultar('DELETE FROM rotina_serie WHERE id=?', [$serie]);
+    }
+
+    public function personalizado(int $exercicio, int $usuario): ?array
+    {
+        return $this->um('SELECT id,tipo_registro_id FROM exercicio
+            WHERE id=? AND usuario_id=? AND ativo=1 FOR UPDATE', [$exercicio, $usuario]);
+    }
+
+    public function classificacaoExiste(string $tabela, int $id): bool
+    {
+        if (!in_array($tabela, ['equipamento', 'grupo_muscular', 'tipo_registro'], true)) {
+            throw new \InvalidArgumentException('Classificação inválida.');
+        }
+        return $this->um("SELECT id FROM $tabela WHERE id=?", [$id]) !== null;
+    }
+
+    public function bloquearUsuario(int $usuario): void
+    {
+        // Serializa o início de sessões para não criar dois treinos ativos na mesma conta.
+        $this->um('SELECT id FROM usuario WHERE id=? FOR UPDATE', [$usuario]);
+    }
+
+    public function iniciarTreino(int $usuario, ?int $rotina, string $nome): int
+    {
+        $this->consultar("INSERT INTO treino (usuario_id,rotina_id,nome,status,iniciado_em)
+            VALUES (?,?,?,'em_andamento',NOW())", [$usuario, $rotina, $nome]);
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    public function finalizarTreino(int $treino, ?string $observacao): void
+    {
+        $this->consultar("UPDATE treino SET status='concluido',finalizado_em=NOW(),
+            descanso_ate=NULL,observacao=? WHERE id=?", [$observacao, $treino]);
+    }
+
+    public function cancelarTreino(int $treino): void
+    {
+        $this->consultar("UPDATE treino SET status='cancelado',finalizado_em=NOW(),descanso_ate=NULL WHERE id=?", [$treino]);
+    }
+
+    public function seriePorChave(int $item, string $chave): ?array
+    {
+        return $this->um('SELECT id FROM serie WHERE treino_exercicio_id=? AND chave=?', [$item, $chave]);
+    }
+
+    public function descanso(int $treino, int $segundos): void
+    {
+        $this->consultar('UPDATE treino SET descanso_ate=IF(?=0,NULL,TIMESTAMPADD(SECOND,?,NOW())) WHERE id=?', [$segundos, $segundos, $treino]);
     }
 
     public function rotina(int $id, int $u, bool $lock = false): ?array
@@ -101,6 +252,7 @@ final class TreinoRepository
     public function anterior(int $u, int $id): array
     {
         $resultado = [];
+        // Busca a última sessão concluída com séries para cada exercício do treino atual.
         $rows = $this->todos("WITH ultimos AS (
             SELECT x.exercicio_id,MAX(t.finalizado_em) fim FROM treino t JOIN treino_exercicio x ON x.treino_id=t.id
             WHERE t.usuario_id=? AND t.status='concluido' AND t.id<>?
@@ -113,8 +265,9 @@ final class TreinoRepository
             JOIN treino_exercicio x ON x.treino_id=t.id AND x.exercicio_id=a.exercicio_id
             JOIN serie s ON s.treino_exercicio_id=x.id AND s.concluida=1
         ) SELECT * FROM candidatos WHERE pos=1 ORDER BY exercicio_id,treino_exercicio_id,numero", [$u, $id, $id, $u, $id]);
-        foreach ($rows as $s)
+        foreach ($rows as $s) {
             $resultado[$s['exercicio_id']][] = $s;
+        }
         return $resultado;
     }
 
@@ -145,10 +298,12 @@ final class TreinoRepository
         $rows = $this->todos("SELECT t.id,t.nome,t.finalizado_em,UNIX_TIMESTAMP(t.finalizado_em) fim,TIMESTAMPDIFF(SECOND,t.iniciado_em,t.finalizado_em) duracao
             FROM treino t WHERE $where ORDER BY t.finalizado_em DESC,t.id DESC LIMIT 21", $params);
         $mais = count($rows) > 20;
-        if ($mais)
+        if ($mais) {
             array_pop($rows);
-        if (!$rows)
+        }
+        if (!$rows) {
             return [[], false];
+        }
 
         $ids = array_column($rows, 'id');
         $in = implode(',', array_fill(0, count($ids), '?'));
@@ -159,10 +314,12 @@ final class TreinoRepository
             WHERE x.treino_id IN (' . $in . ') AND s.concluida=1
             GROUP BY x.treino_id,x.id,COALESCE(x.nome_snapshot,e.nome) ORDER BY x.treino_id,x.id', $ids);
         $resumo = [];
-        foreach ($execucoes as $x)
+        foreach ($execucoes as $x) {
             $resumo[$x['treino_id']][] = $x;
-        foreach ($rows as &$row)
+        }
+        foreach ($rows as &$row) {
             $row['exercicios'] = $resumo[$row['id']] ?? [];
+        }
         return [$rows, $mais];
     }
 
@@ -210,7 +367,7 @@ final class TreinoRepository
             'distancia' => 's.distancia_metros',
             'volume' => self::VOLUME,
         ];
-        $maximos = implode(',', array_map(static fn($nome, $expr) => "MAX($expr) AS $nome", array_keys($metricas), $metricas));
+        $maximos = implode(',', array_map(static fn ($nome, $expr) => "MAX($expr) AS $nome", array_keys($metricas), $metricas));
         $joins = "JOIN treino_exercicio x ON x.treino_id=t.id JOIN serie s ON s.treino_exercicio_id=x.id
             JOIN exercicio e ON e.id=x.exercicio_id JOIN tipo_registro tr ON tr.id=e.tipo_registro_id";
         $rows = $this->todos("WITH atual AS (
@@ -237,5 +394,8 @@ final class TreinoRepository
     }
 
     public const SERIE_TRABALHO = "COALESCE(s.tipo,'normal') NOT IN ('aquecimento','preparatoria')";
-    public const VOLUME = "CASE WHEN tr.natureza_carga='externa' AND tr.usa_repeticoes=1 AND s.concluida=1 AND " . self::SERIE_TRABALHO . " THEN s.peso*s.repeticoes END";
+    // Passos, assistência e séries ignoradas não representam volume de carga externa.
+    public const VOLUME = "CASE WHEN tr.natureza_carga='externa' AND tr.usa_repeticoes=1
+        AND tr.unidade_contagem='repetições' AND s.concluida=1 AND s.ignorada=0
+        AND s.peso>=0 AND s.repeticoes>0 AND " . self::SERIE_TRABALHO . " THEN s.peso*s.repeticoes END";
 }

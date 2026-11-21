@@ -13,8 +13,9 @@ class Database
 
     public static function conectar(): PDO
     {
-        if (self::$conexao !== null)
+        if (self::$conexao !== null) {
             return self::$conexao;
+        }
         $host = getenv('DB_HOST') ?: 'db';
         $porta = 3306;
 

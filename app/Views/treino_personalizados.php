@@ -23,12 +23,14 @@ require __DIR__ . '/treinos/comum.php'; ?>
         <?php $hidden($editando ? ['id' => $editando['id']] : []); ?>
         <label>Nome<input name="nome" value="<?= $esc($editando['nome'] ?? '') ?>" required minlength="2" maxlength="150"></label>
         <?php $texto('descricao', 'Descrição', $editando['descricao'] ?? null);
-        $texto('instrucoes', 'Instruções', $editando['instrucoes'] ?? null);
-        foreach (['grupo_muscular' => 'Grupo muscular', 'equipamento' => 'Equipamento', 'tipo_registro' => 'Métricas registradas'] as $k => $label) {
-            if ($k === 'tipo_registro' && $editando) {
-                echo '<p>Métricas: ' . $esc($opcoes[$k][$editando[$k . '_id']] ?? '—') . '</p>';
-            } else $select($k . '_id', $label, ['' => 'Selecione'] + $opcoes[$k], $editando[$k . '_id'] ?? null);
-        } ?>
+$texto('instrucoes', 'Instruções', $editando['instrucoes'] ?? null);
+foreach (['grupo_muscular' => 'Grupo muscular', 'equipamento' => 'Equipamento', 'tipo_registro' => 'Métricas registradas'] as $k => $label) {
+    if ($k === 'tipo_registro' && $editando) {
+        echo '<p>Métricas: ' . $esc($opcoes[$k][$editando[$k . '_id']] ?? '—') . '</p>';
+    } else {
+        $select($k . '_id', $label, ['' => 'Selecione'] + $opcoes[$k], $editando[$k . '_id'] ?? null);
+    }
+} ?>
         <button>Salvar exercício</button>
     </form>
 </section>

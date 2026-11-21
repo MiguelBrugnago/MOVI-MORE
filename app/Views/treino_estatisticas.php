@@ -18,24 +18,24 @@ use App\Services\RegistroTreino;
 
 require __DIR__ . '/treinos/comum.php';
 $grafico = static function (string $titulo, array $linhas, string $campo, callable $rotulo, callable $valor) use ($esc): void {
-    $linhas = array_values(array_filter($linhas, static fn($r) => isset($r[$campo])));
-?>
+    $linhas = array_values(array_filter($linhas, static fn ($r) => isset($r[$campo])));
+    ?>
     <details class="treino-card">
         <summary><?= $esc($titulo) ?></summary>
         <?php if (!$linhas): ?><p>Sem registros compatíveis.</p><?php else:
-                                                                $max = max(1, max(array_column($linhas, $campo)));
-                                                                foreach ($linhas as $r): $nome = $rotulo($r); ?>
+            $max = max(1, max(array_column($linhas, $campo)));
+            foreach ($linhas as $r): $nome = $rotulo($r); ?>
                 <div class="treino-barra treino-grafico">
                     <span><?= $esc($nome) ?></span>
                     <meter min="0" max="<?= $esc($max) ?>" value="<?= $esc(max(0, $r[$campo])) ?>" aria-label="<?= $esc($nome . ': ' . $titulo) ?>"></meter>
                     <strong><?= $esc($valor($r[$campo])) ?></strong>
                 </div>
         <?php endforeach;
-                                                            endif ?>
+        endif ?>
     </details>
 <?php
 };
-$data = static fn($r) => $dataHora($r['fim'], 'd/m/Y');
+$data = static fn ($r) => $dataHora($r['fim'], 'd/m/Y');
 ?>
 <section class="treino-area">
     <h1>Evolução no treino</h1>
@@ -61,20 +61,22 @@ $data = static fn($r) => $dataHora($r['fim'], 'd/m/Y');
         <article class="treino-card">
             <h2><?= $tituloGrafico ?></h2>
             <?php if (!$periodos[$k]): ?><p>Sem sessões concluídas.</p><?php else:
-                                                                        $max = max(array_column($periodos[$k], 'total'));
-                                                                        foreach (array_reverse($periodos[$k]) as $p):
-                                                                            $periodo = (string)$p['periodo'];
-                                                                            if ($k === 'semanas') $periodo = substr($periodo, 0, 4) . '-S' . substr($periodo, 4); ?>
+                $max = max(array_column($periodos[$k], 'total'));
+                foreach (array_reverse($periodos[$k]) as $p):
+                    $periodo = (string)$p['periodo'];
+                    if ($k === 'semanas') {
+                        $periodo = substr($periodo, 0, 4) . '-S' . substr($periodo, 4);
+                    } ?>
                     <div class="treino-barra"><span><?= $esc($periodo) ?></span><meter min="0" max="<?= (int)$max ?>" value="<?= (int)$p['total'] ?>" aria-label="Treinos em <?= $esc($periodo) ?>"></meter><strong><?= (int)$p['total'] ?></strong></div>
             <?php endforeach;
-                                                                    endif ?>
+            endif ?>
         </article>
     <?php endforeach ?>
     <?php
-    $grafico('Volume de trabalho por sessão', array_reverse($recentes), 'volume', $data, static fn($v) => number_format((float)$v, 2, ',', '.') . ' kg × rep.');
-    $grafico('Duração por sessão', array_reverse($recentes), 'duracao', $data, $duracao);
-    $grafico('Distribuição das séries concluídas', $distribuicao, 'total', static fn($r) => RegistroTreino::TIPOS[$r['tipo']] ?? $r['tipo'], static fn($v) => $v);
-    ?>
+    $grafico('Volume de trabalho por sessão', array_reverse($recentes), 'volume', $data, static fn ($v) => number_format((float)$v, 2, ',', '.') . ' kg × rep.');
+$grafico('Duração por sessão', array_reverse($recentes), 'duracao', $data, $duracao);
+$grafico('Distribuição das séries concluídas', $distribuicao, 'total', static fn ($r) => RegistroTreino::TIPOS[$r['tipo']] ?? $r['tipo'], static fn ($v) => $v);
+?>
     <article class="treino-card">
         <h2>Exercícios mais realizados e recordes</h2>
         <p>Recordes e volume de trabalho desconsideram aquecimento e séries preparatórias.</p>
@@ -92,8 +94,8 @@ $data = static fn($r) => $dataHora($r['fim'], 'd/m/Y');
             <h2>Melhor carga e contagem por sessão</h2>
             <?php if (!$evolucao): ?><p>Sem séries concluídas para este exercício.</p><?php else: ?>
                 <?php
-                                                                                        $grafico('Progressão de carga', array_reverse($evolucao), 'carga', $data, static fn($v) => number_format((float)$v, 2, ',', '.') . ' kg');
-                                                                                        $grafico('Evolução da contagem', array_reverse($evolucao), 'repeticoes', $data, static fn($v) => $v);
+                                                                                        $grafico('Progressão de carga', array_reverse($evolucao), 'carga', $data, static fn ($v) => number_format((float)$v, 2, ',', '.') . ' kg');
+                $grafico('Evolução da contagem', array_reverse($evolucao), 'repeticoes', $data, static fn ($v) => $v);
                 ?>
                 <table>
                     <thead>

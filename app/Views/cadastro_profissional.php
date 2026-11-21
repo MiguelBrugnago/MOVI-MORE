@@ -32,10 +32,10 @@ $erro = $erro ?? null;
     <form action="/profissional/cadastro" method="POST">
 
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(
-                                                            (string) $_SESSION['csrf_token'],
-                                                            ENT_QUOTES,
-                                                            'UTF-8'
-                                                        ) ?>">
+            (string) $_SESSION['csrf_token'],
+            ENT_QUOTES,
+            'UTF-8'
+        ) ?>">
 
         <label for="tipo">Tipo de profissional</label>
 

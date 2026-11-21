@@ -46,6 +46,7 @@ final class UsuarioRepository
 
         return (int) $this->pdo->lastInsertId();
     }
+
     public function buscarPorId(int $id): ?array
     {
         $stmt = $this->pdo->prepare(

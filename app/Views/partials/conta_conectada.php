@@ -26,10 +26,10 @@ $email = htmlspecialchars(
             type="hidden"
             name="csrf_token"
             value="<?= htmlspecialchars(
-                        (string) ($_SESSION['csrf_token'] ?? ''),
-                        ENT_QUOTES,
-                        'UTF-8'
-                    ) ?>">
+                (string) ($_SESSION['csrf_token'] ?? ''),
+                ENT_QUOTES,
+                'UTF-8'
+            ) ?>">
 
         <button type="submit">Sair</button>
     </form>

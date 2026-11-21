@@ -43,19 +43,22 @@ final class AuthController
 
         $confirmacao = $_POST['confirmar_senha'] ?? null;
 
-if (
-    !is_string($confirmacao) ||
-    $senha !== $confirmacao
-) {
-    http_response_code(422);
-    exit('As senhas não coincidem.');
-}
+        if (
+            !is_string($confirmacao) ||
+            $senha !== $confirmacao
+        ) {
+            http_response_code(422);
+            exit('As senhas não coincidem.');
+        }
 
         if (
+            !mb_check_encoding($nome, 'UTF-8') ||
             mb_strlen($nome, 'UTF-8') < 3 ||
             mb_strlen($nome, 'UTF-8') > 150 ||
             !filter_var($email, FILTER_VALIDATE_EMAIL) ||
             strlen($email) > 150 ||
+            str_contains($senha, "\0") ||
+            strlen($senha) > 72 ||
             mb_strlen($senha, 'UTF-8') < 8 ||
             mb_strlen($senha, 'UTF-8') > 32
         ) {
@@ -72,6 +75,9 @@ if (
 
         $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
+
+
+        // A restrição do banco também trata cadastros simultâneos com o mesmo e-mail.
         try {
             $repository->cadastrar($nome, $email, $senhaHash);
         } catch (PDOException $erro) {
@@ -120,6 +126,7 @@ if (
             !filter_var($email, FILTER_VALIDATE_EMAIL) ||
             strlen($email) > 150 ||
             $senha === '' ||
+            str_contains($senha, "\0") ||
             mb_strlen($senha, 'UTF-8') > 32
         ) {
             http_response_code(401);

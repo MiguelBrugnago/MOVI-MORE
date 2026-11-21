@@ -58,4 +58,3 @@ return [
         '/vinculos/encerrar' => [\App\Controllers\VinculoController::class, 'encerrar'],
     ]
 ];
-

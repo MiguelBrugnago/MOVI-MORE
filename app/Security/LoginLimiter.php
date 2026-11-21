@@ -21,6 +21,7 @@ final class LoginLimiter
     {
         $this->pdo = Database::conectar();
 
+        // As tentativas usam hashes do e-mail normalizado e do IP.
         $email = strtolower(trim($email));
 
         $this->identificador = hash('sha256', $email);

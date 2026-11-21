@@ -1,8 +1,14 @@
-<?php require __DIR__ . '/fisico_comum.php'; ?>
+<?php
+/**
+ * @var array|null $recente
+ * @var array $declaracoes
+ * @var array $perfil
+ */
+require __DIR__ . '/fisico_comum.php'; ?>
 <h1>Meu perfil físico</h1>
 <p>Seu ponto de partida para acompanhar a evolução. Os campos são opcionais.</p>
 <section class="catalogo" aria-label="Última avaliação">
-<?php foreach (['peso','gordura','massa_magra'] as $chave): ?>
+<?php foreach (['peso', 'gordura', 'massa_magra'] as $chave): ?>
 <article><h2><?= $esc($metricas[$chave][0]) ?></h2><strong><?= $numero($recente['medidas'][$chave] ?? null) ?> <?= isset($recente['medidas'][$chave]) ? $esc($metricas[$chave][1]) : '' ?></strong>
 <p><?= $recente ? 'Avaliação de ' . $esc($recente['avaliado_em']) : 'Nenhuma avaliação registrada.' ?></p></article>
 <?php endforeach; ?>
@@ -16,7 +22,7 @@
 <label>Altura (cm)<input type="number" name="altura_cm" min="30" max="280" step="0.01" value="<?= $esc($perfil['altura_cm'] ?? '') ?>"></label>
 </div></fieldset>
 <fieldset><legend>Treinamento</legend><div class="treino-campos">
-<?php foreach (['objetivo'=>['Objetivo principal',\App\Services\PerfilFisicoService::OBJETIVOS], 'experiencia'=>['Experiência',\App\Services\PerfilFisicoService::EXPERIENCIAS]] as $chave=>[$rotulo,$opcoes]): ?>
+<?php foreach (['objetivo' => ['Objetivo principal', \App\Services\PerfilFisicoService::OBJETIVOS], 'experiencia' => ['Experiência', \App\Services\PerfilFisicoService::EXPERIENCIAS]] as $chave => [$rotulo,$opcoes]): ?>
 <label><?= $rotulo ?><select name="<?= $chave ?>"><option value="">Não informado</option><?php foreach ($opcoes as $opcao): ?><option <?= ($perfil[$chave] ?? '') === $opcao ? 'selected' : '' ?>><?= $esc($opcao) ?></option><?php endforeach; ?></select></label>
 <?php endforeach; ?>
 <label>Tempo de treinamento (meses)<input type="number" name="tempo_treinamento_meses" min="0" max="1200" value="<?= $esc($perfil['tempo_treinamento_meses'] ?? '') ?>"></label>
@@ -29,7 +35,7 @@
 </form>
 <h2>Condições, lesões e restrições</h2>
 <p>Informe voluntariamente apenas o que considera relevante para treinar. Você controla o acesso em Compartilhamento.</p>
-<?php foreach (['condicao'=>'condicoes','restricao'=>'restricoes'] as $tipo=>$grupo): ?>
+<?php foreach (['condicao' => 'condicoes', 'restricao' => 'restricoes'] as $tipo => $grupo): ?>
 <article><h3><?= $tipo === 'condicao' ? 'Condições e lesões informadas' : 'Restrições de movimento' ?></h3>
 <?php if (!$declaracoes[$grupo]): ?><p>Nenhuma informação registrada.</p><?php endif; ?>
 <?php foreach ($declaracoes[$grupo] as $d): ?>

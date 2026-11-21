@@ -17,18 +17,24 @@ final class AnaliseTreinoController
         header('Cache-Control: no-store, private');
         try {
             $aluno = isset($_GET['aluno']) ? RegistroTreino::numero($_GET['aluno'], 1, 2147483647) : null;
-            if (isset($_GET['aluno']) && $aluno === null) throw new \InvalidArgumentException('Aluno inválido.');
+            if (isset($_GET['aluno']) && $aluno === null) {
+                throw new \InvalidArgumentException('Aluno inválido.');
+            }
             $u = $aluno ?? (int)$usuario['id'];
             $profissional = $u !== (int)$usuario['id'];
             if ($profissional) {
                 $vinculos = new VinculoProfissionalRepository();
-                if (!$vinculos->autorizado((int)$usuario['id'], $u, 'treinos')) throw new \DomainException('Acesso aos treinos não autorizado.', 403);
+                if (!$vinculos->autorizado((int)$usuario['id'], $u, 'treinos')) {
+                    throw new \DomainException('Acesso aos treinos não autorizado.', 403);
+                }
                 $vinculos->registrarLeitura((int)$usuario['id'], $u, 'analise_muscular');
             }
             $p = Analise::periodo($_GET);
             $exercicio = RegistroTreino::numero($_GET['exercicio'] ?? null, 1, 2147483647);
             $metrica = $_GET['metrica'] ?? 'equivalentes';
-            if (!in_array($metrica, ['equivalentes', 'series', 'diretas', 'indiretas'], true)) throw new \InvalidArgumentException('Métrica inválida.');
+            if (!in_array($metrica, ['equivalentes', 'series', 'diretas', 'indiretas'], true)) {
+                throw new \InvalidArgumentException('Métrica inválida.');
+            }
             $repo = new AnaliseTreinoRepository(new TreinoRepository(Database::conectar()));
             $catalogo = $repo->catalogo();
             $relacoes = $repo->relacoes($u, $p['anterior_inicio'], $p['fim']);
@@ -42,16 +48,23 @@ final class AnaliseTreinoController
                 $p['dias']
             );
             $opcoes = [];
-            foreach ($execucoes as $x) $opcoes[$x['exercicio_id']] = $x['nome'];
+            foreach ($execucoes as $x) {
+                $opcoes[$x['exercicio_id']] = $x['nome'];
+            }
             $series = $exercicio ? $repo->seriesExercicio($u, $exercicio, $p['inicio'], $p['fim']) : [];
             $maisSeries = count($series) > 500;
-            if ($maisSeries) array_pop($series);
+            if ($maisSeries) {
+                array_pop($series);
+            }
             $melhores = $exercicio ? $repo->melhoresPorRepeticoes($u, $exercicio, $p['inicio'], $p['fim']) : [];
             $recordes = [];
             $progressao = [];
+            // Cada lado começa com seu melhor resultado anterior ao período. As sessões chegam em ordem de conclusão.
             $maximos = $exercicio ? array_column($repo->recordeAnterior($u, $exercicio, $p['inicio']), 'carga', 'lado') : [];
             foreach ($execucoes as $x) {
-                if ((int)$x['exercicio_id'] !== $exercicio) continue;
+                if ((int)$x['exercicio_id'] !== $exercicio) {
+                    continue;
+                }
                 $progressao[] = $x;
                 if ($x['carga'] !== null && (!isset($maximos[$x['lado']]) || $x['carga'] > $maximos[$x['lado']])) {
                     $recordes[] = $x;
