@@ -1,8 +1,10 @@
+<p align="center">
+  <img src="./assets/movi-plus-banner-original.png" alt="MOVI+ — banner institucional" width="100%">
+</p>
+
 # MOVI+
 
-<img src="assets/movi-plus-logo-and-slogan.png" alt="MOVI+ — Movimente-se. Cuide-se. Evolua." width="720">
-
-Plataforma acadêmica de academia comunitária voltada à atividade física, à acessibilidade e à conexão entre praticantes e profissionais. O MOVI+ organiza o cadastro de usuários, a biblioteca de exercícios e o planejamento e registro de treinos em uma aplicação web reproduzível com Docker e MySQL.
+O MOVI+ é uma plataforma acadêmica que conecta praticantes e profissionais de uma academia comunitária, com foco em atividade física e acessibilidade. A aplicação reúne o cadastro de usuários, a biblioteca de exercícios, o planejamento de rotinas e o registro de treinos.
 
 Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UNOESC, em 2026.
 
@@ -21,6 +23,8 @@ Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UN
 - [Solução de problemas](#solução-de-problemas)
 - [Equipe](#equipe)
 - [Licença](#licença)
+- [Perfil físico e acompanhamento profissional](#perfil-físico-e-acompanhamento-profissional)
+- [Mapa muscular e análise avançada de treinamento](#mapa-muscular-e-análise-avançada-de-treinamento)
 
 ## Funcionalidades
 
@@ -34,10 +38,10 @@ Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UN
 
 | Camada | Tecnologia | Uso |
 |---|---|---|
-| Aplicação | PHP 8.3, Apache, Composer 2 | Aplicação sem framework; Composer fornece autoload PSR-4 para `App\\`. |
+| Aplicação | PHP 8.3, Apache, Composer 2 | Aplicação sem framework; Composer fornece autoload PSR-4 para o namespace `App`. |
 | Persistência | MySQL 8.4, PDO | Banco relacional e consultas parametrizadas. |
-| Interface | HTML, CSS, JavaScript | Views PHP, estilos e interação do catálogo e treinos. |
-| Infraestrutura | Docker, Docker Compose v2 | Serviços `app` e `db`; versões de ferramentas instaladas nos containers. |
+| Interface | HTML, CSS, JavaScript | Views PHP, estilos e interações do catálogo e dos treinos. |
+| Infraestrutura | Docker, Docker Compose v2 | Execução dos serviços `app` e `db` em contêineres. |
 
 `public/index.php` direciona método e caminho conforme [routes/web.php](routes/web.php). Controllers recebem requisições, services concentram regras, repositories consultam o banco e as views geram a interface. O Apache publica somente `public/`.
 
@@ -48,13 +52,24 @@ MOVI+/
 ├── .docker/php/       # Dockerfile e configurações PHP/Apache
 ├── app/
 │   ├── Config/        # Conexão PDO
+│   ├── Contracts/     # Contrato das métricas de treino
 │   ├── Controllers/   # Fluxo HTTP
 │   ├── Models/        # Entidades
 │   ├── Repositories/  # Consultas e persistência
 │   ├── Security/      # Sessão, autenticação, CSRF e limite de login
 │   ├── Services/      # Regras e operações de treino
+│   ├── Support/       # Validação de entradas
 │   └── Views/         # Templates PHP
-├── assets/            # Logotipo e imagens do projeto
+├── assets/            # Identidade visual do projeto
+│   ├── alternatives/  # Banner e prévia social alternativos
+│   ├── variants/      # Variações de tema, orientação e tamanho
+│   ├── favicon.png
+│   ├── movi-plus-app-icon.png
+│   ├── movi-plus-banner-original.png
+│   ├── movi-plus-logo-and-slogan.png
+│   ├── movi-plus-logo-horizontal.png
+│   ├── movi-plus-logo-mono.png
+│   └── social-preview-1280x640.jpg
 ├── database/
 │   ├── migrations/    # 001–017, evolução do schema
 │   ├── scripts/       # Migrador, importação e validação do catálogo
@@ -65,7 +80,7 @@ MOVI+/
 │   └── index.php      # Front controller
 ├── routes/            # Mapa de rotas
 ├── storage/           # Diretórios locais de uploads, sessões e logs
-├── tests/             # Testes permanentes HTTP e de integração
+├── tests/             # Testes unitários, de integração e HTTP
 ├── compose.yml        # Serviços de desenvolvimento
 ├── composer.json      # Autoload da aplicação
 └── README.md          # Documentação operacional única
@@ -76,7 +91,7 @@ MOVI+/
 ### Pré-requisitos
 
 - Git.
-- Docker Desktop com backend WSL 2 no Windows, ou Docker Engine e plugin Docker Compose no Linux/macOS.
+- Docker Desktop no Windows (com WSL 2) ou no macOS. No Linux, Docker Engine com o plugin Docker Compose.
 - Contêineres Linux habilitados. No Windows, confirme WSL 2 com `wsl --status` e aguarde o Docker Desktop iniciar.
 - Compose v2 com suporte a `up --wait`.
 
@@ -107,7 +122,7 @@ docker compose ps
 
 Abra [http://localhost:8080](http://localhost:8080). Crie uma conta para verificar cadastro e login, pesquise um exercício e confira seus detalhes. Em **Rotinas e treinos**, crie uma rotina, inclua um exercício e configure uma série; inicie e finalize uma sessão e confira o Histórico e Evolução.
 
-O MySQL é criado com o schema e o usuário definidos no primeiro boot de um volume vazio. Apache não aplica migrations nem seeds automaticamente. O volume `movi_mysql_data` persiste mesmo quando containers são removidos.
+Na primeira inicialização com um volume vazio, o MySQL cria o banco e o usuário definidos no arquivo `.env`. Apache não aplica migrations nem seeds automaticamente. O volume `movi_mysql_data` persiste mesmo quando containers são removidos.
 
 ## Desenvolvimento local
 
@@ -213,33 +228,25 @@ Restaure somente em schema de recuperação numa instância MySQL separada e com
 
 O catálogo combina dados oficiais versionados nas 37 seeds com registros personalizados ligados a uma conta. Para popular uma instalação limpa, conclua as migrations e execute `database/scripts/popular_exercicios.php` uma vez. Para conferir exercícios e vínculos, rode `validar_catalogo.sql`, examine as contagens por status e compare `assinatura_catalogo.sql` com uma instalação de referência.
 
-Se a importação falhar, a transação é revertida; verifique a mensagem do primeiro SQL inválido, as migrations aplicadas e a conectividade PDO antes de tentar novamente. Não remova registros isolados nem recrie IDs manualmente para corrigir falhas: seeds posteriores resolvem vínculos por código estável. Após qualquer restauração, confira relações de exercícios, músculos, equipamentos, ambientes, aliases e mídias. Dados personalizados não fazem parte do catálogo versionado. A contagem publicada anteriormente foi 629 (623 ativos e 6 inativos); o estado deve ser confirmado por consulta na instalação atual.
+Se a importação falhar, a transação é revertida; verifique a mensagem do primeiro SQL inválido, as migrations aplicadas e a conectividade PDO antes de tentar novamente. Não remova registros isolados nem recrie IDs manualmente para corrigir falhas: seeds posteriores resolvem vínculos por código estável. Após qualquer restauração, confira relações de exercícios, músculos, equipamentos, ambientes, aliases e mídias. Dados personalizados não fazem parte do catálogo versionado. Consulte as contagens da instalação com a consulta SQL da seção de seeds.
 
 ## Testes e qualidade
 
-Os testes permanentes são `tests/treinos_integracao.php` e `tests/treinos_http.php`. Eles usam dados sintéticos e devem apontar a um MySQL descartável, nunca ao banco principal. A suíte HTTP cobre cadastro, login, cadastro profissional, vínculos, alunos, logout e limitação de tentativas, além das rotas de exercícios e treinos. A integração cobre persistência, regras e métricas de treino.
+O executor `tests/executar.php` reúne os testes de métricas, perfil físico e análise de treinos. Para executar apenas as suítes unitárias, use `docker compose exec app php tests/executar.php` com a aplicação em execução.
 
-Crie uma cópia isolada do repositório, copie `.env.example` para `.env`, use senhas distintas e configure `DB_NAME=movi_treinos_teste`. Para não publicar a porta de banco do ambiente de teste, nessa cópia crie `compose.override.yml`:
-
-```yaml
-services:
-  db:
-    ports: !reset []
-```
-
-Use um nome próprio de projeto Compose e execute a instalação limpa, seguida dos testes:
+Para incluir as suítes de integração e HTTP, use o ambiente definido em [tests/compose.yml](tests/compose.yml). Ele inicia um MySQL exclusivo com o banco `movi_treinos_teste`, armazena os dados em memória e monta o projeto para leitura. Instale antes as dependências com o comando `composer install` da seção de instalação limpa, para que o contêiner encontre `vendor/autoload.php`.
 
 ```sh
-docker compose -p movi-treinos-verificacao up -d --wait db
-docker compose -p movi-treinos-verificacao run --build --rm --no-deps app composer install --optimize-autoloader --no-interaction
-docker compose -p movi-treinos-verificacao run --rm --no-deps app php database/scripts/migrar.php
-docker compose -p movi-treinos-verificacao run --rm --no-deps app php database/scripts/popular_exercicios.php
-docker compose -p movi-treinos-verificacao run --rm --no-deps app php tests/treinos_integracao.php
-docker compose -p movi-treinos-verificacao run --rm --no-deps app sh -c 'php -S 127.0.0.1:8088 -t public public/index.php >/tmp/treinos-http.log 2>&1 & sleep 1; php tests/treinos_http.php'
-docker compose -p movi-treinos-verificacao stop
+docker compose -p movi-treinos-verificacao -f tests/compose.yml up -d --build app
+docker compose -p movi-treinos-verificacao -f tests/compose.yml exec app php database/scripts/migrar.php
+docker compose -p movi-treinos-verificacao -f tests/compose.yml exec app php database/scripts/popular_exercicios.php
+docker compose -p movi-treinos-verificacao -f tests/compose.yml exec app php tests/executar.php --integracao
+docker compose -p movi-treinos-verificacao -f tests/compose.yml down
 ```
 
-Para repetir do zero, use outra cópia com outro nome Compose; `stop` mantém os dados de teste. Verifique também sintaxe PHP (`find app public routes database tests -name '*.php' -exec php -l {} \\;` em shell Unix), valide `composer.json` e `composer.lock`, e confira os arquivos JavaScript no navegador ou com o runtime disponível. A aplicação precisa de `pdo_mysql`, `mbstring` e OPcache, incluídos na imagem PHP. Não rode testes contra o schema principal.
+O executor usa o Apache do contêiner para as suítes HTTP de perfil e análise e inicia um servidor PHP na porta 8088 para a suíte de treinos. Ao encerrar o ambiente de teste, o banco em memória é descartado.
+
+Para verificar a sintaxe do PHP em um shell Unix, execute `find app public routes database tests -name '*.php' -exec php -l {} +`. Para validar a configuração do Composer e os requisitos da plataforma, use os comandos da seção de desenvolvimento local.
 
 ## Variáveis de ambiente
 
@@ -335,7 +342,7 @@ php tests/perfil_http.php
 php tests/treinos_integracao.php
 ```
 
-`perfil_unitario.php` não acessa o banco. `perfil_http.php` requer a aplicação servida por Apache em `http://127.0.0.1:80` no mesmo container; cria exclusivamente contas sintéticas e se recusa a rodar fora do schema de testes. Cobre CRUD, manutenção do histórico, cálculos, datas, entradas malformadas, CSRF, XSS, IDs de outras contas, leitura profissional, permissões independentes, revogação e renovação de vínculo. Para a regressão HTTP de treinos, mantenha o servidor de teste em 8088 conforme as instruções anteriores.
+`perfil_unitario.php` não acessa o banco. `perfil_http.php` requer a aplicação servida por Apache em `http://127.0.0.1:80` no mesmo container; cria exclusivamente contas sintéticas e se recusa a rodar fora do schema de testes. Cobre CRUD, manutenção do histórico, cálculos, datas, entradas malformadas, CSRF, XSS, IDs de outras contas, leitura profissional, permissões independentes, revogação e renovação de vínculo. Para incluir a regressão HTTP de treinos, use o executor com `--integracao`, conforme a seção de testes.
 
 A verificação desta implementação usou um projeto Compose separado (`movi-perfil-verificacao`), MySQL 8.4 próprio e aplicação na porta local 8089, sem alterar os containers/banco preexistentes. As migrations 001–017, seeds, testes de perfil e regressões de treinos foram executados nesse ambiente. O teste de cadastro da suíte anterior foi atualizado para enviar `confirmar_senha`, campo já obrigatório no controller.
 
@@ -345,7 +352,7 @@ A verificação desta implementação usou um projeto Compose separado (`movi-pe
 
 Implementados mapa frontal/posterior, detalhes por músculo, séries diretas/indiretas/equivalentes, volume externo separado por exercício e lado, distribuição por grupo, frequência semanal, progressão de carga, melhores cargas por quantidade exata de repetições, evolução de recordes e comparação com o período anterior. Os gráficos usam `meter` nativo com rótulos e valores; os dados e detalhes permanecem consultáveis sem JavaScript. JavaScript abre o detalhe ao selecionar o SVG, inclusive por teclado. Não há dependência externa de gráficos ou framework.
 
-A auditoria encontrou as estruturas necessárias nas migrations 001–017: `musculo` (código, `svg_id` e hierarquia), `exercicio_musculo` (papel e `peso_estimado`), `grupo_muscular`, `tipo_registro`, `treino`, `treino_exercicio` e `serie`. Não há entidades de treino/exercício em Models; a persistência existente usa repositories e arrays. As estatísticas anteriores e seus fluxos foram preservados. Autenticação, consentimento `treinos`, vínculo ativo, conta/profissional ativos e auditoria de leitura reutilizam as classes existentes.
+A auditoria encontrou as estruturas necessárias nas migrations 001–017: `musculo` (código, `svg_id` e hierarquia), `exercicio_musculo` (papel e `peso_estimado`), `grupo_muscular`, `tipo_registro`, `treino`, `treino_exercicio` e `serie`. A persistência da análise usa repositórios. Os modelos de treino e exercício ficam em `app/Models/`. As estatísticas anteriores e seus fluxos foram preservados. Autenticação, consentimento `treinos`, vínculo ativo, conta/profissional ativos e auditoria de leitura reutilizam as classes existentes.
 
 As seeds não documentam uma semântica numérica para `peso_estimado`; as relações consultadas no banco legado usam NULL. Não foi reinterpretado esse campo nem alterada a classificação do catálogo. Exercícios personalizados sem associação muscular aparecem no diagnóstico de qualidade de dados e nos totais, sem receber músculos inventados.
 
@@ -430,5 +437,3 @@ Medições locais (não são garantia de carga de produção): nova integração
 A implementação foi validada no esquema atual, mas o banco de desenvolvimento principal precisa de reconciliação antes do uso local completo. Não execute as migrations históricas indiscriminadamente nesse legado: o migrador recusa schema preenchido sem histórico e existem mudanças históricas de catálogo. Faça backup restaurável, ensaie a atualização em cópia, compare estrutura e catálogo e resolva o histórico conforme a seção de recuperação. Nenhuma adoção fictícia de migrations foi feita nesta etapa.
 
 Limitações intencionais: estimativa por heurística; ausência de semântica confiável para `peso_estimado`; SVG esquemático; relações musculares sem lado; sem recomendação automática de volume ou 1RM. Nutrição e gamificação não foram implementadas. Próximos passos recomendados: reconciliar o banco legado, revisar fatores com profissionais e documentar sua fonte, aprimorar o desenho anatômico e testar toque/leitores de tela, além de medir desempenho com históricos densos antes de considerar cache.
-
-O trabalho permaneceu na branch `main` já selecionada. Não houve commit, push, merge, rebase, troca/criação de branch ou alteração de autoria/histórico Git. Os containers e o volume originais foram preservados.
