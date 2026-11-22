@@ -1,4 +1,5 @@
 <?php
+// Este template independente cria o token do formulário de saída. A rota atual de painel usa os templates de aluno e profissional.
 
 declare(strict_types=1);
 

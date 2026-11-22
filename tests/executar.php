@@ -1,4 +1,5 @@
 <?php
+// Executa cada suíte em um processo PHP separado. A opção de integração exige a configuração e o nome real do banco descartável.
 
 declare(strict_types=1);
 
@@ -38,8 +39,9 @@ if ($integracao) {
         proc_close($servidor);
         throw new RuntimeException('A porta 8088 está indisponível. Consulte ' . $log);
     }
-    array_push($testes, 'seed_registros_especiais', 'poo_integracao', 'treinos_integracao', 'analise_integracao', 'treinos_http', 'perfil_http', 'analise_http');
+    array_push($testes, 'seed_registros_especiais', 'poo_integracao', 'treinos_integracao', 'propostas_integracao', 'analise_integracao', 'treinos_http', 'perfil_http', 'analise_http');
 }
+// Cada código de saída diferente de zero conta como uma suíte com falha; as demais ainda são executadas.
 $falhas = 0;
 try {
     foreach ($testes as $teste) {

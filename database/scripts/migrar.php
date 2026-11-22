@@ -1,4 +1,5 @@
 <?php
+// Migrador de linha de comando. O histórico associa cada arquivo SQL à posição, ao checksum e à situação da aplicação no banco configurado.
 
 declare(strict_types=1);
 
@@ -41,6 +42,7 @@ try {
         throw new RuntimeException('Nenhum banco selecionado.');
     }
     $lock = hash('sha256', 'movi:migrar:' . $banco);
+    // O bloqueio é específico deste banco. Uma segunda execução precisa esperar uma nova tentativa para aplicar migrations.
     $s = $pdo->prepare('SELECT GET_LOCK(?, 0)');
     $s->execute([$lock]);
     $bloqueado = (int)$s->fetchColumn() === 1;
@@ -79,6 +81,7 @@ try {
         throw new RuntimeException('Histórico vazio em banco com objetos. Verifique possível execução incompleta.');
     }
 
+    // Um legado sem hashes requer conferência explícita. Um checksum diferente indica que o arquivo local diverge do registrado.
     $semHash = [];
     foreach ($historico as $nome => $linha) {
         if (($linha['estado'] ?? 'aplicada') !== 'aplicada') {

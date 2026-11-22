@@ -1,10 +1,18 @@
 <?php
+// Usa períodos e séries conhecidos para conferir fatores musculares, frequência, percentuais e ausência de dados comparáveis.
 
 declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Services\AnaliseTreinoService as A;
 use App\Services\MapaMuscular;
 
+/**
+ * Interrompe a suíte ao encontrar uma condição falsa, identificando o cenário que falhou.
+ *
+ * @param bool $ok Resultado da afirmação testada.
+ * @param string $nome Nome do cenário no relatório.
+ * @throws RuntimeException Se a expectativa da suíte não for atendida.
+ */
 function conferirAnalise(bool $ok, string $nome): void
 {
     if (!$ok) {

@@ -8,10 +8,16 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 
+/**
+ * Transforma os dados de perfil e avaliação recebidos pelo controller em campos que o
+ * PerfilFisicoRepository pode gravar. Também estima composição corporal e resolve períodos de
+ * consulta.
+ */
 final class PerfilFisicoService
 {
     public const OBJETIVOS = ['Hipertrofia', 'Força', 'Emagrecimento', 'Resistência muscular', 'Condicionamento físico', 'Manutenção', 'Recomposição corporal'];
     public const EXPERIENCIAS = ['Iniciante', 'Intermediário', 'Avançado'];
+    // Cada entrada define rótulo, unidade e limites aceitos pelo formulário e pela persistência das medidas.
     public const MEDIDAS = [
         'peso' => ['Peso corporal', 'kg', 1, 700],
         'gordura' => ['Gordura corporal', '%', 0, 100],
@@ -25,11 +31,25 @@ final class PerfilFisicoService
         'panturrilha' => ['Panturrilha', 'cm', 1, 300],
     ];
 
+    /**
+     * Obtém o dia civil em São Paulo no formato usado nos formulários de data.
+     *
+     * @return string
+     */
     public static function hoje(): string
     {
         return (new DateTimeImmutable('now', new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d');
     }
 
+    /**
+     * Valida uma data civil existente entre 1900 e hoje em formato AAAA-MM-DD. Um campo opcional vazio
+     * resulta em null.
+     *
+     * @param mixed $valor Entrada a validar ou converter.
+     * @param bool $obrigatoria Indica se é permitido deixar a data em branco.
+     * @return ?string
+     * @throws InvalidArgumentException Informe uma data válida entre 1900 e hoje.
+     */
     public static function data(mixed $valor, bool $obrigatoria = false): ?string
     {
         if (($valor === null || $valor === '') && !$obrigatoria) {
@@ -42,6 +62,13 @@ final class PerfilFisicoService
         return $valor;
     }
 
+    /**
+     * Normaliza os textos, as opções de objetivo e experiência e as medidas opcionais do perfil.
+     *
+     * @param array $p Campos de entrada identificados pelo nome no formulário ou na URL.
+     * @return array<string, int|float|string|null>
+     * @throws InvalidArgumentException Para opções desconhecidas, datas inválidas ou campos fora dos limites.
+     */
     public static function perfil(array $p): array
     {
         $dados = ['data_nascimento' => self::data($p['data_nascimento'] ?? null)];
@@ -61,6 +88,14 @@ final class PerfilFisicoService
         return $dados;
     }
 
+    /**
+     * Confere a data e cada medida na unidade prevista. Exige ao menos uma medição e devolve as medidas
+     * agrupadas pelo tipo.
+     *
+     * @param array $p Campos de entrada identificados pelo nome no formulário ou na URL.
+     * @return array{avaliado_em:string,observacao:?string,medidas:array<string,int|float|null>}
+     * @throws InvalidArgumentException Para data inválida, medidas fora da faixa ou ausência de medições.
+     */
     public static function avaliacao(array $p): array
     {
         $dados = ['avaliado_em' => self::data($p['avaliado_em'] ?? null, true),
@@ -72,12 +107,20 @@ final class PerfilFisicoService
                 throw new InvalidArgumentException("$nome: informe um valor entre $min e $max $unidade (até três casas decimais).");
             }
         }
+        // O predicado mantém zero como medida informada. Só valores nulos contam como ausência.
         if (!array_filter($dados['medidas'], static fn ($v) => $v !== null)) {
             throw new InvalidArgumentException('Preencha pelo menos uma medida.');
         }
         return $dados;
     }
 
+    /**
+     * Estima em kg a massa gorda pelo peso vezes o percentual de gordura dividido por 100. A diferença
+     * para o peso é a massa magra.
+     *
+     * @param array $medidas Medições por tipo, com peso em kg e gordura em porcentagem.
+     * @return array{massa_gorda:?float,massa_magra:?float}
+     */
     public static function composicao(array $medidas): array
     {
         if (!isset($medidas['peso'], $medidas['gordura'])) {
@@ -88,8 +131,17 @@ final class PerfilFisicoService
         return ['massa_gorda' => round($gorda, 3), 'massa_magra' => round((float)$medidas['peso'] - $gorda, 3)];
     }
 
+    /**
+     * Converte a opção de histórico na data inicial inclusiva. A opção todos retorna null para dispensar
+     * o filtro.
+     *
+     * @param mixed $periodo Opção de intervalo escolhida no formulário.
+     * @return ?string
+     * @throws InvalidArgumentException Período inválido.
+     */
     public static function inicioPeriodo(mixed $periodo): ?string
     {
+        // A opção de 30 dias recua 29 porque hoje também participa do intervalo; as opções em meses usam o calendário.
         $intervalos = ['30' => '-29 days', '90' => '-89 days', '6m' => '-6 months', '1a' => '-1 year', 'todos' => null];
         if (!is_string($periodo) || !array_key_exists($periodo, $intervalos)) {
             throw new InvalidArgumentException('Período inválido.');

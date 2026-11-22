@@ -1,4 +1,6 @@
-<?php require __DIR__ . '/fisico_comum.php';
+<?php // Avaliações vinculadas a um profissional são exibidas para leitura. Os limites e as unidades vêm do serviço de perfil físico.
+/** @var array $avaliacao Valores da avaliação, da nova ficha ou do formulário reapresentado após erro. */
+require __DIR__ . '/fisico_comum.php';
 $editavel = empty($avaliacao['profissional_id']); ?>
 <h1><?= empty($avaliacao['id']) ? 'Nova avaliação' : 'Detalhes da avaliação' ?></h1>
 <p>Registre as medidas disponíveis. Ao criar uma avaliação, o histórico anterior é preservado.</p>

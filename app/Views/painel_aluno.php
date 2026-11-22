@@ -1,4 +1,5 @@
 <?php
+// O perfil profissional ativo habilita a troca de painel; para as demais contas aparece a opção de cadastro.
 
 declare(strict_types=1);
 
@@ -17,6 +18,7 @@ $ehProfissional = $ehProfissional ?? false;
 <nav>
     <ul>
         <li><a href="/rotinas">Meus treinos</a></li>
+        <li><a href="/propostas">Propostas de treino recebidas</a></li>
         <li><a href="/treinos/analise">Análise e mapa muscular</a></li>
         <li><a href="/perfil/evolucao">Minha evolução corporal</a></li>
         <li><a href="/perfil/avaliacoes">Minhas avaliações</a></li>

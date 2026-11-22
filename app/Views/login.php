@@ -1,4 +1,5 @@
 <?php
+// Gera o token do formulário na sessão e libera o bloqueio antes de entregar o HTML de login.
 
 declare(strict_types=1);
 

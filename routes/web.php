@@ -1,4 +1,5 @@
 <?php
+// O ponto de entrada usa o par método HTTP e caminho para escolher o controller. Rotas de consulta e de gravação possuem entradas independentes.
 
 declare(strict_types=1);
 
@@ -9,9 +10,13 @@ use App\Controllers\LogoutController;
 use App\Controllers\ProfissionalController;
 use App\Controllers\AlunoController;
 use App\Controllers\ExercicioController;
+use App\Controllers\RotinaController;
 
 return [
     'GET' => [
+        '/profissional/modelos' => [RotinaController::class, 'modelos'],
+        '/profissional/propostas' => [RotinaController::class, 'enviadas'],
+        '/propostas' => [RotinaController::class, 'propostas'],
         '/treinos/analise' => [\App\Controllers\AnaliseTreinoController::class, 'index'],
         '/treinos/mapa-muscular' => [\App\Controllers\AnaliseTreinoController::class, 'index'],
         '/treinos/progressao' => [\App\Controllers\AnaliseTreinoController::class, 'index'],
@@ -30,25 +35,28 @@ return [
         '/alunos/visualizar' => [AlunoController::class, 'visualizar'],
         '/exercicios' => [ExercicioController::class, 'index'],
         '/exercicios/ver' => [ExercicioController::class, 'visualizar'],
-        '/rotinas' => [\App\Controllers\RotinaController::class, 'index'],
-        '/treinos' => [\App\Controllers\RotinaController::class, 'index'],
-        '/treinos/personalizados' => [\App\Controllers\RotinaController::class, 'personalizados'],
-        '/treinos/exercicios' => [\App\Controllers\RotinaController::class, 'seletor'],
-        '/treinos/historico' => [\App\Controllers\RotinaController::class, 'historico'],
-        '/treinos/estatisticas' => [\App\Controllers\RotinaController::class, 'estatisticas'],
-        '/treinos/ver' => [\App\Controllers\RotinaController::class, 'treino'],
+        '/rotinas' => [RotinaController::class, 'index'],
+        '/treinos' => [RotinaController::class, 'index'],
+        '/treinos/personalizados' => [RotinaController::class, 'personalizados'],
+        '/treinos/exercicios' => [RotinaController::class, 'seletor'],
+        '/treinos/historico' => [RotinaController::class, 'historico'],
+        '/treinos/estatisticas' => [RotinaController::class, 'estatisticas'],
+        '/treinos/ver' => [RotinaController::class, 'treino'],
     ],
     'POST' => [
+        '/profissional/modelos/salvar' => [RotinaController::class, 'salvarModelo'],
+        '/profissional/propostas/enviar' => [RotinaController::class, 'enviarProposta'],
+        '/propostas/responder' => [RotinaController::class, 'responderProposta'],
         '/perfil' => [\App\Controllers\PerfilController::class, 'salvar'],
         '/perfil/avaliacoes' => [\App\Controllers\PerfilController::class, 'salvar'],
-        '/rotinas' => [\App\Controllers\RotinaController::class, 'criar'],
-        '/rotinas/salvar' => [\App\Controllers\RotinaController::class, 'salvar'],
-        '/treinos/personalizados' => [\App\Controllers\RotinaController::class, 'salvarPersonalizado'],
-        '/treinos/salvar' => [\App\Controllers\RotinaController::class, 'sessao'],
-        '/rotinas/adicionar' => [\App\Controllers\RotinaController::class, 'adicionar'],
-        '/treinos/iniciar' => [\App\Controllers\RotinaController::class, 'iniciar'],
-        '/treinos/serie' => [\App\Controllers\RotinaController::class, 'serie'],
-        '/treinos/finalizar' => [\App\Controllers\RotinaController::class, 'finalizar'],
+        '/rotinas' => [RotinaController::class, 'criar'],
+        '/rotinas/salvar' => [RotinaController::class, 'salvar'],
+        '/treinos/personalizados' => [RotinaController::class, 'salvarPersonalizado'],
+        '/treinos/salvar' => [RotinaController::class, 'sessao'],
+        '/rotinas/adicionar' => [RotinaController::class, 'adicionar'],
+        '/treinos/iniciar' => [RotinaController::class, 'iniciar'],
+        '/treinos/serie' => [RotinaController::class, 'serie'],
+        '/treinos/finalizar' => [RotinaController::class, 'finalizar'],
         '/cadastro' => [AuthController::class, 'cadastrar'],
         '/login' => [AuthController::class, 'login'],
         '/logout' => [LogoutController::class, 'sair'],

@@ -9,8 +9,18 @@ use App\Security\Auth;
 use App\Security\Csrf;
 use PDOException;
 
+/**
+ * Cuida da criação do perfil profissional de uma conta autenticada. O mesmo endpoint mostra o
+ * formulário e envia seus dados ao ProfissionalRepository.
+ */
 final class ProfissionalController
 {
+    /**
+     * Verifica se o perfil já existe. No POST valida CSRF e os campos, grava o cadastro e redireciona ao
+     * painel profissional se houver sucesso.
+     *
+     * Rotas GET /profissional/cadastro, POST /profissional/cadastro.
+     */
     public function cadastro(): void
     {
         Auth::usuario();

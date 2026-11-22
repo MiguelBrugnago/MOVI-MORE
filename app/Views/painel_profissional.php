@@ -1,4 +1,5 @@
 <?php
+// O controller verifica o perfil ativo antes de carregar esta navegação para alunos, modelos e propostas.
 
 declare(strict_types=1);
 
@@ -16,7 +17,8 @@ declare(strict_types=1);
     <ul>
         <li><a href="/alunos">Meus alunos</a></li>
         <li><a href="/vinculos?modo=profissional">Solicitações de vínculo</a></li>
-        <li>Gerenciar treinos</li>
+        <li><a href="/profissional/modelos">Gerenciar modelos de treino</a></li>
+        <li><a href="/profissional/propostas">Propostas enviadas</a></li>
         <li><a href="/alunos">Acompanhar evolução dos alunos</a></li>
         <li><a href="/perfil">Meu perfil físico</a></li>
         <li>Meu perfil profissional</li>

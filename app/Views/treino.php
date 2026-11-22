@@ -1,11 +1,12 @@
 <?php
+// O estado da sessão controla os botões de execução e edição. Séries e resultados anteriores são agrupados por exercício.
 
 /**
  * @var array $treino
  * @var array $itens
- * @var array $series
+ * @var array<int,list<array>> $series Séries executadas ou pendentes por ID do item.
  * @var array $anterior
- * @var string|float|null $volume
+ * @var string|int|float|false|null $volume
  * @var array $recordesSessao
  * @var Closure $esc
  * @var Closure $hidden
@@ -16,7 +17,6 @@
  * @var Closure $resumo
  */
 
-use App\Services\RegistroTreino;
 
 require __DIR__ . '/treinos/comum.php';
 $id = (int)$treino['id'];

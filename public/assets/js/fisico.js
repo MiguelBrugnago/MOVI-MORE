@@ -6,6 +6,7 @@ document.querySelectorAll('[data-pontos]').forEach((container) => {
     svg.setAttribute('viewBox', '0 0 400 220');
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', container.dataset.rotulo + '. Valores disponíveis na tabela abaixo.');
+    // Cria cada parte no namespace SVG e usa textContent para os rótulos vindos dos dados.
     const add = (tag, attrs, text) => {
         const node = document.createElementNS(svg.namespaceURI, tag);
         Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
@@ -47,6 +48,7 @@ document.querySelectorAll('[data-pontos]').forEach((container) => {
 document.querySelectorAll('.fisico-comparacao').forEach((section) => {
     const dados = JSON.parse(section.querySelector('[data-comparacao-dados]').textContent);
     const selects = section.querySelectorAll('[data-comparar]');
+    // Recalcula a comparação localmente quando muda uma das duas avaliações selecionadas.
     const render = () => {
         const [a, b] = [...selects].map((s) => dados.avaliacoes.find((a) => String(a.id) === s.value));
         const table = document.createElement('table');
@@ -62,6 +64,7 @@ document.querySelectorAll('.fisico-comparacao').forEach((section) => {
         linha(['Indicador', 'Inicial', 'Final', 'Variação'], true);
         const format = (v) =>
             v == null ? 'Não informado' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
+        // A diferença é o valor final menos o inicial. Para gordura em porcentagem, a diferença é expressa em pontos percentuais.
         Object.entries(dados.metricas).forEach(([chave, [nome, unidade]]) => {
             const x = a.medidas[chave],
                 y = b.medidas[chave];

@@ -7,8 +7,17 @@ namespace App\Controllers;
 use App\Security\Csrf;
 use App\Security\Session;
 
+/**
+ * Encerra o acesso ao MOVI+ por solicitação do usuário. Verifica a requisição e delega a remoção dos
+ * dados da sessão a Session.
+ */
 final class LogoutController
 {
+    /**
+     * Confere o método HTTP e o token do formulário de saída antes de destruir a sessão e redirecionar.
+     *
+     * Rota POST /logout.
+     */
     public function sair(): void
     {
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

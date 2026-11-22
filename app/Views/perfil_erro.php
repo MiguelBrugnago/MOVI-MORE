@@ -1,4 +1,5 @@
 <?php
+// Reutiliza o alerta do perfil físico para exibir o erro recebido do controller.
 /**
  * @var string $mensagem
  */

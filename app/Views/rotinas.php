@@ -1,11 +1,12 @@
 <?php
+// O controller usa este editor tanto para rotinas pessoais quanto para modelos. O destino dos formulários acompanha o modo autorizado.
 
 /**
  * @var array|null $rotina
  * @var array $rotinas
  * @var array|null $ativo
  * @var array $itens
- * @var array $series
+ * @var array<int,list<array>> $series Séries agrupadas pelo ID do item na rotina.
  * @var bool $arquivadas
  * @var Closure $esc
  * @var Closure $hidden
@@ -13,6 +14,10 @@
  * @var Closure $select
  * @var Closure $num
  * @var array $dias
+ * @var bool $modelo
+ * @var string $base
+ * @var array $alunos
+ * @var array $pessoais
  */
 
 use App\Services\RegistroTreino;
@@ -20,31 +25,50 @@ use App\Services\RegistroTreino;
 require __DIR__ . '/treinos/comum.php';
 ?>
 <section class="treino-area">
-    <h1><?= $arquivadas ? 'Rotinas arquivadas' : 'Minhas rotinas' ?></h1>
-    <?php if ($ativo): ?>
+    <h1><?= $modelo ? ($arquivadas ? 'Modelos arquivados' : 'Modelos de treino') : ($arquivadas ? 'Rotinas arquivadas' : 'Minhas rotinas') ?></h1>
+    <?php if ($modelo): ?>
+        <p><a href="/profissional/propostas?pendentes=1">Propostas pendentes</a></p>
+    <?php elseif ($ativo): ?>
         <p class="treino-destaque"><a href="/treinos/ver?id=<?= (int)$ativo['id'] ?>">Retomar: <?= $esc($ativo['nome']) ?></a></p>
     <?php else: ?>
         <form action="/treinos/iniciar" method="post" class="treino-acoes"><?php $hidden([]); ?><button>Iniciar treino livre</button></form>
     <?php endif ?>
-    <p><a href="/rotinas<?= $arquivadas ? '' : '?arquivadas=1' ?>"><?= $arquivadas ? 'Ver rotinas ativas' : 'Ver arquivadas' ?></a></p>
+    <p><a href="<?= $base ?><?= $arquivadas ? '' : '?arquivadas=1' ?>"><?= $arquivadas ? 'Ver lista ativa' : 'Ver lista arquivada' ?></a></p>
     <?php if (!$arquivadas): ?>
         <details class="treino-card">
-            <summary>Criar rotina</summary>
-            <form method="post" action="/rotinas">
-                <?php $hidden([]); ?>
+            <summary><?= $modelo ? 'Criar modelo' : 'Criar rotina' ?></summary>
+            <form method="post" action="<?= $modelo ? $base . '/salvar' : $base ?>">
+                <?php $hidden(['acao' => 'criar']); ?>
                 <label>Nome<input name="nome" minlength="2" maxlength="150" required></label>
+                <label>Objetivo<input name="objetivo" maxlength="80"></label>
                 <?php $texto('descricao', 'Descrição', null);
         $select('dia_semana', 'Dia da semana', $dias, null); ?>
-                <button>Criar rotina</button>
+                <button><?= $modelo ? 'Criar modelo' : 'Criar rotina' ?></button>
             </form>
         </details>
     <?php endif ?>
+    <?php if ($pessoais): ?>
+        <details class="treino-card">
+            <summary>Criar modelo a partir de uma rotina minha</summary>
+            <form method="post" action="/profissional/modelos/salvar">
+                <?php $hidden(['acao' => 'copiar_pessoal']); ?>
+                <label>Rotina de origem<select name="rotina_id" required>
+                    <option value="">Selecione uma rotina</option>
+                    <?php foreach ($pessoais as $pessoal): ?>
+                        <option value="<?= (int)$pessoal['id'] ?>"><?= $esc($pessoal['nome']) ?></option>
+                    <?php endforeach ?>
+                </select></label>
+                <button>Copiar como modelo</button>
+            </form>
+        </details>
+    <?php endif ?>
+    <?php if (!$rotinas): ?><p><?= $modelo ? 'Nenhum modelo nesta lista.' : 'Nenhuma rotina nesta lista.' ?></p><?php endif ?>
     <div class="catalogo">
         <?php foreach ($rotinas as $r): ?>
             <article>
-                <h2><a href="/rotinas?id=<?= (int)$r['id'] ?><?= $arquivadas ? '&amp;arquivadas=1' : '' ?>"><?= $esc($r['nome']) ?></a></h2>
+                <h2><a href="<?= $base ?>?id=<?= (int)$r['id'] ?><?= $arquivadas ? '&amp;arquivadas=1' : '' ?>"><?= $esc($r['nome']) ?></a></h2>
                 <p><?= $esc($dias[$r['dia_semana'] ?? '']) ?></p>
-                <?php if ($r['ativa'] && !$ativo): ?>
+                <?php if (!$modelo && $r['ativa'] && !$ativo): ?>
                     <form method="post" action="/treinos/iniciar"><?php $hidden(['rotina_id' => $r['id']]); ?><button>Iniciar treino</button></form>
                 <?php endif ?>
             </article>
@@ -53,17 +77,36 @@ require __DIR__ . '/treinos/comum.php';
 
     <?php if ($rotina): ?>
         <h2><?= $esc($rotina['nome']) ?></h2>
-        <form method="post" action="/rotinas/salvar" class="treino-acoes">
+        <?php if ($modelo && $rotina['ativa']): ?>
+            <?php // O aluno só recebe a rotina depois de revisar a proposta e aceitar. ?>
+            <h3>Propor a um aluno</h3>
+            <?php if (!$alunos): ?><p>Nenhum aluno com vínculo ativo.</p>
+            <?php elseif (!$itens): ?><p>Adicione um exercício para enviar este modelo.</p>
+            <?php else: ?>
+                <form method="post" action="/profissional/propostas/enviar" class="treino-acoes">
+                    <?php $hidden(['rotina_id' => $rotina['id'], 'chave' => bin2hex(random_bytes(16))]); ?>
+                    <label>Aluno<select name="aluno_id" required>
+                        <option value="">Selecione um aluno</option>
+                        <?php foreach ($alunos as $aluno): ?>
+                            <option value="<?= (int)$aluno['aluno_id'] ?>"><?= $esc($aluno['aluno_nome']) ?> (<?= $esc($aluno['aluno_email']) ?>)</option>
+                        <?php endforeach ?>
+                    </select></label>
+                    <button>Enviar proposta</button>
+                </form>
+            <?php endif ?>
+        <?php endif ?>
+        <form method="post" action="<?= $base ?>/salvar" class="treino-acoes">
             <?php $hidden(['rotina_id' => $rotina['id']]); ?>
             <button name="acao" value="duplicar">Duplicar</button>
             <button name="acao" value="<?= $rotina['ativa'] ? 'arquivar' : 'restaurar' ?>"><?= $rotina['ativa'] ? 'Arquivar' : 'Restaurar' ?></button>
         </form>
         <?php if ($rotina['ativa']): ?>
             <details class="treino-card">
-                <summary>Editar nome, dia e descrição</summary>
-                <form method="post" action="/rotinas/salvar">
+                <summary>Editar nome, objetivo, dia e descrição</summary>
+                <form method="post" action="<?= $base ?>/salvar">
                     <?php $hidden(['rotina_id' => $rotina['id'], 'acao' => 'editar']); ?>
                     <label>Nome<input name="nome" value="<?= $esc($rotina['nome']) ?>" minlength="2" maxlength="150" required></label>
+                    <label>Objetivo<input name="objetivo" maxlength="80" value="<?= $esc($rotina['objetivo']) ?>"></label>
                     <?php $texto('descricao', 'Descrição', $rotina['descricao']);
             $select('dia_semana', 'Dia da semana', $dias, $rotina['dia_semana']); ?>
                     <button>Salvar rotina</button>
@@ -80,7 +123,7 @@ require __DIR__ . '/treinos/comum.php';
                 endif ?>
         <div class="treino-acoes">
             <a href="/treinos/exercicios?rotina=<?= (int)$rotina['id'] ?>&amp;item=<?= (int)$x['id'] ?>">Substituir exercício</a>
-            <form method="post" action="/rotinas/salvar" class="treino-acoes"><?php $hidden($ids); ?>
+            <form method="post" action="<?= $base ?>/salvar" class="treino-acoes"><?php $hidden($ids); ?>
                 <button name="acao" value="item_subir" aria-label="Subir exercício">↑</button>
                 <button name="acao" value="item_descer" aria-label="Descer exercício">↓</button>
                 <button name="acao" value="item_remover" data-confirm="Remover o exercício e suas séries da rotina?">Remover</button>
@@ -88,7 +131,7 @@ require __DIR__ . '/treinos/comum.php';
         </div>
         <details>
             <summary>Descanso, superset e observações</summary>
-            <form method="post" action="/rotinas/salvar">
+            <form method="post" action="<?= $base ?>/salvar">
                 <?php $hidden($ids + ['acao' => 'item_salvar']); ?>
                 <div class="treino-campos">
                     <?php $num('descanso_segundos', 'Descanso (s)', $x['descanso_segundos'], 0, 86400);
@@ -99,13 +142,14 @@ require __DIR__ . '/treinos/comum.php';
                 <button>Salvar exercício</button>
             </form>
         </details>
+        <?php // A última posição vazia abre os campos para adicionar uma série ao exercício. ?>
         <?php foreach ([...($series[$x['id']] ?? []), []] as $s): ?>
             <details class="treino-serie">
                 <summary><?= $s ? 'Série ' . (int)$s['numero'] . ' · ' . $esc(RegistroTreino::TIPOS[$s['tipo'] ?? ''] ?? 'Normal') : 'Adicionar série' ?>
                     <?php if ($s && $s['repeticoes_min'] !== null): ?> · <?= $esc($s['repeticoes_min']) ?><?= $s['repeticoes_max'] !== null && $s['repeticoes_max'] !== $s['repeticoes_min'] ? '–' . $esc($s['repeticoes_max']) : '' ?> rep.<?php endif ?>
                         <?php if (isset($s['carga_alvo'])): ?> · <?= $esc($s['carga_alvo']) ?> kg<?php endif ?>
                 </summary>
-                <form method="post" action="/rotinas/salvar">
+                <form method="post" action="<?= $base ?>/salvar">
                     <?php $hidden($ids + ($s ? ['serie_id' => $s['id']] : [])); ?>
                     <div class="treino-campos">
                         <?php $select('tipo', 'Tipo', RegistroTreino::TIPOS, $s['tipo'] ?? 'normal');

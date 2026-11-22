@@ -1,4 +1,5 @@
 <?php
+// A conta e o token ficam disponíveis ao template incluído. Liberar a sessão antes da renderização evita bloquear outra requisição da mesma aba.
 
 declare(strict_types=1);
 

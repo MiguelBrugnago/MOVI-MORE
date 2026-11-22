@@ -1,6 +1,8 @@
 <?php
+// Os filtros e a paginação carregam o destino do formulário para manter a seleção na mesma rotina ou sessão.
 
 /**
+ * @var bool $modelo Determina o catálogo e o editor de retorno.
  * @var int $r
  * @var int $t
  * @var int $item
@@ -13,12 +15,13 @@
  */
 require __DIR__ . '/treinos/comum.php';
 $destino = $r ? ['rotina' => $r, 'item' => $item] : ['treino' => $t];
+$baseRotina = $modelo ? '/profissional/modelos' : '/rotinas';
 // Só a inclusão na rotina aceita vários exercícios de uma vez.
 $multiplos = $r && !$item;
 ?>
 <section class="treino-area">
     <h1><?= $item ? 'Substituir exercício' : 'Selecionar exercícios' ?></h1>
-    <p><a href="<?= $r ? '/rotinas?id=' . $r : '/treinos/ver?id=' . $t ?>">Voltar ao treino ou à rotina</a></p>
+    <p><a href="<?= $r ? $baseRotina . '?id=' . $r : '/treinos/ver?id=' . $t ?>">Voltar ao editor</a></p>
     <form method="get" action="/treinos/exercicios" class="treino-campos">
         <?php foreach ($destino as $k => $v): ?><input type="hidden" name="<?= $esc($k) ?>" value="<?= (int)$v ?>"><?php endforeach ?>
         <label>Nome ou nome alternativo<input name="q" value="<?= $esc($f['q']) ?>" maxlength="160"></label>
@@ -29,7 +32,7 @@ $multiplos = $r && !$item;
     </form>
     <p><?= (int)$catalogo['total'] ?> resultados</p>
     <?php if ($catalogo['itens']): ?>
-        <form method="post" action="<?= $r ? '/rotinas/salvar' : '/treinos/salvar' ?>">
+        <form method="post" action="<?= $r ? $baseRotina . '/salvar' : '/treinos/salvar' ?>">
             <?php $hidden($r ? ['rotina_id' => $r, 'item_id' => $item, 'acao' => $item ? 'item_substituir' : 'adicionar'] : ['treino_id' => $t, 'acao' => 'exercicio']); ?>
             <div class="catalogo">
                 <?php foreach ($catalogo['itens'] as $ex): ?>

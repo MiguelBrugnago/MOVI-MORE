@@ -1,4 +1,5 @@
 <?php
+// Lista avaliações em ordem decrescente. Os controles de edição são apresentados apenas no contexto pessoal.
 /**
  * @var array $avaliacoes
  * @var Closure $esc

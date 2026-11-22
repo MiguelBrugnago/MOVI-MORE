@@ -1,0 +1,12 @@
+{
+    "intelephense.environment.phpVersion": "8.3.0",
+    "php.version": "8.3",
+    "php.files.exclude": {
+        "**/storage/backups/**": true
+    },
+    "intelephense.files.exclude": [
+        "**/.git/**", "**/.svn/**", "**/.hg/**", "**/CVS/**", "**/.DS_Store/**",
+        "**/node_modules/**", "**/bower_components/**", "**/vendor/**/{Tests,tests}/**",
+        "**/.history/**", "**/vendor/**/vendor/**", "**/storage/backups/**"
+    ]
+}

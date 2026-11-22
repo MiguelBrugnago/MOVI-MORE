@@ -7,6 +7,10 @@ namespace App\Security;
 use App\Config\Database;
 use PDO;
 
+/**
+ * Conta tentativas de autenticação no MySQL. AuthController consulta as falhas recentes da
+ * combinação de e-mail e IP e também o limite global por IP.
+ */
 final class LoginLimiter
 {
     private const LIMITE_COMBINACAO = 5;
@@ -17,6 +21,13 @@ final class LoginLimiter
     private string $identificador;
     private string $ipHash;
 
+    /**
+     * Obtém a conexão e prepara os hashes do e-mail normalizado e do endereço de origem usados nas
+     * consultas.
+     *
+     * @param string $email Endereço de e-mail da conta.
+     * @param string $ip Endereço de origem da requisição.
+     */
     public function __construct(string $email, string $ip)
     {
         $this->pdo = Database::conectar();
@@ -28,6 +39,12 @@ final class LoginLimiter
         $this->ipHash = hash('sha256', $ip);
     }
 
+    /**
+     * Conta falhas nos últimos 900 segundos pelo relógio do banco. Cinco para o mesmo par ou trinta para
+     * o mesmo IP atingem o limite.
+     *
+     * @return bool
+     */
     public function bloqueado(): bool
     {
         $sql = '
@@ -49,6 +66,7 @@ final class LoginLimiter
 
         $tentativasCombinacao = (int) $stmt->fetchColumn();
 
+        // O primeiro limite cobre falhas do mesmo par. Se ele permitir prosseguir, a segunda consulta soma as falhas do IP entre contas.
         if ($tentativasCombinacao >= self::LIMITE_COMBINACAO) {
             return true;
         }
@@ -73,6 +91,9 @@ final class LoginLimiter
         return $tentativasIp >= self::LIMITE_IP;
     }
 
+    /**
+     * Grava uma tentativa sem sucesso para que ela participe das próximas verificações da janela.
+     */
     public function registrarFalha(): void
     {
         $sql = '
@@ -90,6 +111,9 @@ final class LoginLimiter
         ]);
     }
 
+    /**
+     * Registra a autenticação bem-sucedida. As falhas anteriores expiram de acordo com a janela.
+     */
     public function registrarSucesso(): void
     {
         $sql = '
@@ -107,6 +131,9 @@ final class LoginLimiter
         ]);
     }
 
+    /**
+     * Remove tentativas com mais de um dia usando o horário do banco.
+     */
     public function limparRegistrosAntigos(): void
     {
         $sql = '

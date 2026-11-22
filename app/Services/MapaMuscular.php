@@ -4,15 +4,26 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-/** Desenho esquemático original MOVI+. Coordenadas de metade do corpo (espelhadas na view).
+/**
+ * Traduz a identificação dos músculos do catálogo em regiões para a visualização da análise de
+ * treino.
+ *
+ * Desenho esquemático original MOVI+. Coordenadas de metade do corpo (espelhadas na view).
  * Músculos profundos aparecem em faixas esquemáticas; não é um atlas anatômico.
  * svg_id é respeitado quando reconhecido; codigo é o fallback estável, sem escrita no catálogo.
  */
 final class MapaMuscular
 {
+    /**
+     * Monta o mapa por código muscular com grupo, vista e coordenadas de um polígono para o SVG.
+     *
+     * @return array<string,array{grupo:string,vista:string,pontos:string}>
+     */
     public static function regioes(): array
     {
         $r = [];
+        // Converte cada conjunto de polígonos em entradas por código para a view localizar grupo, face e pontos.
+        /** Acrescenta as coordenadas de um grupo e de uma vista ao mapa indexado pelo código muscular. */
         $add = static function (string $grupo, string $vista, array $itens) use (&$r): void {
             foreach ($itens as $codigo => $pontos) {
                 $r[$codigo] = ['grupo' => $grupo, 'vista' => $vista, 'pontos' => $pontos];
@@ -87,9 +98,17 @@ final class MapaMuscular
         return $r;
     }
 
+    /**
+     * Procura primeiro a região indicada por svg_id e depois o código do músculo. Devolve null quando o
+     * desenho não possui região compatível.
+     *
+     * @param array $musculo Registro do catálogo com código e identificação visual.
+     * @return ?string
+     */
     public static function chave(array $musculo): ?string
     {
         $r = self::regioes();
+        // Um identificador visual vazio ou desconhecido deixa o código estável do catálogo participar da busca.
         foreach ([$musculo['svg_id'] ?? '', $musculo['codigo'] ?? ''] as $chave) {
             if (isset($r[$chave])) {
                 return $chave;

@@ -1,4 +1,5 @@
 <?php
+// Testa contratos de métricas, entidades, validações e roteamento em memória, sem abrir conexão com o banco.
 
 declare(strict_types=1);
 
@@ -16,12 +17,15 @@ use App\Services\RegistroTreino;
 use App\Services\AnaliseTreinoService;
 
 $verificacoes = 0;
+/** Conta a verificação aprovada ou interrompe a suíte com o nome do caso. */
 $conferir = static function (bool $ok, string $caso) use (&$verificacoes): void {
     if (!$ok) {
         throw new RuntimeException($caso);
     }
     $verificacoes++;
 };
+// Uma entrada inválida precisa produzir a classe de exceção esperada e, quando informado, o código da regra de domínio.
+/** Compara o tipo e, quando informado, o código da exceção produzida pelo caso de teste. */
 $rejeitar = static function (callable $acao, string $tipo = InvalidArgumentException::class, ?int $codigo = null) use ($conferir): void {
     try {
         $acao();
@@ -33,6 +37,7 @@ $rejeitar = static function (callable $acao, string $tipo = InvalidArgumentExcep
 };
 
 // O mesmo consumidor preserva a representação e os limites de cada especialização.
+/** Lê a medição pelo contrato compartilhado, preservando o tipo concreto e o valor ausente. */
 $ler = static fn (MetricaInterface $metrica): int|float|null => $metrica->valor();
 $conferir($ler(new MetricaInteira('12', 1, 100)) === 12, 'Repetições inteiras');
 $conferir($ler(new MetricaDecimal('12.50', 0, 100)) === 12.5, 'Carga decimal');

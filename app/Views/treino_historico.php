@@ -1,7 +1,8 @@
 <?php
+// Cada sessão traz um resumo dos exercícios. O ID da última sessão é o cursor usado no link para a página anterior.
 
 /**
- * @var array $rows
+ * @var list<array> $rows Página de sessões concluídas com seus resumos por exercício.
  * @var bool $mais
  * @var array $f
  * @var Closure $esc

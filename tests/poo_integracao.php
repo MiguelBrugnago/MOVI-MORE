@@ -1,4 +1,5 @@
 <?php
+// Exercita persistência, permissões e rollback no banco de teste para verificar as regras compartilhadas pelos modelos e serviços.
 
 declare(strict_types=1);
 
@@ -16,6 +17,7 @@ use App\Services\TreinoService;
 $pdo = Database::conectar();
 $db = new TreinoRepository($pdo);
 $servico = new TreinoService($db);
+/** Interrompe o cenário e identifica a expectativa de persistência que falhou. */
 $verificar = static function (bool $ok, string $caso): void {
     if (!$ok) {
         throw new RuntimeException($caso);
@@ -51,7 +53,7 @@ try {
     $db->transacao(fn () => $db->inserir('rotina', ['usuario_id' => 2147483647, 'nome' => 'FK inválida']));
     throw new RuntimeException('Chave estrangeira inválida aceita.');
 } catch (PDOException $erro) {
-    $verificar($erro->getCode() === '23000' && !$pdo->inTransaction(), 'Integridade ou rollback');
+    $verificar(($erro->errorInfo[0] ?? null) === '23000' && !$pdo->inTransaction(), 'Integridade ou rollback');
 }
 foreach (['usuario; DELETE', 'usuario`'] as $tabela) {
     try {
@@ -62,6 +64,7 @@ foreach (['usuario; DELETE', 'usuario`'] as $tabela) {
 }
 
 // A expressão compartilhada precisa dar a mesma resposta em todos os relatórios.
+/** Avalia a expressão SQL de volume com unidade de contagem, estado e peso controlados. */
 $volume = static function (string $unidade, int $ignorada, ?float $peso) use ($db): mixed {
     return $db->consultar(
         'SELECT ' . TreinoRepository::VOLUME . " FROM

@@ -7,8 +7,18 @@ namespace App\Controllers;
 use App\Repositories\ProfissionalRepository;
 use App\Security\Auth;
 
+/**
+ * Seleciona o painel da conta autenticada. O modo solicitado na URL depende também do cadastro ativo
+ * consultado no ProfissionalRepository.
+ */
 final class PainelController
 {
+    /**
+     * Carrega o painel profissional quando a conta está habilitada e pediu esse modo. Nos demais casos
+     * apresenta o painel do aluno.
+     *
+     * Rota GET /painel.
+     */
     public function index(): void
     {
         Auth::usuario();

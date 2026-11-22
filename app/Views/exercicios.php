@@ -1,8 +1,10 @@
 <?php
+// A página conserva os filtros nos links de navegação e apresenta somente os resultados liberados pelo repositório.
 
 /** @var array{q: string, grupo: string, equipamento: string, modalidade: string, ordem: string, pagina: int} $filtros */
 /** @var array<string, list<array{id: int|string, nome: string}>> $opcoes */
 /** @var array{total: int, pagina: int, paginas: int, itens: list<array<string, mixed>>} $resultado */
+/** Escapa o valor no momento de inseri-lo em texto ou em um atributo HTML. */
 $esc = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 ?>
 <h1>Biblioteca de exercícios</h1>

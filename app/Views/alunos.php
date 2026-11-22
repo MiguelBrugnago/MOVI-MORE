@@ -1,8 +1,9 @@
 <?php
+// O repositório entrega alunos com acompanhamento ativo. Cada link usa o ID da conta do aluno no detalhamento.
 
 declare(strict_types=1);
 
-/** @var array $alunos */
+/** @var list<array{aluno_id:int,aluno_nome:string,aluno_email:string,vinculo_id:int,iniciado_em:?string}> $alunos */
 ?>
 
 <h1>Meus alunos</h1>

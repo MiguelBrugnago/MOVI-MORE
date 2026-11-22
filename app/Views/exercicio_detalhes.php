@@ -1,4 +1,5 @@
 <?php
+// Mídias passam pela validação de URL antes de renderizar. Os músculos vêm das relações do catálogo para este exercício.
 
 /**
  * @var array $exercicio
@@ -6,6 +7,7 @@
  * @var array $musculos
  * @var array $rotinas
  */
+/** Escapa o valor no momento de inseri-lo em texto ou em um atributo HTML. */
 $esc = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); ?>
 <a href="/exercicios">Voltar à biblioteca</a>
 <h1><?= $esc($exercicio['nome']) ?></h1>
@@ -25,6 +27,7 @@ $esc = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); ?>
     <p><?= $esc($exercicio['criterio_carga']) ?></p><?php endif; ?>
 <?php foreach ($midias as $m):
         $url = $m['localizacao'];
+        // Aceita endereços HTTPS ou caminhos locais absolutos antes de inserir a mídia na página.
         if (!preg_match('~^(?:https://[^/]|/(?!/))[^\x00-\x20\\\\]*$~D', $url)) {
             continue;
         } ?>

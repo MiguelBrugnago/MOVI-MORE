@@ -5,17 +5,23 @@ const start = document.querySelector('[data-inicio]');
 const rest = document.querySelector('[data-descanso]');
 const statusRest = document.querySelector('[data-rest-status]');
 const family = 'movi-treino:' + (section?.dataset.sessao ?? '') + ':';
+/** Formata segundos inteiros para o relógio do treino ou do descanso.
+ * @param {number} seconds Tempo restante ou decorrido em segundos.
+ * @param {boolean} [showHours=false] Exibe as horas mesmo antes da primeira hora.
+ * @returns {string} Tempo com os componentes separados por dois-pontos. */
 const format = (seconds, showHours = false) => {
     const n = Math.max(0, Math.floor(seconds));
     const sections = [Math.floor(n / 60) % 60, n % 60];
     if (showHours || n >= 3600) sections.unshift(Math.floor(n / 3600));
     return sections.map((value) => String(value).padStart(2, '0')).join(':');
 };
+// Os prazos do controller vêm em segundos Unix. Date.now() mede milissegundos.
 const now = () => Math.floor(Date.now() / 1000);
 let end = Number(rest?.dataset.descanso ?? 0);
 let paused = 0;
 let activeRequest = false;
 
+/** Atualiza os relógios a partir dos instantes absolutos e anuncia o fim do descanso uma única vez. */
 function tick() {
     if (start) start.textContent = format(now() - Number(start.dataset.inicio), true);
     if (!rest) return;
@@ -26,8 +32,14 @@ function tick() {
     }
 }
 tick();
+// O navegador redesenha o relógio a cada meio segundo. O prazo absoluto evita acumular atrasos.
 if (start || rest) window.setInterval(tick, 500);
 
+/** Envia o formulário com CSRF e o botão acionado. Uma resposta HTML pode indicar expiração da sessão.
+ * @param {HTMLFormElement} form Formulário que fornece os campos e a URL.
+ * @param {HTMLElement|null} [submitter] Botão que identifica a ação escolhida.
+ * @param {Object<string,string>} [fields] Campos que substituem os valores do formulário.
+ * @returns {Promise<Object>} Resposta JSON do controller, ou rejeição com a mensagem de falha. */
 async function post(form, submitter, fields) {
     const body = new FormData(form, submitter ?? undefined);
     for (const [key, value] of Object.entries(fields ?? {})) body.set(key, value);
@@ -45,6 +57,10 @@ async function post(form, submitter, fields) {
     return data;
 }
 
+/** Salva a duração e usa o prazo devolvido pelo servidor para sincronizar o relógio desta página.
+ * @param {HTMLFormElement} form Formulário da sessão.
+ * @param {HTMLElement|null} submitter Botão acionado, quando houver.
+ * @param {number} seconds Segundos de descanso; zero encerra a contagem. */
 async function setRest(form, submitter, seconds) {
     if (activeRequest) return;
     activeRequest = true;
@@ -71,6 +87,7 @@ if (pauseButton) {
         if (!remaining || activeRequest) return;
         activeRequest = true;
         try {
+            // Pausar limpa o prazo no servidor; só esta página guarda o restante para uma retomada.
             await post(form, null, { segundos: '0' });
             end = 0;
             paused = remaining;
@@ -93,10 +110,12 @@ document.querySelectorAll('[data-rest-form]').forEach((form) => {
     });
 });
 
+/** Seleciona somente controles editáveis que participam do rascunho da série. */
 const editable = (form) =>
     Array.from(form.elements).filter(
         (field) => field.name && ['number', 'textarea', 'select-one'].includes(field.type),
     );
+/** Recupera o JSON da aba. Conteúdo inválido ou armazenamento indisponível resulta em null. */
 const getDraft = (key) => {
     try {
         return JSON.parse(sessionStorage.getItem(key) ?? 'null');
@@ -104,6 +123,7 @@ const getDraft = (key) => {
         return null;
     }
 };
+/** Guarda os valores da série na aba, incluindo a chave necessária para repetir o envio. */
 const setDraft = (key, values) => {
     try {
         sessionStorage.setItem(key, JSON.stringify(values));
@@ -111,6 +131,7 @@ const setDraft = (key, values) => {
         /* O salvamento no servidor continua disponível. */
     }
 };
+/** Remove a cópia local depois da confirmação do servidor. */
 const removeDraft = (key) => {
     try {
         sessionStorage.removeItem(key);
@@ -118,6 +139,8 @@ const removeDraft = (key) => {
         /* O armazenamento local é opcional. */
     }
 };
+/** Liga eventos nos cartões novos ou já existentes e recupera o rascunho de cada série pelo treino, item e série.
+ * @param {Document|DocumentFragment} [root=document] Página inicial ou fragmento HTML devolvido pelo servidor. */
 function bindSeries(root = document) {
     for (const form of root.querySelectorAll('[data-serie-form]')) {
         const key = family + form.dataset.item + ':' + form.dataset.serie;
@@ -127,6 +150,7 @@ function bindSeries(root = document) {
         const card = form.closest('[data-serie-card]');
         const autosave = start && form.dataset.serie !== '0' && card.dataset.estado === 'pendente';
         let scheduled;
+        // A comparação usa apenas os valores editáveis para reconhecer alterações feitas durante o envio.
         const valuesNow = () => Object.fromEntries(fields.map((field) => [field.name, field.value]));
         const draft = getDraft(key);
         if (draft) {
@@ -140,6 +164,7 @@ function bindSeries(root = document) {
             if (chave) values.chave = chave.value;
             setDraft(key, values);
         };
+        // Só séries pendentes já existentes têm salvamento automático. Uma série nova aguarda o envio explícito.
         const savePending = async () => {
             if (!form.isConnected || !form.checkValidity()) return;
             if (activeRequest) {
@@ -166,6 +191,7 @@ function bindSeries(root = document) {
             store();
             if (autosave) {
                 window.clearTimeout(scheduled);
+                // O intervalo depois da última edição evita uma requisição a cada tecla.
                 scheduled = window.setTimeout(savePending, 950);
             }
         };
@@ -239,6 +265,7 @@ let pendingConfirmation;
 confirmation.addEventListener('close', () => {
     if (confirmation.returnValue === 'confirmar' && pendingConfirmation?.form.isConnected) {
         const { form, button } = pendingConfirmation;
+        // Retoma o mesmo botão confirmado para preservar a ação original e as validações do formulário.
         form.requestSubmit(button);
     }
     pendingConfirmation = undefined;

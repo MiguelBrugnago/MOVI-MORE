@@ -1,4 +1,5 @@
 <?php
+// O mesmo cartão aparece no HTML inicial e na resposta assíncrona. Uma série vazia abre o formulário de inclusão.
 
 /**
  * @var int $id
@@ -18,6 +19,7 @@
 use App\Services\RegistroTreino;
 
 $ids = ['treino_id' => $id, 'item_id' => $x['id']];
+// O JSON da sessão guarda as metas copiadas no início do treino. A série nova ainda não possui esse registro.
 $metas = isset($s['metas']) ? json_decode($s['metas'], true, 512, JSON_THROW_ON_ERROR) : [];
 $estado = !empty($s['concluida']) ? 'concluida' : (!empty($s['ignorada']) ? 'ignorada' : 'pendente');
 $tipo = $s['tipo'] ?? 'normal';

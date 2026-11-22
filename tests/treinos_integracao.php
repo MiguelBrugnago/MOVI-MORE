@@ -1,4 +1,5 @@
 <?php
+// Exercita o serviço e o MySQL de teste com contas separadas, histórico volumoso e séries repetidas. As medições impressas usam tempo de execução local.
 
 declare(strict_types=1);
 
@@ -14,12 +15,26 @@ if (PHP_SAPI !== 'cli' || getenv('DB_NAME') !== 'movi_treinos_teste') {
     exit(1);
 }
 
+/**
+ * Interrompe a suíte ao encontrar uma condição falsa, identificando o cenário que falhou.
+ *
+ * @param bool $ok Resultado da afirmação testada.
+ * @param string $nome Nome do cenário no relatório.
+ * @throws RuntimeException Se a expectativa da suíte não for atendida.
+ */
 function verificar(bool $ok, string $nome): void
 {
     if (!$ok) {
         throw new RuntimeException($nome);
     }
 }
+/**
+ * Executa a tentativa e exige uma exceção de domínio com o código esperado.
+ *
+ * @param callable $fn Tentativa que deve ser rejeitada.
+ * @param int $status Código esperado da exceção de domínio.
+ * @throws RuntimeException Se a expectativa da suíte não for atendida.
+ */
 function rejeitar(callable $fn, int $status): void
 {
     try {
@@ -30,6 +45,13 @@ function rejeitar(callable $fn, int $status): void
     }
     throw new RuntimeException('A operação deveria ter sido bloqueada.');
 }
+/**
+ * Executa a operação de teste, imprime a duração em milissegundos e devolve o resultado.
+ *
+ * @param string $nome Nome do cenário no relatório.
+ * @param callable $acao Operação a medir.
+ * @return mixed Resultado original da operação medida.
+ */
 function medir(string $nome, callable $acao): mixed
 {
     $ms = hrtime(true);

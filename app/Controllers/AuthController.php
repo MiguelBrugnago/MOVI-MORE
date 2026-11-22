@@ -10,8 +10,18 @@ use App\Security\LoginLimiter;
 use App\Security\Session;
 use PDOException;
 
+/**
+ * Recebe os formulários públicos de criação de conta e autenticação. Valida o token CSRF e os
+ * campos, consulta UsuarioRepository e inicia a sessão após conferir a senha.
+ */
 final class AuthController
 {
+    /**
+     * Valida nome, e-mail, senha e confirmação do POST. Grava o hash e responde 201 no sucesso, 422 para
+     * dados inválidos ou 409 em conflito.
+     *
+     * Rota POST /cadastro.
+     */
     public function cadastrar(): void
     {
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -73,6 +83,7 @@ final class AuthController
             exit('Não foi possível concluir o cadastro.');
         }
 
+        // A senha segue para a função de hash somente depois da confirmação e dos limites de tamanho.
         $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
 
@@ -96,6 +107,12 @@ final class AuthController
         echo 'Cadastro realizado com sucesso.';
     }
 
+    /**
+     * Normaliza o e-mail, consulta LoginLimiter e verifica o hash da conta ativa. Falha de autenticação
+     * retorna 401, limite atingido retorna 429 e sucesso redireciona com 303.
+     *
+     * Rota POST /login.
+     */
     public function login(): void
     {
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -135,6 +152,7 @@ final class AuthController
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
 
+        // O limite considera falhas recentes antes de autenticar; o relógio usado na contagem é o mesmo que gravou as tentativas.
         $limiter = new LoginLimiter($email, $ip);
 
         if ($limiter->bloqueado()) {
