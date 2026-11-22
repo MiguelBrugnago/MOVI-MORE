@@ -1,4 +1,5 @@
 <?php
+// O controller escolhe a mensagem e o destino de retorno. Ambos passam pelo escape de HTML na renderização.
 
 /**
  * @var string $mensagem

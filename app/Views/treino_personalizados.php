@@ -1,4 +1,5 @@
 <?php
+// Criação e edição compartilham os campos de classificação. Na edição o tipo de registro permanece associado às metas e ao histórico existentes.
 
 /**
  * @var array $itens
@@ -25,6 +26,7 @@ require __DIR__ . '/treinos/comum.php'; ?>
         <?php $texto('descricao', 'Descrição', $editando['descricao'] ?? null);
 $texto('instrucoes', 'Instruções', $editando['instrucoes'] ?? null);
 foreach (['grupo_muscular' => 'Grupo muscular', 'equipamento' => 'Equipamento', 'tipo_registro' => 'Métricas registradas'] as $k => $label) {
+    // Mudar a modalidade de um exercício já usado alteraria a interpretação das séries antigas.
     if ($k === 'tipo_registro' && $editando) {
         echo '<p>Métricas: ' . $esc($opcoes[$k][$editando[$k . '_id']] ?? '—') . '</p>';
     } else {

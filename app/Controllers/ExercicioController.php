@@ -8,8 +8,17 @@ use App\Repositories\ExercicioRepository;
 use App\Config\Database;
 use App\Security\Auth;
 
+/**
+ * Apresenta o catálogo à conta autenticada. Passa os filtros ao ExercicioRepository e carrega
+ * músculos e mídias somente após localizar um exercício acessível.
+ */
 final class ExercicioController
 {
+    /**
+     * Lê filtros e página da URL, limita o texto pesquisado e entrega a lista paginada ao layout.
+     *
+     * Rota GET /exercicios.
+     */
     public function index(): void
     {
         Auth::usuario();
@@ -27,6 +36,12 @@ final class ExercicioController
         require __DIR__ . '/../Views/layouts/app.php';
     }
 
+    /**
+     * Lê o ID da URL e exige acesso ao exercício antes de consultar detalhes e rotinas disponíveis.
+     * Retorna 404 quando indisponível.
+     *
+     * Rota GET /exercicios/ver.
+     */
     public function visualizar(): void
     {
         Auth::usuario();

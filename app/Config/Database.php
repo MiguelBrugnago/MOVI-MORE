@@ -7,12 +7,25 @@ namespace App\Config;
 use PDO;
 use RuntimeException;
 
+/**
+ * Fornece a conexão PDO compartilhada pelos repositórios durante a execução do PHP. Lê a
+ * configuração do ambiente e usa consultas preparadas nativas do MySQL.
+ */
 class Database
 {
     private static ?PDO $conexao = null;
 
+    /**
+     * Abre a conexão na primeira chamada e reutiliza a mesma instância nas seguintes. Assim, as
+     * consultas de uma transação usam a mesma conexão.
+     *
+     * @return PDO
+     * @throws RuntimeException Se faltar a configuração exigida para a conexão.
+     * @throws \PDOException Se a conexão com o MySQL falhar.
+     */
     public static function conectar(): PDO
     {
+        // Reutilizar a conexão mantém o mesmo contexto de transação para todos os repositórios chamados pelo serviço.
         if (self::$conexao !== null) {
             return self::$conexao;
         }

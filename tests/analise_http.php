@@ -1,4 +1,5 @@
 <?php
+// Verifica pela interface HTTP o período, o mapa e a progressão tanto no acesso pessoal quanto no acesso profissional autorizado.
 
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || getenv('DB_NAME') !== 'movi_treinos_teste') {
@@ -9,6 +10,13 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Config\Database;
 use App\Repositories\{TreinoRepository,VinculoProfissionalRepository};
 
+/**
+ * Interrompe a suíte ao encontrar uma condição falsa, identificando o cenário que falhou.
+ *
+ * @param bool $ok Resultado da afirmação testada.
+ * @param string $mensagem Descrição da falha esperada na saída do teste.
+ * @throws RuntimeException Se a expectativa da suíte não for atendida.
+ */
 function checkAnalise(bool $ok, string $mensagem): void
 {
     if (!$ok) {
@@ -21,6 +29,8 @@ $sufixo = bin2hex(random_bytes(6));
 $senha = 'Analise-teste-123';
 $usuarios = [];
 $clientes = [];
+// Um cliente por usuário separa os cookies e permite verificar o mesmo recurso sob permissões diferentes.
+/** Cria um cliente de análise identificado pelos cookies da própria sessão e valida o status HTTP. */
 $cliente = static function () {
     $ch = curl_init();
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEFILE => '', CURLOPT_HEADER => true, CURLOPT_TIMEOUT => 15]);
@@ -38,6 +48,7 @@ $cliente = static function () {
         return $res;
     };
 };
+/** Obtém o token da página que antecede o POST sem misturar usuários de teste. */
 $token = static function (string $h): string {
     preg_match('/name="csrf_token" value="([a-f0-9]+)"/', $h, $m);
     return $m[1] ?? throw new RuntimeException('Token ausente');

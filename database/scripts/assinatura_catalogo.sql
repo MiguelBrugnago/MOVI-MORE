@@ -1,5 +1,6 @@
 -- Assinatura linha a linha do catálogo público. Compare a saída entre bancos.
 -- Exclui IDs numéricos e datas de criação, que dependem da instalação.
+-- Os JOINs substituem IDs locais pelos códigos do catálogo. A ordenação final permite comparar duas exportações linha a linha.
 SELECT grupo, assinatura FROM (
 SELECT 'exercicio' AS grupo, SHA2(JSON_ARRAY(e.codigo,e.nome,e.descricao,e.instrucoes,e.categoria,e.dificuldade,e.tipo,e.unilateral,e.midia,e.ativo,e.slug,e.nome_ingles,e.criterio_carga,e.criterio_repeticoes,e.modalidade,q.codigo,g.codigo,t.codigo),256) AS assinatura FROM exercicio e JOIN equipamento q ON q.id=e.equipamento_id JOIN grupo_muscular g ON g.id=e.grupo_muscular_id JOIN tipo_registro t ON t.id=e.tipo_registro_id WHERE e.usuario_id IS NULL
 UNION ALL

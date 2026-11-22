@@ -1,4 +1,5 @@
 <?php
+// A tabela chega do mais recente ao mais antigo. O gráfico percorre a ordem inversa para mostrar a evolução no tempo.
 /**
  * @var array $aluno
  * @var array $avaliacoes
@@ -17,6 +18,7 @@
 <?php foreach ($metricas as $chave => [$nome,$unidade]): if ($chave === 'massa_gorda') {
     continue;
 }
+    // Cada indicador tem a própria sequência de datas. Uma avaliação sem a medida fica fora da linha desse gráfico.
     $pontos = [];
     foreach (array_reverse($avaliacoes) as $a) {
         if (isset($a['medidas'][$chave])) {

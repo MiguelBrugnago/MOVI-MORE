@@ -1,4 +1,5 @@
 <?php
+// O mapa e as tabelas usam os mesmos totais por músculo. A métrica selecionada determina o valor comparado com o período anterior.
 /**
  * @var array $p
  * @var string $metrica
@@ -18,26 +19,34 @@
 use App\Services\AnaliseTreinoService as A;
 use App\Services\MapaMuscular;
 
+/** Escapa o valor no momento de inseri-lo em texto ou em um atributo HTML. */
 $esc = static fn ($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+/** Apresenta números com uma casa decimal e marca as medições ausentes com um travessão. */
 $num = static fn ($v) => $v === null ? '—' : number_format((float)$v, 1, ',', '.');
+// Quando uma das medições está ausente ou a base percentual é zero, o formatador preserva a informação de indisponibilidade.
+/** Formata a diferença absoluta e a variação percentual calculadas pelo serviço, preservando medidas ausentes. */
 $delta = static function ($a, $b) use ($num): string {
     $d = A::comparar($a === null ? null : (float)$a, $b === null ? null : (float)$b);
     return $num($d['absoluta']) . ' (' . ($d['percentual'] === null ? '% não aplicável' : $num($d['percentual']) . '%') . ')';
 };
+/** Renderiza indicadores na unidade informada e usa a maior medição da série como escala. */
 $barras = static function (string $titulo, array $linhas, string $unidade) use ($esc, $num): void {
     ?><details class="treino-card" open><summary><?= $esc($titulo) ?></summary><?php
     if (!$linhas) {
         echo '<p>Sem registros compatíveis no período.</p>';
     }
+    // A maior barra determina a escala. O mínimo de 1 mantém o elemento meter válido quando todos os totais são zero.
     $max = max([1, ...array_values($linhas)]);
     foreach ($linhas as $nome => $valor): ?>
         <div class="analise-barra"><span><?= $esc($nome) ?></span><meter min="0" max="<?= $esc($max) ?>" value="<?= $esc($valor) ?>" aria-label="<?= $esc($nome . ' — ' . $titulo) ?>"></meter><strong><?= $num($valor) ?> <?= $esc($unidade) ?></strong></div>
     <?php endforeach; ?></details><?php
 };
+// Todos os links carregam a janela e a métrica atuais para que a mudança de seção preserve a comparação.
 $base = ['periodo' => $p['periodo'], 'de' => $p['de'], 'ate' => $p['ate'], 'metrica' => $metrica];
 if ($aluno) {
     $base['aluno'] = $aluno;
 }
+/** Combina o caminho e os filtros com a janela selecionada e escapa o endereço para o atributo HTML. */
 $link = static fn ($caminho, $extra = []) => $esc($caminho . '?' . http_build_query(array_replace($base, $extra)));
 ?>
 <link rel="stylesheet" href="/assets/css/analise.css">

@@ -1,3 +1,4 @@
+-- Compara exercícios públicos ativos e códigos distintos antes das verificações de classificação e de vínculos.
 SELECT
     COUNT(*) AS total,
     COUNT(DISTINCT codigo) AS codigos_distintos

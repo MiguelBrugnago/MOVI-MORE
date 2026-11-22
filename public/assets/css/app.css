@@ -370,6 +370,7 @@ header p {
 [data-rest-status]:empty {
     display: none;
 }
+/* Perfil e avaliações usam a grade de campos do treino, agrupada por conjunto de medidas. */
 .fisico-form {
     max-width: none;
 }

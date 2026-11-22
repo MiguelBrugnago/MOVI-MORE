@@ -1,15 +1,29 @@
 <?php
+// Verifica datas civis, unidades, campos opcionais e fórmulas de composição com entradas válidas e inválidas.
 
 declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Services\PerfilFisicoService as F;
 
+/**
+ * Interrompe a suíte ao encontrar uma condição falsa, identificando o cenário que falhou.
+ *
+ * @param bool $ok Resultado da afirmação testada.
+ * @param string $nome Nome do cenário no relatório.
+ * @throws RuntimeException Se a expectativa da suíte não for atendida.
+ */
 function conferir(bool $ok, string $nome): void
 {
     if (!$ok) {
         throw new RuntimeException($nome);
     }
 }
+/**
+ * Exige que o caso de entrada inválida seja rejeitado pelo validador.
+ *
+ * @param callable $fn Tentativa que deve ser rejeitada.
+ * @throws RuntimeException Se a expectativa da suíte não for atendida.
+ */
 function invalido(callable $fn): void
 {
     try {

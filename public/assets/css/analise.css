@@ -10,6 +10,7 @@
     font-size: 1.8rem;
     color: #6ee7b7;
 }
+/* As vistas anterior e posterior compartilham a largura disponível e preservam a proporção do SVG. */
 .analise-corpos {
     display: flex;
     justify-content: center;

@@ -1,4 +1,5 @@
 <?php
+// Usa sessões HTTP distintas para exercitar avaliações, titularidade e consentimentos de leitura profissional no banco isolado.
 
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || getenv('DB_NAME') !== 'movi_treinos_teste') {
@@ -11,6 +12,13 @@ use App\Repositories\PerfilFisicoRepository;
 use App\Repositories\TreinoRepository;
 use App\Repositories\VinculoProfissionalRepository;
 
+/**
+ * Interrompe a suíte ao encontrar uma condição falsa, identificando o cenário que falhou.
+ *
+ * @param bool $ok Resultado da afirmação testada.
+ * @param string $nome Nome do cenário no relatório.
+ * @throws RuntimeException Se a expectativa da suíte não for atendida.
+ */
 function conferir(bool $ok, string $nome): void
 {
     if (!$ok) {
@@ -27,6 +35,8 @@ foreach (['aluno', 'outro', 'profissional'] as $papel) {
     $email = "$papel-$sufixo@example.test";
     $usuarios[$papel] = $db->inserir('usuario', ['nome' => $papel, 'email' => $email, 'senha_hash' => password_hash($senha, PASSWORD_DEFAULT)]);
 }
+// O cliente conserva os cookies entre chamadas e exige o status esperado antes de verificar o conteúdo do perfil.
+/** Cria um cliente que mantém a sessão entre chamadas e confere o status esperado de cada resposta. */
 $cliente = static function () {
     $ch = curl_init();
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEFILE => '', CURLOPT_HEADER => true, CURLOPT_TIMEOUT => 15]);
@@ -43,6 +53,7 @@ $cliente = static function () {
         return (string)$res;
     };
 };
+/** Obtém o token do HTML da própria sessão para as alterações de perfil testadas. */
 $token = static function (string $html): string {
     preg_match('/name="csrf_token" value="([a-f0-9]+)"/', $html, $m);
     return $m[1] ?? throw new RuntimeException('Sem CSRF');

@@ -1,4 +1,5 @@
 <?php
+// Campos ainda não preenchidos permanecem opcionais. A avaliação mais recente fornece peso e composição para o resumo.
 /**
  * @var array|null $recente
  * @var array $declaracoes

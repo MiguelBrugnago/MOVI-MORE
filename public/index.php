@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 $inicioRequisicao = hrtime(true);
+// Mede até o encerramento da requisição e registra apenas as que ultrapassarem 500 milissegundos.
 register_shutdown_function(static function () use ($inicioRequisicao): void {
     $ms = (hrtime(true) - $inicioRequisicao) / 1e6;
     if ($ms > 500) {
@@ -14,6 +15,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 $rotas = require __DIR__ . '/../routes/web.php';
 
+// A tabela de rotas usa o caminho sem a query string. Os controllers continuam recebendo os filtros da URL em $_GET.
 $metodoHttp = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 $caminho = parse_url(

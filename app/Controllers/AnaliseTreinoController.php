@@ -4,13 +4,26 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use DomainException;
+use InvalidArgumentException;
+
 use App\Config\Database;
 use App\Repositories\{TreinoRepository, AnaliseTreinoRepository, VinculoProfissionalRepository};
 use App\Security\Auth;
 use App\Services\{AnaliseTreinoService as Analise, RegistroTreino};
 
+/**
+ * Entrega a análise por período, o mapa muscular e a progressão por exercício. Coordena sessão,
+ * consentimento, consultas agregadas e cálculos do AnaliseTreinoService.
+ */
 final class AnaliseTreinoController
 {
+    /**
+     * Lê os filtros da URL, consulta o período e a referência anterior e renderiza a análise. A consulta
+     * de outro aluno exige permissão de treinos e gera registro de leitura.
+     *
+     * Rotas GET /treinos/analise, GET /treinos/mapa-muscular, GET /treinos/progressao.
+     */
     public function index(): void
     {
         $usuario = Auth::usuario();
@@ -18,14 +31,14 @@ final class AnaliseTreinoController
         try {
             $aluno = isset($_GET['aluno']) ? RegistroTreino::numero($_GET['aluno'], 1, 2147483647) : null;
             if (isset($_GET['aluno']) && $aluno === null) {
-                throw new \InvalidArgumentException('Aluno inválido.');
+                throw new InvalidArgumentException('Aluno inválido.');
             }
             $u = $aluno ?? (int)$usuario['id'];
             $profissional = $u !== (int)$usuario['id'];
             if ($profissional) {
                 $vinculos = new VinculoProfissionalRepository();
                 if (!$vinculos->autorizado((int)$usuario['id'], $u, 'treinos')) {
-                    throw new \DomainException('Acesso aos treinos não autorizado.', 403);
+                    throw new DomainException('Acesso aos treinos não autorizado.', 403);
                 }
                 $vinculos->registrarLeitura((int)$usuario['id'], $u, 'analise_muscular');
             }
@@ -33,7 +46,7 @@ final class AnaliseTreinoController
             $exercicio = RegistroTreino::numero($_GET['exercicio'] ?? null, 1, 2147483647);
             $metrica = $_GET['metrica'] ?? 'equivalentes';
             if (!in_array($metrica, ['equivalentes', 'series', 'diretas', 'indiretas'], true)) {
-                throw new \InvalidArgumentException('Métrica inválida.');
+                throw new InvalidArgumentException('Métrica inválida.');
             }
             $repo = new AnaliseTreinoRepository(new TreinoRepository(Database::conectar()));
             $catalogo = $repo->catalogo();
@@ -52,6 +65,7 @@ final class AnaliseTreinoController
                 $opcoes[$x['exercicio_id']] = $x['nome'];
             }
             $series = $exercicio ? $repo->seriesExercicio($u, $exercicio, $p['inicio'], $p['fim']) : [];
+            // O repositório busca uma linha além das 500 exibidas para a view poder indicar que há mais resultados.
             $maisSeries = count($series) > 500;
             if ($maisSeries) {
                 array_pop($series);
@@ -74,8 +88,8 @@ final class AnaliseTreinoController
             $titulo = 'MOVI+ | Análise de treinamento';
             $viewPath = __DIR__ . '/../Views/treino_analise.php';
             require __DIR__ . '/../Views/layouts/app.php';
-        } catch (\InvalidArgumentException | \DomainException $e) {
-            http_response_code($e instanceof \DomainException ? $e->getCode() : 422);
+        } catch (InvalidArgumentException | DomainException $e) {
+            http_response_code($e instanceof DomainException ? $e->getCode() : 422);
             $mensagem = $e->getMessage();
             $voltar = '/rotinas';
             $viewPath = __DIR__ . '/../Views/treino_erro.php';

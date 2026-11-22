@@ -11,6 +11,7 @@ Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UN
 ## Sumário
 
 - [Funcionalidades](#funcionalidades)
+- [Modelos e propostas de treino](#modelos-e-propostas-de-treino)
 - [Stack](#stack)
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Executando com Docker](#executando-com-docker)
@@ -30,7 +31,7 @@ Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UN
 
 | Situação | Recursos |
 |---|---|
-| Implementadas | Cadastro e login; cadastro profissional; gerenciamento de alunos e solicitações/vínculos; biblioteca pública e exercícios personalizados; pesquisa, filtros e detalhes; criação, edição, arquivamento e restauração de rotinas; configuração de séries, repetições, cargas e descanso; execução de sessões e treinos livres; histórico paginado e estatísticas de evolução; mapa muscular e análise de treinamento por período; perfil físico, avaliações corporais, gráficos e comparação; acompanhamento profissional com permissões por categoria. |
+| Implementadas | Cadastro e login; cadastro profissional; gerenciamento de alunos e solicitações/vínculos; biblioteca pública e exercícios personalizados; pesquisa, filtros e detalhes; modelos profissionais e propostas de treino com aceite pelo aluno; criação, edição, arquivamento e restauração de rotinas; configuração de séries, repetições, cargas e descanso; execução de sessões e treinos livres; histórico paginado e estatísticas de evolução; mapa muscular e análise de treinamento por período; perfil físico, avaliações corporais, gráficos e comparação; acompanhamento profissional com permissões por categoria. |
 | Parciais | A mídia aparece quando existe cadastro válido de imagem ou GIF. O descanso tem alerta visual enquanto a página está aberta. Rascunhos pendentes sobrevivem a falhas na mesma aba, mas não há sincronização offline depois de fechá-la. |
 | Planejadas | Recomendações automáticas, gamificação com ranking e conquistas, espaços públicos e recursos ampliados de comunidade e acessibilidade. |
 
@@ -71,7 +72,7 @@ MOVI+/
 │   ├── movi-plus-logo-mono.png
 │   └── social-preview-1280x640.jpg
 ├── database/
-│   ├── migrations/    # 001–017, evolução do schema
+│   ├── migrations/    # 001–018, evolução do schema
 │   ├── scripts/       # Migrador, importação e validação do catálogo
 │   └── seeds/         # 37 arquivos SQL de dados oficiais e relações
 ├── public/
@@ -153,7 +154,7 @@ O banco usa MySQL 8.4, `utf8mb4` e PDO. No Compose, o host de conexão da aplica
 
 ### Histórico de migrations
 
-O repositório possui migrations sequenciais **001–017**:
+O repositório possui migrations sequenciais **001–018**:
 
 | Faixa | Conteúdo |
 |---|---|
@@ -163,6 +164,7 @@ O repositório possui migrations sequenciais **001–017**:
 | 015 | Rotinas e execução: séries, descanso, metas copiadas, métricas e índices. |
 | 016 | Ajuste do evento de limpeza de tentativas para calcular o corte usando o relógio do MySQL. |
 | 017 | Campos complementares do perfil físico e índices para avaliações/medidas. Preserva registros e estruturas anteriores. |
+| 018 | Identificação dos modelos profissionais, propostas por vínculo e cópia dos exercícios e séries enviados. |
 
 Execute o migrador pela aplicação:
 
@@ -437,3 +439,55 @@ Medições locais (não são garantia de carga de produção): nova integração
 A implementação foi validada no esquema atual, mas o banco de desenvolvimento principal precisa de reconciliação antes do uso local completo. Não execute as migrations históricas indiscriminadamente nesse legado: o migrador recusa schema preenchido sem histórico e existem mudanças históricas de catálogo. Faça backup restaurável, ensaie a atualização em cópia, compare estrutura e catálogo e resolva o histórico conforme a seção de recuperação. Nenhuma adoção fictícia de migrations foi feita nesta etapa.
 
 Limitações intencionais: estimativa por heurística; ausência de semântica confiável para `peso_estimado`; SVG esquemático; relações musculares sem lado; sem recomendação automática de volume ou 1RM. Nutrição e gamificação não foram implementadas. Próximos passos recomendados: reconciliar o banco legado, revisar fatores com profissionais e documentar sua fonte, aprimorar o desenho anatômico e testar toque/leitores de tela, além de medir desempenho com históricos densos antes de considerar cache.
+
+## Modelos e propostas de treino
+
+1. No painel profissional, abra **Gerenciar modelos de treino**. Crie um modelo, informe o objetivo e use o editor para organizar exercícios do catálogo público, séries, metas, grupos e descanso. O editor também permite duplicar, arquivar e restaurar modelos. A opção **Criar modelo a partir de uma rotina minha** também aceita rotinas pessoais cujos exercícios estejam ativos no catálogo público.
+2. Abra o modelo ativo, selecione um aluno vinculado e clique em **Enviar proposta**. O profissional pode acompanhar as pendências, cancelar um envio e consultar o histórico de cada aluno.
+3. No painel do aluno, abra **Propostas de treino recebidas** para conferir o profissional, os exercícios e cada série. Aceitar cria uma rotina pessoal com a identificação do profissional. Recusar encerra a proposta e mantém o conteúdo disponível no histórico.
+4. A rotina aceita aparece em **Meus treinos**. O aluno pode editá-la e iniciar sessões pelo fluxo habitual, inclusive após o encerramento do vínculo.
+
+### Rotas do módulo
+
+| Método | Caminho | Uso |
+|---|---|---|
+| GET | `/profissional/modelos` | Lista e editor. Aceita `id` e `arquivadas=1`. |
+| POST | `/profissional/modelos/salvar` | Criação, edição, ordenação, duplicação, arquivamento e restauração pelo proprietário. |
+| POST | `/profissional/propostas/enviar` | Envio de um modelo ativo ao aluno selecionado. |
+| GET | `/profissional/propostas` | Enviadas. Aceita `id` para detalhes, `aluno` para histórico e `pendentes=1` para filtrar. |
+| GET | `/propostas` | Recebidas pelo usuário autenticado. Aceita `id` e `pendentes=1`. |
+| POST | `/propostas/responder` | Aceite ou recusa pelo destinatário e cancelamento pelo remetente. |
+
+### Banco, autorização e orientação a objetos
+
+A migration **018_propostas_rotina.sql** acrescenta `rotina.modelo_profissional`, com valor inicial falso para as rotinas existentes. A tabela `proposta_rotina` guarda o vínculo, o modelo, a versão enviada do nome, objetivo, descrição e dia, o estado e a referência à rotina aceita. Cada registro de `proposta_exercicio` mantém a referência ao exercício, o nome exibido no envio e as suas séries em JSON. As chaves estrangeiras preservam essas referências. Os índices únicos permitem várias propostas encerradas do mesmo modelo e uma pendente por vínculo.
+
+O servidor confere a conta, o perfil profissional e o vínculo ativo para enviar. O catálogo do editor profissional contém exercícios públicos ativos, utilizáveis por todos os destinatários. No aceite, o serviço confere o vínculo, o destinatário e a disponibilidade dos exercícios novamente. Se um exercício sair do catálogo nesse intervalo, o aluno ainda pode revisar ou recusar o envio. Encerrar o vínculo cancela as pendências na mesma transação. Reabrir o vínculo permite novos envios. O acesso a histórico, perfil físico e saúde continua dependendo do consentimento específico para cada categoria.
+
+Na camada de aplicação, `RotinaController` recebe os formulários e reutiliza a validação de sessão e CSRF. `TreinoService` aplica ao modelo as mesmas regras de exercícios, séries e ordenação da rotina pessoal. `PropostaService` usa composição com `PropostaRepository` e `TreinoRepository`. O primeiro consulta propostas de cada participante. O segundo fornece a transação e a cópia do planejamento, também usada ao duplicar uma rotina. Bloquear a proposta durante o aceite faz dois pedidos simultâneos convergirem para a mesma rotina do aluno. Novas sessões continuam sob responsabilidade de `TreinoService`.
+
+### Execução e testes
+
+Para instalar, siga a seção **Executando com Docker**. Em instalações já acompanhadas pelo migrador, aplique a 018 antes de servir a nova versão do PHP. Para reproduzir a verificação em um ambiente isolado novo com as dependências do Composer instaladas, execute:
+
+```sh
+docker compose -p movi-propostas-verificacao -f tests/compose.yml up -d --build app
+docker compose -p movi-propostas-verificacao -f tests/compose.yml exec -T app php database/scripts/migrar.php
+docker compose -p movi-propostas-verificacao -f tests/compose.yml exec -T app php database/scripts/popular_exercicios.php
+docker compose -p movi-propostas-verificacao -f tests/compose.yml exec -T app php tests/executar.php --integracao
+```
+
+A suíte `propostas_integracao.php` cobre alteração do modelo após envio, aceite, recusa, cancelamento, vínculos encerrados e reabertos, isolamento entre contas, reenvios e cópia de metas. Ela provoca uma falha na segunda série para verificar que o MySQL desfaz a cópia inteira. A suíte `treinos_http.php` cobre o editor, os formulários, a proteção CSRF, a exibição de texto escapado e o acesso à rotina aceita. O executor também inclui as regressões de treinos, perfil e análise.
+
+Na verificação desta entrega, as 18 migrations e as 37 seeds rodaram em um MySQL 8.4 isolado e as 11 suítes passaram. A consulta ao banco principal mostrou a 016 como última migration registrada. Nesse banco, as migrations pendentes para esta versão são a 017 e a 018.
+
+A consulta de propostas oferece filtros de aluno e estado. Ela carrega todos os registros correspondentes. Para históricos extensos, a próxima melhoria sugerida é paginar a lista.
+
+### Arquivos da implementação
+
+| Área | Criados | Modificados |
+|---|---|---|
+| Regras e persistência | `app/Services/PropostaService.php`, `app/Repositories/PropostaRepository.php` | `app/Services/TreinoService.php`, `app/Repositories/TreinoRepository.php`, `ExercicioRepository.php` e `VinculoProfissionalRepository.php` no mesmo diretório de repositórios |
+| HTTP e navegação | `app/Views/propostas.php` | `routes/web.php`, `app/Controllers/RotinaController.php` e, em `app/Views/`, `rotinas.php`, `treino_seletor.php`, `treinos/comum.php`, `painel_profissional.php`, `painel_aluno.php` e `aluno_detalhes.php` |
+| Banco e testes | `database/migrations/018_propostas_rotina.sql`, `tests/propostas_integracao.php` | `tests/executar.php`, `tests/treinos_http.php` |
+| Documentação | | `README.md` |

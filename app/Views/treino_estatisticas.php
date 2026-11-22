@@ -1,4 +1,5 @@
 <?php
+// As barras usam os agregados do repositório. As funções de rótulo e valor adaptam períodos, exercícios e unidades ao mesmo desenho.
 
 /**
  * @var array $totais
@@ -17,6 +18,7 @@
 use App\Services\RegistroTreino;
 
 require __DIR__ . '/treinos/comum.php';
+/** Usa as funções de rótulo e valor para renderizar cada agregado na escala de barras do indicador. */
 $grafico = static function (string $titulo, array $linhas, string $campo, callable $rotulo, callable $valor) use ($esc): void {
     $linhas = array_values(array_filter($linhas, static fn ($r) => isset($r[$campo])));
     ?>
@@ -35,6 +37,7 @@ $grafico = static function (string $titulo, array $linhas, string $campo, callab
     </details>
 <?php
 };
+/** Formata o instante de conclusão de uma sessão como rótulo para as barras de evolução. */
 $data = static fn ($r) => $dataHora($r['fim'], 'd/m/Y');
 ?>
 <section class="treino-area">

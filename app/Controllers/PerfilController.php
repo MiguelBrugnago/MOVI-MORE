@@ -14,8 +14,17 @@ use App\Services\RegistroTreino;
 use DomainException;
 use InvalidArgumentException;
 
+/**
+ * Coordena perfil físico, avaliações, declarações e consentimentos. Identifica a conta pela sessão,
+ * normaliza as entradas com PerfilFisicoService e entrega dados ao layout.
+ */
 final class PerfilController
 {
+    /**
+     * Confirma a sessão, desabilita cache compartilhado da resposta e devolve o ID da conta ativa.
+     *
+     * @return int
+     */
     private function usuario(): int
     {
         $usuario = Auth::usuario();
@@ -23,11 +32,22 @@ final class PerfilController
         return (int)$usuario['id'];
     }
 
+    /**
+     * Prepara o acesso a perfis e avaliações com a conexão da aplicação.
+     *
+     * @return PerfilFisicoRepository
+     */
     private function repo(): PerfilFisicoRepository
     {
         return new PerfilFisicoRepository(Database::conectar());
     }
 
+    /**
+     * Disponibiliza os dados ao template, consome a mensagem de sessão e carrega o layout.
+     *
+     * @param string $nome Nome do arquivo de view escolhido pelo controller, sem a extensão PHP.
+     * @param array $dados Campos associados aos seus nomes.
+     */
     private function view(string $nome, array $dados = []): void
     {
         extract($dados, EXTR_SKIP);
@@ -38,11 +58,23 @@ final class PerfilController
         require __DIR__ . '/../Views/layouts/app.php';
     }
 
+    /**
+     * Extrai um ID positivo dos parâmetros da requisição e rejeita um identificador ausente.
+     *
+     * @param array $dados Campos associados aos seus nomes.
+     * @return int
+     * @throws InvalidArgumentException Identificador obrigatório.
+     */
     private function id(array $dados): int
     {
         return RegistroTreino::numero($dados['id'] ?? null, 1, 2147483647) ?? throw new InvalidArgumentException('Identificador obrigatório.');
     }
 
+    /**
+     * Carrega o perfil, as declarações e a avaliação mais recente da conta.
+     *
+     * Rota GET /perfil.
+     */
     public function index(): void
     {
         $u = $this->usuario();
@@ -50,12 +82,23 @@ final class PerfilController
         $this->view('perfil', ['perfil' => $r->perfil($u), 'declaracoes' => $r->declaracoes($u), 'recente' => $r->historico($u)[0] ?? null]);
     }
 
+    /**
+     * Entrega ao template as avaliações da conta em ordem cronológica decrescente.
+     *
+     * Rota GET /perfil/avaliacoes.
+     */
     public function historico(): void
     {
         $u = $this->usuario();
         $this->view('avaliacoes', ['avaliacoes' => $this->repo()->historico($u)]);
     }
 
+    /**
+     * Preenche a data atual ao abrir uma nova avaliação ou consulta a avaliação da conta indicada na
+     * URL.
+     *
+     * Rotas GET /perfil/avaliacoes/nova, GET /perfil/avaliacoes/ver.
+     */
     public function formulario(): void
     {
         $u = $this->usuario();
@@ -67,6 +110,11 @@ final class PerfilController
         }
     }
 
+    /**
+     * Valida o período escolhido, consulta as avaliações da conta na janela e renderiza a evolução.
+     *
+     * Rota GET /perfil/evolucao.
+     */
     public function evolucao(): void
     {
         $u = $this->usuario();
@@ -79,12 +127,24 @@ final class PerfilController
         }
     }
 
+    /**
+     * Converte a exceção de domínio em seu status HTTP e a entrada inválida em 422, com uma mensagem na
+     * tela.
+     *
+     * @param DomainException|InvalidArgumentException $e Falha de domínio ou de validação a apresentar na resposta HTTP.
+     */
     private function erro(\Exception $e): void
     {
         http_response_code($e instanceof DomainException ? $e->getCode() : 422);
         $this->view('perfil_erro', ['mensagem' => $e->getMessage()]);
     }
 
+    /**
+     * Confere CSRF e despacha a ação do formulário para perfil, avaliação, declaração ou consentimento.
+     * No sucesso redireciona com 303 e em erro de validação reapresenta os campos.
+     *
+     * Rotas POST /perfil, POST /perfil/avaliacoes.
+     */
     public function salvar(): void
     {
         $u = $this->usuario();
@@ -142,6 +202,7 @@ final class PerfilController
         } catch (InvalidArgumentException $e) {
             http_response_code(422);
             // Reapresenta os textos em UTF-8, inclusive o valor que o usuário precisa corrigir.
+            // Na resposta 422, os valores válidos para HTML voltam ao formulário para o usuário corrigir o campo indicado.
             $entrada = array_filter($_POST, static fn ($v) => is_string($v) && mb_check_encoding($v, 'UTF-8'));
             if ($acao === 'perfil') {
                 $this->view('perfil', ['perfil' => $entrada, 'erro' => $e->getMessage(), 'declaracoes' => $this->repo()->declaracoes($u), 'recente' => $this->repo()->historico($u)[0] ?? null]);

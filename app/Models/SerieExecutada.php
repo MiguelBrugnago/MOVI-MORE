@@ -10,6 +10,10 @@ use App\Models\Metricas\MetricaInteira;
 use App\Support\Validacao;
 use InvalidArgumentException;
 
+/**
+ * Reúne as medições e os detalhes de uma série realizada. Compõe objetos MetricaInterface de acordo
+ * com a modalidade e entrega ao TreinoService os campos para persistência.
+ */
 final class SerieExecutada
 {
     public const TIPOS = [
@@ -27,6 +31,15 @@ final class SerieExecutada
     private array $metricas = [];
     private readonly array $detalhes;
 
+    /**
+     * Monta as medições permitidas pelo tipo de registro e valida estado, lado, percepção de esforço e
+     * repetições em reserva antes da gravação.
+     *
+     * @param array $entrada Campos enviados para a série realizada.
+     * @param array $registro Flags da modalidade que habilitam as medições.
+     * @param string $estado Estado da série, pendente, concluída ou ignorada.
+     * @throws InvalidArgumentException Se o estado, as medições, o tipo, o lado ou os detalhes forem inválidos.
+     */
     public function __construct(array $entrada, array $registro, string $estado)
     {
         if (!in_array($estado, ['pendente', 'concluida', 'ignorada'], true)) {
@@ -48,6 +61,7 @@ final class SerieExecutada
         if (!in_array($lado, ['', 'direito', 'esquerdo', 'conjunto'], true)) {
             throw new InvalidArgumentException('Lado inválido.');
         }
+        // RIR registra repetições em reserva (0 a 20). RPE registra esforço percebido (0 a 10, com uma casa decimal).
         $this->detalhes = [
             'rir' => Validacao::numero($entrada['rir'] ?? null, 0, 20),
             'rpe' => Validacao::numero($entrada['rpe'] ?? null, 0, 10, 1),
@@ -59,6 +73,13 @@ final class SerieExecutada
         ];
     }
 
+    /**
+     * Confere a chave de tipo de série usada no banco e nos formulários.
+     *
+     * @param mixed $tipo Chave do tipo de registro.
+     * @return string
+     * @throws InvalidArgumentException Tipo de série inválido.
+     */
     public static function tipo(mixed $tipo): string
     {
         if (!is_string($tipo) || !isset(self::TIPOS[$tipo])) {
@@ -67,6 +88,12 @@ final class SerieExecutada
         return $tipo;
     }
 
+    /**
+     * Reúne métricas e detalhes em um registro com as unidades originais e os indicadores de conclusão e
+     * de série ignorada.
+     *
+     * @return array<string, int|float|string|null>
+     */
     public function paraPersistencia(): array
     {
         $dados = [];

@@ -1,4 +1,6 @@
 <?php
+// O papel atual define qual participante aparece na lista e quais solicitações ele pode responder. As permissões são carregadas por ID de vínculo.
+/** @var array<int,array<string,int>> $permissoes Consentimentos agrupados por vínculo e categoria. */
 $modoProfissional = $modoProfissional ?? false;
 $vinculos = $vinculos ?? [];
 $mensagem = $mensagem ?? '';
@@ -6,6 +8,12 @@ $ehProfissional = $ehProfissional ?? false;
 
 $modo = $modoProfissional ? 'profissional' : 'aluno';
 
+/**
+ * Escapa texto do vínculo antes de inseri-lo no HTML.
+ *
+ * @param string $texto Nome, e-mail ou mensagem apresentada na tela.
+ * @return string Texto com os caracteres especiais convertidos em entidades.
+ */
 function escaparVinculo(string $texto): string
 {
     return htmlspecialchars($texto, ENT_QUOTES, 'UTF-8');
@@ -71,6 +79,7 @@ function escaparVinculo(string $texto): string
         ? $vinculo['aluno_email']
         : $vinculo['profissional_email'];
 
+    // A mesma relação aparece para os dois usuários. Só quem recebeu uma solicitação pendente vê os controles de resposta.
     $recebida = $vinculo['status'] === 'pendente'
         && (
             ($modoProfissional &&

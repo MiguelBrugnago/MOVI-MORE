@@ -1,4 +1,5 @@
 <?php
+// O formulário retorna à própria rota. O controller fornece a mensagem de validação quando algum campo precisa de correção.
 
 declare(strict_types=1);
 

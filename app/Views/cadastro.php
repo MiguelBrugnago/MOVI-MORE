@@ -1,4 +1,5 @@
 <?php
+// O token acompanha os campos enviados ao cadastro. A sessão é liberada antes de renderizar o formulário público.
 
 declare(strict_types=1);
 

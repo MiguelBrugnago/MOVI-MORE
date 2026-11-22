@@ -1,11 +1,12 @@
 <?php
+// O controller prepara cada categoria após conferir o consentimento. A apresentação mantém os blocos de treino, perfil e saúde independentes.
 
 declare(strict_types=1);
 
 /** @var array $aluno */
 /**
  * @var bool $treinosPermitidos
- * @var array $treinos
+ * @var list<array> $treinos Sessões liberadas pelo consentimento de treinos.
  * @var bool $maisTreinos
  * @var bool $fisicoPermitido
  * @var array|null $recente
@@ -56,6 +57,8 @@ declare(strict_types=1);
 </p>
 
 <hr>
+
+<p><a href="/profissional/propostas?aluno=<?= (int)$aluno['aluno_id'] ?>">Histórico de propostas deste aluno</a></p>
 
 <h3>Treinos do aluno</h3>
 <?php $somenteLeitura = true;

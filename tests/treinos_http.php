@@ -1,4 +1,5 @@
 <?php
+// Mantém cookies separados por cliente para verificar as respostas reais das rotas, a proteção CSRF e o isolamento entre contas.
 
 declare(strict_types=1);
 
@@ -16,6 +17,8 @@ $email = 'http-' . bin2hex(random_bytes(6)) . '@example.test';
 $u = $db->inserir('usuario', $cred + ['email' => $email]);
 $email2 = 'http-' . bin2hex(random_bytes(6)) . '@example.test';
 $u2 = $db->inserir('usuario', $cred + ['email' => $email2]);
+// Cada cliente reutiliza sua própria sessão cURL. A resposta é separada em corpo e cabeçalho para conferir o destino do 303.
+/** Cria um cliente com cookies próprios que devolve corpo, redirecionamento e duração da requisição. */
 $cliente = static function () use ($base): Closure {
     $ch = curl_init();
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEFILE => '', CURLOPT_HEADER => true, CURLOPT_TIMEOUT => 10]);
@@ -43,12 +46,14 @@ $cliente = static function () use ($base): Closure {
         return [$body, $m[1] ?? '', (hrtime(true) - $start) / 1e6];
     };
 };
+/** Extrai do HTML o token do formulário recebido por este cliente ou interrompe o teste se faltar. */
 $token = static function (string $html): string {
     if (!preg_match('/name="csrf_token"\s+value="([a-f0-9]+)"/', $html, $m)) {
         throw new RuntimeException('CSRF não encontrado.');
     }
     return $m[1];
 };
+/** Reproduz o login via formulário e devolve o token da sessão autenticada para os POSTs seguintes. */
 $login = static function (Closure $http, string $email) use ($token, $senha): array {
     [$login] = $http('/login', 200);
     $http('/login', 303, ['csrf_token' => $token($login), 'email' => $email, 'senha' => $senha]);
@@ -145,6 +150,43 @@ if (!str_contains($alunos, $email2)) {
 }
 $http('/alunos/visualizar?id=' . $u2, 200);
 $estranho('/alunos/visualizar?id=' . $u, 403);
+
+// O profissional monta a proposta no editor e o aluno revisa a versão enviada antes do aceite.
+$http('/profissional/modelos', 200);
+$estranho('/profissional/modelos', 403);
+$salvarModelo = '/profissional/modelos/salvar';
+[, $editor] = $http($salvarModelo, 303, $csrf + ['acao' => 'criar', 'nome' => $nome, 'objetivo' => 'Força']);
+parse_str(parse_url($editor, PHP_URL_QUERY), $modelo);
+$dadosModelo = ['rotina_id' => $modelo['id']];
+$http('/treinos/exercicios?rotina=' . $modelo['id'], 200);
+$http($salvarModelo, 303, $csrf + $dadosModelo + ['acao' => 'adicionar', 'exercicio_id' => $e['id']]);
+[$htmlModelo] = $http($editor, 200);
+if (!preg_match('/name="chave" value="([a-f0-9]{32})"/', $htmlModelo, $envio)) {
+    throw new RuntimeException('O editor não apresentou o formulário de envio.');
+}
+$formEnvio = $dadosModelo + ['aluno_id' => $u2, 'chave' => $envio[1]];
+$http('/profissional/propostas/enviar', 403, $formEnvio);
+[, $enviada] = $http('/profissional/propostas/enviar', 303, $csrf + $formEnvio);
+$http($enviada, 200);
+$estranho($enviada, 403);
+parse_str(parse_url($enviada, PHP_URL_QUERY), $proposta);
+$detalhe = '/propostas?id=' . $proposta['id'];
+$http($detalhe, 404);
+[$recebida] = $estranho($detalhe, 200);
+if (str_contains($recebida, $nome) || !str_contains($recebida, '&lt;img') || !str_contains($recebida, 'Força')) {
+    throw new RuntimeException('Conteúdo ou escape incorreto na proposta.');
+}
+$resposta = ['proposta_id' => $proposta['id'], 'acao' => 'aceitar'];
+$estranho('/propostas/responder', 403, $resposta);
+$http('/propostas/responder', 404, $csrf + $resposta);
+$estranho('/propostas/responder', 303, $csrf2 + $resposta);
+$estranho('/propostas/responder', 303, $csrf2 + $resposta);
+[$recebida] = $estranho($detalhe, 200);
+if (!str_contains($recebida, 'Abrir minha rotina')) {
+    throw new RuntimeException('Faltou o link para a rotina aceita.');
+}
+$http('/profissional/propostas?aluno=' . $u2, 200);
+$estranho('/propostas?pendentes=1', 200);
 $http('/vinculos/encerrar', 303, $csrf + ['modo' => 'profissional', 'vinculo_id' => $v[1]]);
 $http('/alunos/visualizar?id=' . $u2, 404);
 $http('/logout', 303, $csrf);

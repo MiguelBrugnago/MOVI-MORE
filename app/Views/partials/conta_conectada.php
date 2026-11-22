@@ -1,4 +1,5 @@
 <?php
+// O layout fornece a conta autenticada. Nome e e-mail são escapados antes de aparecer no cabeçalho.
 
 declare(strict_types=1);
 

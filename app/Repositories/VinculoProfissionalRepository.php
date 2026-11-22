@@ -4,11 +4,25 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use DomainException;
+use InvalidArgumentException;
+use Throwable;
+
 use App\Config\Database;
 use PDO;
 
+/**
+ * Persiste solicitações e vínculos entre alunos e profissionais. Controla quem pode responder, quais
+ * categorias de dados tiveram consentimento e registra leituras autorizadas.
+ */
 class VinculoProfissionalRepository
 {
+    /**
+     * Carrega o valor de permitido por categoria no vínculo indicado.
+     *
+     * @param int $vinculo Identificador da relação entre profissional e aluno.
+     * @return array<string,int>
+     */
     public function permissoes(int $vinculo): array
     {
         $s = $this->pdo->prepare('SELECT categoria_dados,permitido FROM permissao_acesso WHERE vinculo_profissional_id=?');
@@ -16,16 +30,27 @@ class VinculoProfissionalRepository
         return $s->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
+    /**
+     * Confere a categoria e bloqueia o vínculo ativo do aluno antes de conceder ou revogar acesso com
+     * horário do banco.
+     *
+     * @param int $aluno ID da conta do aluno acompanhado.
+     * @param int $vinculo Identificador da relação entre profissional e aluno.
+     * @param string $categoria Categoria de dados sujeita ao consentimento do aluno.
+     * @param bool $permitir Indica concessão ou revogação de acesso.
+     * @throws InvalidArgumentException Categoria inválida.
+     * @throws DomainException Vínculo não encontrado.
+     */
     public function permitir(int $aluno, int $vinculo, string $categoria, bool $permitir): void
     {
         if (!in_array($categoria, ['fisico', 'saude', 'treinos'], true)) {
-            throw new \InvalidArgumentException('Categoria inválida.');
+            throw new InvalidArgumentException('Categoria inválida.');
         }
         $this->transacao(function () use ($aluno, $vinculo, $categoria, $permitir) {
             $s = $this->pdo->prepare("SELECT id FROM vinculo_profissional WHERE id=? AND aluno_id=? AND status='ativo' FOR UPDATE");
             $s->execute([$vinculo, $aluno]);
             if (!$s->fetchColumn()) {
-                throw new \DomainException('Vínculo não encontrado.', 404);
+                throw new DomainException('Vínculo não encontrado.', 404);
             }
             $s = $this->pdo->prepare('INSERT INTO permissao_acesso (vinculo_profissional_id,categoria_dados,permitido,concedido_em,revogado_em)
                 VALUES (?,?,?,IF(?=1,NOW(),NULL),IF(?=0,NOW(),NULL)) ON DUPLICATE KEY UPDATE
@@ -34,6 +59,17 @@ class VinculoProfissionalRepository
         });
     }
 
+    /**
+     * Exige as duas contas e o vínculo ativos, permissão concedida no vínculo atual e ausência de
+     * revogação.
+     *
+     * O aluno escolhe quais categorias o profissional pode consultar no vínculo atual.
+     *
+     * @param int $profissionalUsuario ID da conta do profissional que solicita leitura.
+     * @param int $aluno ID da conta do aluno acompanhado.
+     * @param string $categoria Categoria de dados sujeita ao consentimento do aluno.
+     * @return bool
+     */
     public function autorizado(int $profissionalUsuario, int $aluno, string $categoria): bool
     {
         $s = $this->pdo->prepare("SELECT 1 FROM vinculo_profissional v JOIN profissional p ON p.id=v.profissional_id
@@ -45,12 +81,28 @@ class VinculoProfissionalRepository
         return (bool)$s->fetchColumn();
     }
 
+    /**
+     * Registra na auditoria quem consultou qual recurso de qual aluno.
+     *
+     * @param int $usuario ID da conta cujos dados delimitam a operação.
+     * @param int $aluno ID da conta do aluno acompanhado.
+     * @param string $recurso Nome do recurso consultado para o registro de auditoria.
+     */
     public function registrarLeitura(int $usuario, int $aluno, string $recurso): void
     {
         $s = $this->pdo->prepare("INSERT INTO auditoria_acesso (usuario_id,aluno_id,recurso,acao) VALUES (?,?,?,'consultar')");
         $s->execute([$usuario, $aluno, $recurso]);
     }
 
+    /**
+     * Executa a alteração do vínculo e os efeitos associados na mesma transação e reverte tudo em caso
+     * de erro.
+     *
+     * @template T
+     * @param callable():T $acao Operação cujas escritas serão confirmadas em conjunto.
+     * @return T Resultado da operação confirmada.
+     * @throws Throwable Propaga a falha que interrompeu a transação.
+     */
     private function transacao(callable $acao): mixed
     {
         $this->pdo->beginTransaction();
@@ -58,7 +110,7 @@ class VinculoProfissionalRepository
             $resultado = $acao();
             $this->pdo->commit();
             return $resultado;
-        } catch (\Throwable $erro) {
+        } catch (Throwable $erro) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
@@ -68,11 +120,20 @@ class VinculoProfissionalRepository
 
     private PDO $pdo;
 
+    /**
+     * Abre a conexão compartilhada usada para vínculos, consentimentos e auditoria.
+     */
     public function __construct()
     {
         $this->pdo = Database::conectar();
     }
 
+    /**
+     * Resolve o ID do perfil profissional ativo a partir do usuário autenticado.
+     *
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @return ?int
+     */
     public function profissionalDoUsuario(int $usuarioId): ?int
     {
         $sql = "SELECT id FROM profissional
@@ -86,6 +147,14 @@ class VinculoProfissionalRepository
         return $id === false ? null : (int) $id;
     }
 
+    /**
+     * Seleciona os vínculos da pessoa no papel escolhido e junta os nomes e e-mails dos dois
+     * participantes.
+     *
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @param bool $modoProfissional Seleciona o papel profissional para esta operação.
+     * @return list<array<string,scalar|null>>
+     */
     public function listar(int $usuarioId, bool $modoProfissional): array
     {
         $sql = "SELECT v.*,
@@ -113,11 +182,28 @@ class VinculoProfissionalRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Inicia a transação de solicitação e devolve a mensagem de resultado para o formulário.
+     *
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @param string $email Endereço de e-mail da conta.
+     * @param bool $modoProfissional Seleciona o papel profissional para esta operação.
+     * @return string
+     */
     public function solicitar(int $usuarioId, string $email, bool $modoProfissional): string
     {
         return $this->transacao(fn () => $this->solicitarNaTransacao($usuarioId, $email, $modoProfissional));
     }
 
+    /**
+     * Identifica o outro participante por e-mail, bloqueia o par e cria ou reabre a solicitação
+     * revogando permissões anteriores.
+     *
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @param string $email Endereço de e-mail da conta.
+     * @param bool $modoProfissional Seleciona o papel profissional para esta operação.
+     * @return string
+     */
     private function solicitarNaTransacao(
         int $usuarioId,
         string $email,
@@ -194,6 +280,7 @@ class VinculoProfissionalRepository
             'aluno_id' => $alunoId
         ]);
 
+        // O par profissional e aluno pode voltar a se vincular. A linha bloqueada permite reusar o registro sem duplicar o par.
         $existente = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($existente) {
@@ -234,11 +321,30 @@ class VinculoProfissionalRepository
         return 'Solicitação enviada com sucesso.';
     }
 
+    /**
+     * Processa o aceite ou a recusa de forma atômica e devolve a mensagem exibida pelo controller.
+     *
+     * @param int $vinculoId ID da solicitação ou vínculo.
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @param bool $modoProfissional Seleciona o papel profissional para esta operação.
+     * @param bool $aceitar Decisão de aceitar ou recusar a solicitação pendente.
+     * @return string
+     */
     public function responder(int $vinculoId, int $usuarioId, bool $modoProfissional, bool $aceitar): string
     {
         return $this->transacao(fn () => $this->responderNaTransacao($vinculoId, $usuarioId, $modoProfissional, $aceitar));
     }
 
+    /**
+     * Trava a solicitação pendente e confere se quem responde é o destinatário. No aceite, inicia o
+     * acompanhamento.
+     *
+     * @param int $vinculoId ID da solicitação ou vínculo.
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @param bool $modoProfissional Seleciona o papel profissional para esta operação.
+     * @param bool $aceitar Decisão de aceitar ou recusar a solicitação pendente.
+     * @return string
+     */
     private function responderNaTransacao(
         int $vinculoId,
         int $usuarioId,
@@ -267,6 +373,7 @@ class VinculoProfissionalRepository
                 && $vinculo['solicitado_por'] === 'profissional';
         }
 
+        // Somente a parte que recebeu a solicitação pode decidir o estado do vínculo.
         if (!$permitido) {
             return 'Você não pode responder esta solicitação.';
         }
@@ -293,11 +400,28 @@ class VinculoProfissionalRepository
         return $aceitar ? 'Solicitação aceita.' : 'Solicitação recusada.';
     }
 
+    /**
+     * Coordena o encerramento do vínculo e o cancelamento das propostas pendentes na mesma transação.
+     *
+     * @param int $vinculoId ID da solicitação ou vínculo.
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @param bool $modoProfissional Seleciona o papel profissional para esta operação.
+     * @return string
+     */
     public function encerrar(int $vinculoId, int $usuarioId, bool $modoProfissional): string
     {
         return $this->transacao(fn () => $this->encerrarNaTransacao($vinculoId, $usuarioId, $modoProfissional));
     }
 
+    /**
+     * Verifica a participação antes de datar o encerramento. Cancela as propostas pendentes mesmo se o
+     * vínculo vier a ser reaberto.
+     *
+     * @param int $vinculoId ID da solicitação ou vínculo.
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @param bool $modoProfissional Seleciona o papel profissional para esta operação.
+     * @return string
+     */
     private function encerrarNaTransacao(
         int $vinculoId,
         int $usuarioId,
@@ -335,11 +459,23 @@ class VinculoProfissionalRepository
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $vinculoId]);
 
-        return $stmt->rowCount() > 0
-            ? 'Vínculo encerrado.'
-            : 'Este vínculo já foi encerrado.';
+        if ($stmt->rowCount() === 0) {
+            return 'Este vínculo já foi encerrado.';
+        }
+        // O mesmo vínculo pode ser reaberto. Propostas antigas ficam encerradas.
+        $cancelar = $this->pdo->prepare("UPDATE proposta_rotina SET status='cancelada', respondida_em=NOW()
+            WHERE vinculo_id=? AND status='pendente'");
+        $cancelar->execute([$vinculoId]);
+        return 'Vínculo encerrado.';
     }
 
+    /**
+     * Lista os alunos ativos do perfil profissional ativo com vínculo em acompanhamento, ordenados por
+     * nome.
+     *
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @return list<array<string,scalar|null>>
+     */
     public function listarAlunosAtivos(int $usuarioId): array
     {
         $sql = "SELECT
@@ -363,6 +499,13 @@ class VinculoProfissionalRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Busca o aluno pelo par usuário profissional e ID do aluno, exigindo vínculo e cadastros ativos.
+     *
+     * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
+     * @param int $alunoId ID da conta de aluno.
+     * @return array<string,scalar|null>|null
+     */
     public function buscarAlunoVinculado(
         int $usuarioId,
         int $alunoId

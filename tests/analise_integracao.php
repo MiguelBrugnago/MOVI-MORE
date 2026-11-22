@@ -1,4 +1,5 @@
 <?php
+// Cria sessões sintéticas no banco isolado e compara os agregados SQL com os resultados esperados para cada modalidade.
 
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || getenv('DB_NAME') !== 'movi_treinos_teste') {
@@ -23,10 +24,13 @@ try {
     $db->inserir('exercicio_musculo', ['exercicio_id' => $privado, 'musculo_id' => $musculos['peitoral_maior'], 'papel' => 'primario']);
     $db->inserir('exercicio_musculo', ['exercicio_id' => $privado, 'musculo_id' => $musculos['triceps_braquial'], 'papel' => 'secundario']);
     $periodo = A::periodo(['periodo' => 'personalizado', 'de' => '2026-01-02', 'ate' => '2026-01-02'], new DateTimeImmutable('2026-11-18'));
+    // Os instantes finais conhecidos permitem testar inclusão e exclusão de sessões nos limites do período.
+    /** Cria uma sessão sintética com estado e instante final escolhidos para exercitar as janelas. */
     $sessao = static function (string $status, int $fim) use ($db, $u): int {
         $db->consultar('INSERT INTO treino (usuario_id,status,iniciado_em,finalizado_em) VALUES (?,?,FROM_UNIXTIME(?),FROM_UNIXTIME(?))', [$u, $status, $fim - 3600, $fim]);
         return (int)$db->consultar('SELECT LAST_INSERT_ID()')->fetchColumn();
     };
+    /** Insere um exercício e uma série de teste na sessão com os campos do cenário. */
     $serie = static function (int $t, array $dados = [], ?int $e = null) use ($db, $privado): void {
         $x = $db->inserir('treino_exercicio', ['treino_id' => $t, 'exercicio_id' => $e ?? $privado, 'ordem' => (int)$db->consultar('SELECT COALESCE(MAX(ordem),0)+1 FROM treino_exercicio WHERE treino_id=?', [$t])->fetchColumn()]);
         $db->inserir('serie', array_replace(['treino_exercicio_id' => $x, 'numero' => 1, 'peso' => 20, 'repeticoes' => 10, 'concluida' => 1, 'ignorada' => 0, 'tipo' => 'normal'], $dados));

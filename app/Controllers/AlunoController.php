@@ -4,11 +4,23 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use InvalidArgumentException;
+
 use App\Repositories\VinculoProfissionalRepository;
 use App\Security\Auth;
 
+/**
+ * Atende o acompanhamento profissional. Usa a identidade de sessão, o vínculo e os consentimentos
+ * por categoria antes de renderizar dados do aluno.
+ */
 final class AlunoController
 {
+    /**
+     * Confere o perfil profissional ativo e lista somente seus alunos vinculados. Nega o modo
+     * profissional com HTTP 403.
+     *
+     * Rota GET /alunos.
+     */
     public function index(): void
     {
         Auth::usuario();
@@ -33,6 +45,12 @@ final class AlunoController
         require __DIR__ . '/../Views/layouts/app.php';
     }
 
+    /**
+     * Valida o ID na URL, procura o vínculo do profissional e prepara apenas os blocos autorizados de
+     * treino, perfil físico e saúde.
+     *
+     * Rota GET /alunos/visualizar.
+     */
     public function visualizar(): void
     {
         Auth::usuario();
@@ -72,13 +90,14 @@ final class AlunoController
             return;
         }
 
+        // Vínculo ativo identifica a relação. Treino, perfil e saúde ainda exigem autorizações independentes do aluno.
         $fisicoPermitido = $repository->autorizado($usuarioId, $alunoId, 'fisico');
         $saudePermitida = $repository->autorizado($usuarioId, $alunoId, 'saude');
         $treinosPermitidos = $repository->autorizado($usuarioId, $alunoId, 'treinos');
         $periodo = $_GET['periodo'] ?? 'todos';
         try {
             $inicio = \App\Services\PerfilFisicoService::inicioPeriodo($periodo);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             http_response_code(422);
             echo 'Período inválido.';
             return;
