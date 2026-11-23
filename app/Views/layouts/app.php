@@ -13,6 +13,20 @@ $usuarioLogado = Auth::usuario();
 session_write_close();
 
 $titulo = $titulo ?? 'MOVI+';
+
+$caminhoAtual = parse_url(
+    $_SERVER['REQUEST_URI'] ?? '/',
+    PHP_URL_PATH
+) ?: '/';
+
+$menuAtivo = match (true) {
+    $caminhoAtual === '/painel' => 'inicio',
+    str_starts_with($caminhoAtual, '/exercicios') => 'exercicios',
+    str_starts_with($caminhoAtual, '/rotinas'),
+    str_starts_with($caminhoAtual, '/treinos') => 'treinos',
+    str_starts_with($caminhoAtual, '/perfil') => 'perfil',
+    default => '',
+};
 ?>
 
 <!DOCTYPE html>
@@ -30,24 +44,28 @@ $titulo = $titulo ?? 'MOVI+';
     <header>
         <a href="/painel"><strong>MOVI+</strong></a>
         
+
 <nav class="menu-principal" aria-label="Principal">
-    <a href="/painel" class="menu-link">
-        Início
-    </a>
+    <?php
+    $itensMenu = [
+        'inicio' => ['/painel', 'Início'],
+        'exercicios' => ['/exercicios', 'Exercícios'],
+        'treinos' => ['/rotinas', 'Rotinas e treinos'],
+        'perfil' => ['/perfil', 'Perfil físico'],
+    ];
 
-    <a href="/exercicios" class="menu-link">
-        Exercícios
-    </a>
-
-    <a href="/rotinas" class="menu-link">
-        Rotinas e treinos
-    </a>
-
-    <a href="/perfil" class="menu-link">
-        Perfil físico
-    </a>
+    foreach ($itensMenu as $id => [$url, $nome]):
+        $ativo = $menuAtivo === $id;
+    ?>
+        <a
+            href="<?= $url ?>"
+            class="menu-link <?= $ativo ? 'ativo' : '' ?>"
+            <?= $ativo ? 'aria-current="page"' : '' ?>
+        >
+            <?= htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') ?>
+        </a>
+    <?php endforeach; ?>
 </nav>
-
 
         <?php require __DIR__ . '/../partials/conta_conectada.php'; ?>
     </header>
