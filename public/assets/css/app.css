@@ -478,11 +478,6 @@ header > a:first-child {
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .menu-principal .menu-link {
-        transition: none;
-    }
-
 /* Destaque da página selecionada */
 .menu-principal .menu-link.ativo {
     background: #2EAD70;
@@ -494,6 +489,12 @@ header > a:first-child {
 .menu-principal .menu-link.ativo:hover {
     background: #26965f;
 }
+
+/* Acessibilidade: reduzir animações */
+@media (prefers-reduced-motion: reduce) {
+    .menu-principal .menu-link {
+        transition: none;
+    }
 
     .menu-principal .menu-link:hover {
         transform: none;
