@@ -761,3 +761,203 @@ body.home-publica {
         transform: none;
     }
 }
+
+/* =========================================
+   MOVI+ - PAINEL DO ALUNO
+   ========================================= */
+
+.painel-aluno {
+    color: #ffffff;
+    background: #111318;
+    border-radius: 20px;
+    padding: clamp(20px, 4vw, 40px);
+}
+
+/* Boas-vindas */
+.painel-boas-vindas {
+    background: linear-gradient(
+        120deg,
+        #20242d,
+        #28233b
+    );
+    border: 1px solid #383b4a;
+    border-radius: 18px;
+    padding: clamp(20px, 4vw, 36px);
+    margin-bottom: 36px;
+}
+
+.painel-tag {
+    display: inline-block;
+    color: #65d9a0;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.painel-boas-vindas h1 {
+    color: #ffffff;
+    margin: 16px 0;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+
+.painel-boas-vindas p {
+    color: #bfc7d5;
+    line-height: 1.7;
+}
+
+/* Área de funcionalidades */
+.painel-recursos h2 {
+    color: #ffffff;
+    font-size: 1.4rem;
+    margin-bottom: 24px;
+}
+
+.painel-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(100%, 260px), 1fr)
+    );
+    gap: 18px;
+}
+
+/* Cartões clicáveis */
+.painel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 190px;
+    padding: 26px;
+    background: #22262f;
+    border: 1px solid #383e4b;
+    border-top: 4px solid #2ead70;
+    border-radius: 16px;
+    text-decoration: none;
+    color: #ffffff;
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.painel-card h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.painel-card p {
+    color: #bfc7d5;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.painel-card-acao {
+    display: inline-block;
+    margin-top: auto;
+    color: #65d9a0;
+    font-weight: 700;
+}
+
+/* Cores dos cartões */
+.painel-card.verde {
+    border-top-color: #2ead70;
+}
+
+.painel-card.roxo {
+    border-top-color: #a390f7;
+}
+
+.painel-card.ciano {
+    border-top-color: #19bfe5;
+}
+
+.painel-card.laranja {
+    border-top-color: #ffaa45;
+}
+
+.painel-card.roxo .painel-card-acao {
+    color: #a390f7;
+}
+
+.painel-card.ciano .painel-card-acao {
+    color: #19bfe5;
+}
+
+.painel-card.laranja .painel-card-acao {
+    color: #ffaa45;
+}
+
+/* Interatividade */
+.painel-card:hover {
+    background: #2b303b;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.painel-card:focus-visible {
+    outline: 3px solid #19bfe5;
+    outline-offset: 4px;
+}
+
+/* Área profissional */
+.painel-profissional {
+    margin-top: 36px;
+    padding: 26px;
+    border: 1px solid #383e4b;
+    border-radius: 16px;
+    background: #20242d;
+}
+
+.painel-profissional h2 {
+    color: #ffffff;
+    margin-top: 0;
+}
+
+.painel-profissional p {
+    color: #bfc7d5;
+}
+
+.painel-profissional a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 20px;
+    background: #8358ef;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.painel-profissional a:hover {
+    background: #6d43d5;
+}
+
+/* Celulares */
+@media (max-width: 600px) {
+    .painel-aluno {
+        padding: 16px;
+    }
+
+    .painel-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .painel-card {
+        min-height: 155px;
+        padding: 20px;
+    }
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    .painel-card {
+        transition: none;
+    }
+
+    .painel-card:hover {
+        transform: none;
+    }
+}
