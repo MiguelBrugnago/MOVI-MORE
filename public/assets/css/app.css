@@ -522,3 +522,242 @@ header .logo-img {
         width: 145px;
     }
 }
+
+/* =========================================
+   MOVI+ - HOME PÚBLICA
+   ========================================= */
+
+body.home-publica {
+    margin: 0;
+    padding: 24px clamp(16px, 4vw, 64px);
+    max-width: none;
+    min-height: 100vh;
+    background:
+        radial-gradient(
+            circle at 85% 20%,
+            rgba(131, 88, 239, 0.15),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 10% 75%,
+            rgba(46, 173, 112, 0.1),
+            transparent 35%
+        ),
+        #111318;
+    color: #ffffff;
+}
+
+/* Cabeçalho da Home */
+.home-publica .home-header {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 16px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #292e38;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.home-publica .home-logo img {
+    display: block;
+    width: 180px;
+    height: auto;
+}
+
+/* Navegação pública */
+.home-publica .home-nav {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.home-publica .home-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 20px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 10px;
+}
+
+.home-publica .home-nav a:hover {
+    background: #292e38;
+}
+
+.home-publica .home-nav .home-btn-cadastro {
+    background: #2EAD70;
+}
+
+.home-publica .home-nav .home-btn-cadastro:hover {
+    background: #26965f;
+}
+
+/* Conteúdo principal */
+.home-publica .home-main {
+    max-width: 1240px;
+    margin: 0 auto;
+}
+
+/* Área de apresentação */
+.home-publica .home-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 100px 16px 80px;
+}
+
+.home-publica .home-tag {
+    color: #65d9a0;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.home-publica .home-hero h1 {
+    max-width: 800px;
+    margin: 24px 0;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    line-height: 1.1;
+    letter-spacing: -2px;
+}
+
+.home-publica .home-hero h1 span {
+    color: #a390f7;
+}
+
+.home-publica .home-hero p {
+    max-width: 620px;
+    color: #bfc7d5;
+    font-size: 1.15rem;
+    line-height: 1.7;
+}
+
+/* Botões principais */
+.home-publica .home-acoes {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 28px;
+}
+
+.home-publica .home-acoes a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.home-publica .home-btn-principal {
+    background: #2EAD70;
+}
+
+.home-publica .home-btn-secundario {
+    background: #242831;
+    border: 1px solid #464d59;
+}
+
+.home-publica .home-acoes a:hover {
+    transform: translateY(-3px);
+}
+
+.home-publica .home-btn-principal:hover {
+    background: #26965f;
+}
+
+.home-publica .home-btn-secundario:hover {
+    background: #343a46;
+}
+
+/* Cartões de funcionalidades */
+.home-publica .home-recursos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    padding: 20px 0 60px;
+}
+
+.home-publica .home-card {
+    background: #20242d;
+    border: 1px solid #343a46;
+    border-radius: 18px;
+    padding: 30px;
+    margin: 0;
+    transition: transform 0.2s;
+}
+
+.home-publica .home-card:hover {
+    transform: translateY(-5px);
+}
+
+.home-publica .home-card:nth-child(1) {
+    border-top: 3px solid #2EAD70;
+}
+
+.home-publica .home-card:nth-child(2) {
+    border-top: 3px solid #8358ef;
+}
+
+.home-publica .home-card:nth-child(3) {
+    border-top: 3px solid #19bfe5;
+}
+
+.home-publica .home-card h2 {
+    color: #ffffff;
+    font-size: 1.3rem;
+}
+
+.home-publica .home-card p {
+    color: #bfc7d5;
+    line-height: 1.7;
+}
+
+/* Rodapé */
+.home-publica .home-footer {
+    text-align: center;
+    color: #8f98a8;
+    padding: 24px 0;
+    border-top: 1px solid #292e38;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .home-publica .home-hero {
+        padding: 65px 12px;
+    }
+
+    .home-publica .home-recursos {
+        grid-template-columns: 1fr;
+    }
+
+    .home-publica .home-header {
+        justify-content: center;
+    }
+
+    .home-publica .home-hero h1 {
+        letter-spacing: -1px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-publica .home-acoes a,
+    .home-publica .home-card {
+        transition: none;
+    }
+
+    .home-publica .home-acoes a:hover,
+    .home-publica .home-card:hover {
+        transform: none;
+    }
+}
