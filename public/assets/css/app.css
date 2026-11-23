@@ -398,3 +398,92 @@ header p {
     border-left: 4px solid #b03725;
     background: #fff1ed;
 }
+
+/* =========================================
+   MOVI+ - NOVO MENU DE NAVEGAÇÃO
+   ========================================= */
+
+header {
+    background: #111318;
+    border: 1px solid #292e38;
+    border-radius: 18px;
+    padding: 18px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 24px rgba(17, 19, 24, 0.12);
+}
+
+/* Logotipo */
+header > a:first-child {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+/* Menu principal */
+.menu-principal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Botões de navegação */
+.menu-principal .menu-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 16px;
+    color: #e8edf2;
+    background: #242831;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background 0.2s ease,
+                transform 0.2s ease,
+                border-color 0.2s ease;
+}
+
+/* Efeito ao passar o mouse */
+.menu-principal .menu-link:hover {
+    background: #2EAD70;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Navegação pelo teclado */
+.menu-principal .menu-link:focus-visible {
+    outline: 3px solid #19BFE5;
+    outline-offset: 3px;
+}
+
+/* Adaptação para celulares */
+@media (max-width: 768px) {
+    header {
+        padding: 16px;
+    }
+
+    .menu-principal {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .menu-principal .menu-link {
+        flex: 1 1 auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-principal .menu-link {
+        transition: none;
+    }
+
+    .menu-principal .menu-link:hover {
+        transform: none;
+    }
+}
