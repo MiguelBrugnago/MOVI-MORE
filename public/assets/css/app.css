@@ -483,6 +483,18 @@ header > a:first-child {
         transition: none;
     }
 
+/* Destaque da página selecionada */
+.menu-principal .menu-link.ativo {
+    background: #2EAD70;
+    color: #ffffff;
+    border-color: #53d995;
+    box-shadow: 0 4px 14px rgba(46, 173, 112, 0.25);
+}
+
+.menu-principal .menu-link.ativo:hover {
+    background: #26965f;
+}
+
     .menu-principal .menu-link:hover {
         transform: none;
     }
