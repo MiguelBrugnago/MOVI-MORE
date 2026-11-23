@@ -42,7 +42,17 @@ $menuAtivo = match (true) {
 <body>
 
     <header>
-        <a href="/painel"><strong>MOVI+</strong></a>
+        
+<a href="/painel" class="logo-link" aria-label="MOVI+ - Ir para o início">
+    <img
+        src="/assets/img/movi-plus-logo-horizontal.png"
+        alt="MOVI+"
+        class="logo-img"
+        width="200"
+        height="63"
+    >
+</a>
+
         
 
 <nav class="menu-principal" aria-label="Principal">
