@@ -19,31 +19,104 @@ session_write_close();
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 
-<body>
-    <h1>Criar conta</h1>
+<body class="auth-page">
 
-    <form method="POST" action="/cadastro">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
+    <main class="auth-container">
 
-        <label for="nome">Nome</label>
-        <input id="nome" type="text" name="nome" minlength="3" maxlength="150" autocomplete="name" required>
+        <a href="/" class="auth-logo"
+           aria-label="MOVI+ - Página inicial">
+            <img
+                src="/assets/img/movi-plus-logo-horizontal.png"
+                alt="MOVI+"
+            >
+        </a>
 
-        <label for="email">E-mail</label>
-        <input id="email" type="email" name="email" maxlength="150" autocomplete="email" required>
-        
-        <label for="senha">Senha</label>
-        <input id="senha" type="password" name="senha"
-               minlength="8" maxlength="32"
-               autocomplete="new-password" required>
+        <section class="auth-card">
 
-        <label for="confirmar_senha">Confirmar senha</label>
-        <input id="confirmar_senha" type="password"
-               name="confirmar_senha"
-               minlength="8" maxlength="32"
-               autocomplete="new-password" required>
+            <h1>Comece sua evolução</h1>
 
-        <button type="submit">Cadastrar</button>
-    </form>
+            <p class="auth-subtitulo">
+                Crie sua conta e organize seus
+                treinos em um só lugar.
+            </p>
+
+            <form method="POST" action="/cadastro">
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>"
+                >
+
+                <label for="nome">
+                    Nome completo
+                    <input
+                        id="nome"
+                        type="text"
+                        name="nome"
+                        minlength="3"
+                        maxlength="150"
+                        autocomplete="name"
+                        placeholder="Seu nome completo"
+                        required
+                    >
+                </label>
+
+                <label for="email">
+                    E-mail
+                    <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        maxlength="150"
+                        autocomplete="email"
+                        placeholder="seu@email.com"
+                        required
+                    >
+                </label>
+
+                <label for="senha">
+                    Senha
+                    <input
+                        id="senha"
+                        type="password"
+                        name="senha"
+                        minlength="8"
+                        maxlength="32"
+                        autocomplete="new-password"
+                        placeholder="Mínimo de 8 caracteres"
+                        required
+                    >
+                </label>
+
+                <label for="confirmar_senha">
+                    Confirmar senha
+                    <input
+                        id="confirmar_senha"
+                        type="password"
+                        name="confirmar_senha"
+                        minlength="8"
+                        maxlength="32"
+                        autocomplete="new-password"
+                        placeholder="Digite a senha novamente"
+                        required
+                    >
+                </label>
+
+                <button type="submit" class="auth-btn">
+                    Criar minha conta
+                </button>
+
+            </form>
+
+            <p class="auth-rodape">
+                Já possui uma conta?
+                <a href="/login">Entrar</a>
+            </p>
+
+        </section>
+
+    </main>
+
 </body>
-
 </html>

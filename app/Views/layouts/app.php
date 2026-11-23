@@ -13,6 +13,20 @@ $usuarioLogado = Auth::usuario();
 session_write_close();
 
 $titulo = $titulo ?? 'MOVI+';
+
+$caminhoAtual = parse_url(
+    $_SERVER['REQUEST_URI'] ?? '/',
+    PHP_URL_PATH
+) ?: '/';
+
+$menuAtivo = match (true) {
+    $caminhoAtual === '/painel' => 'inicio',
+    str_starts_with($caminhoAtual, '/exercicios') => 'exercicios',
+    str_starts_with($caminhoAtual, '/rotinas'),
+    str_starts_with($caminhoAtual, '/treinos') => 'treinos',
+    str_starts_with($caminhoAtual, '/perfil') => 'perfil',
+    default => '',
+};
 ?>
 
 <!DOCTYPE html>
@@ -28,9 +42,40 @@ $titulo = $titulo ?? 'MOVI+';
 <body>
 
     <header>
-        <a href="/painel"><strong>MOVI+</strong></a>
-        <nav aria-label="Principal"><a href="/exercicios">Exercícios</a> · <a href="/rotinas">Rotinas e treinos</a> · <a href="/perfil">Perfil físico</a>
-        </nav>
+        
+<a href="/painel" class="logo-link" aria-label="MOVI+ - Ir para o início">
+    <img
+        src="/assets/img/movi-plus-logo-horizontal.png"
+        alt="MOVI+"
+        class="logo-img"
+        width="200"
+        height="63"
+    >
+</a>
+
+        
+
+<nav class="menu-principal" aria-label="Principal">
+    <?php
+    $itensMenu = [
+        'inicio' => ['/painel', 'Início'],
+        'exercicios' => ['/exercicios', 'Exercícios'],
+        'treinos' => ['/rotinas', 'Rotinas e treinos'],
+        'perfil' => ['/perfil', 'Perfil físico'],
+    ];
+
+    foreach ($itensMenu as $id => [$url, $nome]):
+        $ativo = $menuAtivo === $id;
+    ?>
+        <a
+            href="<?= $url ?>"
+            class="menu-link <?= $ativo ? 'ativo' : '' ?>"
+            <?= $ativo ? 'aria-current="page"' : '' ?>
+        >
+            <?= htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') ?>
+        </a>
+    <?php endforeach; ?>
+</nav>
 
         <?php require __DIR__ . '/../partials/conta_conectada.php'; ?>
     </header>
