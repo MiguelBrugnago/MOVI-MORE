@@ -1335,57 +1335,113 @@ main:has(> .perfil-fisico-form, > .perfil-avaliacao-form),
 .perfil-evolucao .fisico-grafico circle {
     fill: #65d9a0;
 }
-main:has(> .nutricao-consulta-dia) {
-    color-scheme: dark;
-    color: #e8edf2;
-}
-
-main:has(> .nutricao-consulta-dia) .treino-card {
-    background-color: #20242d;
-    border-color: #383e4b;
-    border-radius: 16px;
-}
-
-main:has(> .nutricao-consulta-dia) :is(input, select, textarea) {
-    background-color: #161a21;
-    border-color: #717e90;
-}
-
-main:has(> .nutricao-consulta-dia) fieldset {
-    min-width: 0;
-    border: 1px solid #717e90;
-    border-radius: 10px;
-}
-
 .nutricao-consulta-dia {
     align-items: flex-end;
 }
 
-.nutricao-consulta-dia > button {
-    background-color: #65d9a0;
-    border-color: #65d9a0;
-    color: #0b0d11;
-    font-weight: 700;
+.nutricao-resumo > h2 {
+    margin-top: 0;
 }
 
-main:has(> .nutricao-consulta-dia) summary {
-    min-height: 44px;
-    padding-block: 10px;
-    font-weight: 700;
-    cursor: pointer;
+.nutricao-resumo > p,
+.nutricao-registros span {
+    color: var(--movi-texto-secundario);
 }
 
-main:has(> .nutricao-consulta-dia) dl {
-    margin-block: 16px;
+.nutricao-metricas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+    gap: 12px;
+    margin: 20px 0 28px;
 }
 
-main:has(> .nutricao-consulta-dia) dt {
-    font-weight: 700;
+.nutricao-metrica {
+    --nutricao-acento: var(--movi-verde);
+
+    min-width: 0;
+    padding: clamp(14px, 2vw, 20px);
+    background-color: var(--movi-fundo-painel);
+    border: 1px solid var(--movi-borda);
+    border-top: 3px solid var(--nutricao-acento);
+    border-radius: 14px;
 }
 
-main:has(> .nutricao-consulta-dia) dd {
-    margin: 0 0 12px;
-    color: #c4cbd4;
+.nutricao-metrica--proteinas {
+    --nutricao-acento: #b69af8;
+}
+
+.nutricao-metrica--carboidratos {
+    --nutricao-acento: #53cee9;
+}
+
+.nutricao-metrica--gorduras {
+    --nutricao-acento: #ffb35e;
+}
+
+.nutricao-metrica dt {
+    color: var(--nutricao-acento);
+    font-size: 0.9rem;
+}
+
+.nutricao-metrica dd {
+    display: grid;
+    gap: 4px;
+    margin: 8px 0 0;
+}
+
+.nutricao-metrica dd strong {
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.nutricao-metrica dd span {
+    color: var(--movi-texto-secundario);
+    font-size: 0.875rem;
+}
+
+.nutricao-registros {
+    display: grid;
+    gap: 8px;
+    padding: 0;
+    list-style: none;
+}
+
+.nutricao-registros li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--movi-fundo-painel);
+    border: 1px solid var(--movi-borda);
+    border-radius: 12px;
+}
+
+.nutricao-registros li > div {
+    display: grid;
+    gap: 4px;
+}
+
+.nutricao-registros form {
+    margin: 0;
+}
+
+.nutricao-registros .nutricao-remover-registro {
+    background-color: var(--movi-fundo-campo);
+    border-color: #ae6763;
+    color: #ffb4ad;
+}
+
+.nutricao-formulario-consumo {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    max-width: none;
+}
+
+.nutricao-formulario-consumo > button {
+    grid-column: 1 / -1;
+    justify-self: start;
 }
 :root:has(> .movi-app) {
     background:
