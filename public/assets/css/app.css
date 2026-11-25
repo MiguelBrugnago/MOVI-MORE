@@ -1129,32 +1129,39 @@ body.auth-page {
         transform: none;
     }
 }
-:root:has(.biblioteca-exercicios) {
+:root:has(.biblioteca-exercicios, .exercicio-detalhes) {
     background-color: #0b0d11;
 }
 
-.biblioteca-exercicios {
+.biblioteca-exercicios,
+.exercicio-detalhes {
     color-scheme: dark;
     color: #e8edf2;
 }
 
-.biblioteca-exercicios a {
+.biblioteca-exercicios a,
+.exercicio-detalhes a {
     color: #65d9a0;
 }
 
 .biblioteca-exercicios .filtros,
-.biblioteca-exercicios .catalogo article {
+.biblioteca-exercicios .catalogo article,
+.exercicio-ficha,
+.exercicio-detalhes form {
     background-color: #161a21;
     border: 1px solid #383f4c;
     border-radius: 14px;
 }
 
-.biblioteca-exercicios .filtros {
+.biblioteca-exercicios .filtros,
+.exercicio-ficha,
+.exercicio-detalhes form {
     padding: clamp(16px, 3vw, 24px);
 }
 
 .biblioteca-exercicios .filtros input[type="search"],
-.biblioteca-exercicios .filtros select {
+.biblioteca-exercicios .filtros select,
+.exercicio-detalhes select {
     background-color: #20252e;
     border-color: #717e90;
 }
@@ -1177,7 +1184,8 @@ body.auth-page {
 }
 
 .biblioteca-exercicios .filtros button,
-.biblioteca-exercicios .paginacao [aria-current="page"] {
+.biblioteca-exercicios .paginacao [aria-current="page"],
+.exercicio-detalhes button {
     background-color: #65d9a0;
     border-color: #65d9a0;
     color: #0b0d11;
@@ -1189,6 +1197,42 @@ body.auth-page {
     justify-self: start;
 }
 
-.biblioteca-exercicios .catalogo p {
+.biblioteca-exercicios .catalogo p,
+.exercicio-ficha dd {
     color: #c4cbd4;
+}
+
+.exercicio-ficha {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 8px 24px;
+    max-width: 640px;
+}
+
+.exercicio-ficha dt {
+    grid-column: 1;
+    font-weight: 700;
+}
+
+.exercicio-ficha dd {
+    grid-column: 2;
+    margin: 0;
+}
+
+.exercicio-midia {
+    display: block;
+    max-width: min(100%, 560px);
+    height: auto;
+    margin: 16px 0;
+    border-radius: 12px;
+}
+
+@media (max-width: 480px) {
+    .exercicio-ficha {
+        display: block;
+    }
+
+    .exercicio-ficha dt:not(:first-child) {
+        margin-top: 12px;
+    }
 }
