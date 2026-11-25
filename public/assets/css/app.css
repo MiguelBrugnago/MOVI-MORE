@@ -1130,7 +1130,7 @@ body.auth-page {
     }
 }
 :root:has(.biblioteca-exercicios, .exercicio-detalhes, .editor-rotinas),
-:root:has(.perfil-fisico-form, .nutricao-consulta-dia) {
+:root:has(.perfil-fisico-form, .nutricao-consulta-dia, .perfil-avaliacoes) {
     background-color: #0b0d11;
 }
 
@@ -1267,36 +1267,57 @@ main:has(> .editor-rotinas) > .treino-nav a {
     color: #ffb4ad;
     border-color: #ae6763;
 }
-main:has(> .perfil-fisico-form) {
+main:has(> .perfil-fisico-form),
+.perfil-avaliacoes {
     color-scheme: dark;
     color: #e8edf2;
 }
 
-main:has(> .perfil-fisico-form) a {
+:is(main:has(> .perfil-fisico-form), .perfil-avaliacoes) a {
     color: #65d9a0;
 }
 
-main:has(> .perfil-fisico-form) :is(article, fieldset, .treino-destaque) {
+:is(main:has(> .perfil-fisico-form), .perfil-avaliacoes) :is(article, fieldset, .treino-destaque) {
     background-color: #161a21;
     border-color: #383f4c;
 }
 
-main:has(> .perfil-fisico-form) :is(.treino-nav a, .treino-link, input, select, textarea, button) {
+:is(main:has(> .perfil-fisico-form), .perfil-avaliacoes) :is(.treino-nav a, .treino-link, input, select, textarea, button) {
     background-color: #20252e;
     border-color: #717e90;
 }
 
-main:has(> .perfil-fisico-form) .perfil-fisico-form > button {
+.perfil-fisico-form > button {
     background-color: #65d9a0;
     border-color: #65d9a0;
     color: #0b0d11;
     font-weight: 700;
 }
 
-main:has(> .perfil-fisico-form) .fisico-erro {
+:is(main:has(> .perfil-fisico-form), .perfil-avaliacoes) .fisico-erro {
     background-color: #351f23;
     border-color: #ffb4ad;
     color: #ffdad6;
+}
+
+.perfil-avaliacoes table {
+    background-color: #161a21;
+    border: 1px solid #383f4c;
+    border-radius: 14px;
+}
+
+.perfil-avaliacoes caption {
+    padding: 12px;
+    color: #c4cbd4;
+    text-align: start;
+}
+
+.perfil-avaliacoes th {
+    background-color: #20252e;
+}
+
+.perfil-avaliacoes :is(th, td) {
+    border-bottom-color: #383f4c;
 }
 main:has(> .nutricao-consulta-dia) {
     color-scheme: dark;
