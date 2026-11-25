@@ -1130,7 +1130,7 @@ body.auth-page {
     }
 }
 :root:has(.biblioteca-exercicios, .exercicio-detalhes, .editor-rotinas),
-:root:has(.perfil-fisico-form, .nutricao-consulta-dia, .perfil-avaliacoes, .perfil-avaliacao-form) {
+:root:has(.perfil-fisico-form, .nutricao-consulta-dia, .perfil-avaliacoes, .perfil-avaliacao-form, .perfil-evolucao) {
     background-color: #0b0d11;
 }
 
@@ -1268,58 +1268,72 @@ main:has(> .editor-rotinas) > .treino-nav a {
     border-color: #ae6763;
 }
 main:has(> .perfil-fisico-form, > .perfil-avaliacao-form),
-.perfil-avaliacoes {
+.perfil-avaliacoes,
+.perfil-evolucao {
     color-scheme: dark;
     color: #e8edf2;
 }
 
-:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes) a {
+:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes, .perfil-evolucao) a {
     color: #65d9a0;
 }
 
-:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes)
+:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes, .perfil-evolucao)
     :is(article, fieldset, .treino-card, .treino-destaque) {
     background-color: #161a21;
     border-color: #383f4c;
 }
 
-:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes)
+:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes, .perfil-evolucao)
     :is(.treino-nav a, .treino-link, input, select, textarea, button) {
     background-color: #20252e;
     border-color: #717e90;
 }
 
-:is(.perfil-fisico-form, .perfil-avaliacao-form) > button {
+:is(.perfil-fisico-form, .perfil-avaliacao-form) > button,
+.perfil-evolucao .filtros > button {
     background-color: #65d9a0;
     border-color: #65d9a0;
     color: #0b0d11;
     font-weight: 700;
 }
 
-:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes) .fisico-erro {
+:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes, .perfil-evolucao) .fisico-erro {
     background-color: #351f23;
     border-color: #ffb4ad;
     color: #ffdad6;
 }
 
-.perfil-avaliacoes table {
+:is(.perfil-avaliacoes, .perfil-evolucao) table {
     background-color: #161a21;
     border: 1px solid #383f4c;
     border-radius: 14px;
 }
 
-.perfil-avaliacoes caption {
+:is(.perfil-avaliacoes, .perfil-evolucao) caption {
     padding: 12px;
     color: #c4cbd4;
     text-align: start;
 }
 
-.perfil-avaliacoes th {
+:is(.perfil-avaliacoes, .perfil-evolucao) th {
     background-color: #20252e;
 }
 
-.perfil-avaliacoes :is(th, td) {
+:is(.perfil-avaliacoes, .perfil-evolucao) :is(th, td) {
     border-bottom-color: #383f4c;
+}
+
+.perfil-evolucao .fisico-grafico text {
+    fill: #c4cbd4;
+}
+
+.perfil-evolucao .fisico-grafico polyline {
+    stroke: #65d9a0;
+}
+
+.perfil-evolucao .fisico-grafico circle {
+    fill: #65d9a0;
 }
 main:has(> .nutricao-consulta-dia) {
     color-scheme: dark;
