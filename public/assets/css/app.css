@@ -1285,7 +1285,7 @@ main:has(> .perfil-fisico-form, > .perfil-avaliacao-form),
 }
 
 :is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes, .perfil-evolucao)
-    :is(.treino-nav a, .treino-link, input, select, textarea, button) {
+    :is(.treino-nav a, .treino-link, input, select, textarea) {
     background-color: #20252e;
     border-color: #717e90;
 }
@@ -1346,7 +1346,7 @@ main:has(> .nutricao-consulta-dia) .treino-card {
     border-radius: 16px;
 }
 
-main:has(> .nutricao-consulta-dia) :is(input, select, textarea, button) {
+main:has(> .nutricao-consulta-dia) :is(input, select, textarea) {
     background-color: #161a21;
     border-color: #717e90;
 }
@@ -1386,4 +1386,121 @@ main:has(> .nutricao-consulta-dia) dt {
 main:has(> .nutricao-consulta-dia) dd {
     margin: 0 0 12px;
     color: #c4cbd4;
+}
+:root:has(> .movi-app) {
+    background:
+        radial-gradient(ellipse at top right, #201a2e, transparent 38rem),
+        #0b0d11;
+}
+
+.movi-app {
+    --movi-fundo-painel: #111318;
+    --movi-fundo-cartao: #20242d;
+    --movi-fundo-campo: #262b35;
+    --movi-borda: #383e4b;
+    --movi-texto: #f4f7fa;
+    --movi-texto-secundario: #c4cbd4;
+    --movi-verde: #65d9a0;
+
+    color-scheme: dark;
+    color: var(--movi-texto);
+}
+
+.movi-cabecalho .conta-conectada {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    align-items: center;
+    max-width: 100%;
+}
+
+.movi-cabecalho .conta-conectada > small {
+    grid-column: 1;
+}
+
+.movi-cabecalho .conta-conectada > form {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+}
+
+.movi-cabecalho .conta-conectada button {
+    background-color: var(--movi-fundo-campo);
+    border-color: #596474;
+}
+
+.movi-conteudo:not(:has(> .painel-aluno)) {
+    padding: clamp(16px, 3vw, 36px);
+    background-color: var(--movi-fundo-painel);
+    border: 1px solid var(--movi-borda);
+    border-radius: 20px;
+}
+
+.movi-conteudo:not(:has(> .painel-aluno)) :where(h1) {
+    margin: 0 0 20px;
+    padding: clamp(20px, 4vw, 36px);
+    background: linear-gradient(120deg, #20242d, #28233b);
+    border: 1px solid #383b4a;
+    border-radius: 18px;
+    line-height: 1.15;
+}
+
+.movi-app .movi-conteudo :where(article, fieldset, .treino-card, .treino-destaque, .treino-dialogo) {
+    background-color: var(--movi-fundo-cartao);
+    border-color: var(--movi-borda);
+    border-radius: 16px;
+    color: var(--movi-texto);
+}
+
+.movi-app .movi-conteudo :where(fieldset) {
+    min-inline-size: 0;
+    padding: clamp(12px, 2vw, 20px);
+}
+
+.movi-app .movi-conteudo :where(input, select, textarea) {
+    background-color: var(--movi-fundo-campo);
+    border-color: #717e90;
+    color: var(--movi-texto);
+}
+
+.movi-app .movi-conteudo :where(input, textarea)::placeholder {
+    color: var(--movi-texto-secundario);
+}
+
+.movi-app :where(.movi-conteudo:not(:has(> .painel-aluno))) a {
+    color: var(--movi-verde);
+}
+
+.movi-app .movi-conteudo :where(.treino-nav a, .treino-link) {
+    background-color: var(--movi-fundo-campo);
+    border-color: #596474;
+}
+
+.movi-app :where(.movi-conteudo) :where(button) {
+    background-color: var(--movi-verde);
+    border-color: var(--movi-verde);
+    border-radius: 10px;
+    color: #0b0d11;
+    font-weight: 700;
+}
+
+.movi-app .movi-conteudo :where(summary) {
+    min-height: 44px;
+    padding-block: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.movi-app .movi-conteudo :where(th, td) {
+    border-bottom-color: var(--movi-borda);
+}
+
+.movi-app .movi-conteudo :where(progress, meter) {
+    accent-color: var(--movi-verde);
+}
+
+@media (max-width: 600px) {
+    .movi-app .movi-conteudo .tabela-responsiva tr {
+        background-color: var(--movi-fundo-cartao);
+        border-color: var(--movi-borda);
+    }
 }
