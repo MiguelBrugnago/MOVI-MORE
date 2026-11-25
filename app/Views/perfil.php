@@ -15,7 +15,7 @@ require __DIR__ . '/fisico_comum.php'; ?>
 <?php endforeach; ?>
 </section>
 <p><a class="treino-link" href="/perfil/avaliacoes/nova">Registrar peso e medidas</a> · Estimativas calculadas não são medições clínicas.</p>
-<form method="post" action="/perfil" class="fisico-form">
+<form method="post" action="/perfil" class="fisico-form perfil-fisico-form">
 <input type="hidden" name="csrf_token" value="<?= $csrf ?>"><input type="hidden" name="acao" value="perfil">
 <fieldset><legend>Dados pessoais e físicos</legend><div class="treino-campos">
 <label>Data de nascimento<input type="date" name="data_nascimento" min="1900-01-01" max="<?= \App\Services\PerfilFisicoService::hoje() ?>" value="<?= $esc($perfil['data_nascimento'] ?? '') ?>"></label>
