@@ -1130,7 +1130,7 @@ body.auth-page {
     }
 }
 :root:has(.biblioteca-exercicios, .exercicio-detalhes, .editor-rotinas),
-:root:has(.perfil-fisico-form, .nutricao-consulta-dia, .perfil-avaliacoes) {
+:root:has(.perfil-fisico-form, .nutricao-consulta-dia, .perfil-avaliacoes, .perfil-avaliacao-form) {
     background-color: #0b0d11;
 }
 
@@ -1267,34 +1267,36 @@ main:has(> .editor-rotinas) > .treino-nav a {
     color: #ffb4ad;
     border-color: #ae6763;
 }
-main:has(> .perfil-fisico-form),
+main:has(> .perfil-fisico-form, > .perfil-avaliacao-form),
 .perfil-avaliacoes {
     color-scheme: dark;
     color: #e8edf2;
 }
 
-:is(main:has(> .perfil-fisico-form), .perfil-avaliacoes) a {
+:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes) a {
     color: #65d9a0;
 }
 
-:is(main:has(> .perfil-fisico-form), .perfil-avaliacoes) :is(article, fieldset, .treino-destaque) {
+:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes)
+    :is(article, fieldset, .treino-card, .treino-destaque) {
     background-color: #161a21;
     border-color: #383f4c;
 }
 
-:is(main:has(> .perfil-fisico-form), .perfil-avaliacoes) :is(.treino-nav a, .treino-link, input, select, textarea, button) {
+:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes)
+    :is(.treino-nav a, .treino-link, input, select, textarea, button) {
     background-color: #20252e;
     border-color: #717e90;
 }
 
-.perfil-fisico-form > button {
+:is(.perfil-fisico-form, .perfil-avaliacao-form) > button {
     background-color: #65d9a0;
     border-color: #65d9a0;
     color: #0b0d11;
     font-weight: 700;
 }
 
-:is(main:has(> .perfil-fisico-form), .perfil-avaliacoes) .fisico-erro {
+:is(main:has(> .perfil-fisico-form, > .perfil-avaliacao-form), .perfil-avaliacoes) .fisico-erro {
     background-color: #351f23;
     border-color: #ffb4ad;
     color: #ffdad6;
