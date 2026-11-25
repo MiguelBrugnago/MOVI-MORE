@@ -98,7 +98,7 @@ $tituloRotinas = match (true) {
         </p>
     <?php endif; ?>
 
-    <?php foreach ($rotinas as $r): ?>
+    <div class="catalogo">
         <?php foreach ($rotinas as $r): ?>
             <article>
                 <h2><a href="<?= $base ?>?id=<?= (int)$r['id'] ?><?= $arquivadas ? '&amp;arquivadas=1' : '' ?>"><?= $esc($r['nome']) ?></a></h2>
