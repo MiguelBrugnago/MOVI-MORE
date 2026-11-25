@@ -44,23 +44,68 @@ $rascunho = $diario['rascunho'];
     <label>Dia do diário<input type="date" name="data" value="<?= $esc($data) ?>" max="<?= $hoje ?>" required></label>
     <button>Consultar dia</button>
 </form>
-<section class="treino-card">
-    <h2>Consumo e metas do dia</h2>
-    <p>Valores calculados pelas porções registradas. As metas são informadas pela conta.</p>
-    <dl><?php foreach ($nutrientes as $campo => $rotulo):
-        $total = array_sum(array_column($diario['registros'], $campo . '_total'));
-        $alvo = $plano[$campo . '_alvo'] ?? null; ?>
-        <dt><?= $rotulo ?></dt><dd><?= $numero($total) ?> consumidos · <?= $alvo === null ? 'Sem meta' : 'Meta de ' . $numero($alvo) ?></dd>
-    <?php endforeach; ?></dl>
-    <?php if (!$diario['registros']): ?><p>Nenhum consumo registrado neste dia.</p><?php endif; ?>
-    <?php foreach ($diario['registros'] as $r): ?>
-        <p><?= $esc($r['alimento_nome_snapshot']) ?> · <?= $esc($r['nome_refeicao']) ?> · <?= $numero($r['quantidade_gramas']) ?> g · <?= $numero($r['calorias_total']) ?> kcal</p>
-        <?php if ($pessoal): ?><form method="post"><?php $campos('corrigir_diario', ['id' => $r['id']]); ?><button>Remover registro de <?= $esc($r['alimento_nome_snapshot']) ?></button></form><?php endif; ?>
-    <?php endforeach; ?>
+<section class="treino-card nutricao-resumo" aria-labelledby="titulo-consumo-diario">
+    <h2 id="titulo-consumo-diario">Consumo e metas do dia</h2>
+    <p>Veja o total das porções registradas e compare com suas metas.</p>
+
+    <dl class="nutricao-metricas">
+        <?php foreach ($nutrientes as $campoNutriente => $rotuloNutriente): ?>
+            <?php
+            $totalConsumido = array_sum(array_column($diario['registros'], $campoNutriente . '_total'));
+            $metaNutriente = $plano[$campoNutriente . '_alvo'] ?? null;
+            ?>
+            <div class="nutricao-metrica nutricao-metrica--<?= $esc($campoNutriente) ?>">
+                <dt><?= $esc($rotuloNutriente) ?></dt>
+                <dd>
+                    <strong><?= $numero($totalConsumido) ?></strong>
+                    <span><?= $metaNutriente === null ? 'Sem meta' : 'Meta de ' . $numero($metaNutriente) ?></span>
+                </dd>
+            </div>
+        <?php endforeach; ?>
+    </dl>
+
+    <h3>Registros do dia</h3>
+    <?php if (!$diario['registros']): ?>
+        <p>Nenhum consumo registrado neste dia.</p>
+    <?php else: ?>
+        <ul class="nutricao-registros">
+            <?php foreach ($diario['registros'] as $registro): ?>
+                <li>
+                    <div>
+                        <strong><?= $esc($registro['alimento_nome_snapshot']) ?></strong>
+                        <span>
+                            <?= $esc($registro['nome_refeicao']) ?> ·
+                            <?= $numero($registro['quantidade_gramas']) ?> g ·
+                            <?= $numero($registro['calorias_total']) ?> kcal
+                        </span>
+                    </div>
+
+                    <?php if ($pessoal): ?>
+                        <form method="post">
+                            <?php $campos('corrigir_diario', ['id' => $registro['id']]); ?>
+                            <button type="submit" class="nutricao-remover-registro">
+                                Remover <?= $esc($registro['alimento_nome_snapshot']) ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+
     <?php if ($pessoal && $diario['alimentos']): ?>
-    <form method="post"><?php $campos('consumo', ['chave' => bin2hex(random_bytes(16))]); $porcao(); ?>
-        <label>Nome da refeição<input name="refeicao" maxlength="120"></label><button>Registrar consumo</button>
-    </form>
+        <h3>Registrar consumo</h3>
+        <form method="post" class="nutricao-formulario-consumo">
+            <?php
+            $campos('consumo', ['chave' => bin2hex(random_bytes(16))]);
+            $porcao();
+            ?>
+            <label>
+                Nome da refeição
+                <input name="refeicao" maxlength="120">
+            </label>
+            <button type="submit">Registrar consumo</button>
+        </form>
     <?php endif; ?>
 </section>
 <section class="treino-card">
