@@ -1054,7 +1054,7 @@ body.auth-page {
     font-weight: 600;
 }
 
-.auth-card input:not([type="hidden"]) {
+.auth-card :is(input:not([type="hidden"]), select, textarea) {
     width: 100%;
     min-height: 48px;
     padding: 12px 14px;
@@ -1091,6 +1091,27 @@ body.auth-page {
 .auth-card .auth-btn:hover {
     background: #26965f;
     transform: translateY(-2px);
+}
+.auth-container-profissional {
+    max-width: 520px;
+    color-scheme: dark;
+}
+
+.auth-cadastro-profissional textarea {
+    resize: vertical;
+}
+
+.auth-cadastro-profissional .auth-btn {
+    color: #0b0d11;
+}
+
+.auth-card .auth-erro {
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    background-color: #351f23;
+    border: 1px solid #ae6763;
+    border-radius: 10px;
+    color: #ffdad6;
 }
 .auth-confirmacao-simbolo {
     display: grid;
