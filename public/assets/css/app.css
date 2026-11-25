@@ -1129,7 +1129,7 @@ body.auth-page {
         transform: none;
     }
 }
-:root:has(.biblioteca-exercicios, .exercicio-detalhes) {
+:root:has(.biblioteca-exercicios, .exercicio-detalhes, .editor-rotinas) {
     background-color: #0b0d11;
 }
 
@@ -1235,4 +1235,34 @@ body.auth-page {
     .exercicio-ficha dt:not(:first-child) {
         margin-top: 12px;
     }
+}
+.editor-rotinas {
+    color-scheme: dark;
+    color: #e8edf2;
+}
+
+.editor-rotinas a,
+main:has(> .editor-rotinas) > .treino-nav a {
+    color: #65d9a0;
+}
+
+.editor-rotinas :is(.treino-card, .treino-destaque, .catalogo article) {
+    background-color: #161a21;
+    border-color: #383f4c;
+}
+
+.editor-rotinas :is(.treino-link, .treino-serie),
+main:has(> .editor-rotinas) > .treino-nav a {
+    background-color: #20252e;
+    border-color: #717e90;
+}
+
+.editor-rotinas :is(input, select, textarea, button) {
+    background-color: #20252e;
+    border-color: #717e90;
+}
+
+.editor-rotinas button[data-confirm] {
+    color: #ffb4ad;
+    border-color: #ae6763;
 }
