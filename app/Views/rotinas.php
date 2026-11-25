@@ -73,20 +73,32 @@ $tituloRotinas = match (true) {
             </form>
         </details>
     <?php endif; ?>
+            <?php if ($pessoais): ?>
         <details class="treino-card">
             <summary>Criar modelo a partir de uma rotina minha</summary>
             <form method="post" action="/profissional/modelos/salvar">
                 <?php $hidden(['acao' => 'copiar_pessoal']); ?>
-                <label>Rotina de origem<select name="rotina_id" required>
-                    <option value="">Selecione uma rotina</option>
-                    <?php foreach ($pessoais as $pessoal): ?>
-                        <option value="<?= (int)$pessoal['id'] ?>"><?= $esc($pessoal['nome']) ?></option>
-                    <?php endforeach ?>
-                </select></label>
-                <button>Copiar como modelo</button>
+                <label>
+                    Rotina de origem
+                    <select name="rotina_id" required>
+                        <option value="">Selecione uma rotina</option>
+                        <?php foreach ($pessoais as $pessoal): ?>
+                            <option value="<?= (int) $pessoal['id'] ?>"><?= $esc($pessoal['nome']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <button type="submit">Copiar como modelo</button>
             </form>
         </details>
-    <?php endif ?>
+    <?php endif; ?>
+
+    <?php if (!$rotinas): ?>
+        <p class="treino-card rotinas-vazio">
+            <?= $modelo ? 'Nenhum modelo nesta lista.' : 'Nenhuma rotina nesta lista.' ?>
+        </p>
+    <?php endif; ?>
+
+    <div class="catalogo">
        <?php if (!$rotinas): ?>
         <p class="treino-card rotinas-vazio">
             <?= $modelo ? 'Nenhum modelo nesta lista.' : 'Nenhuma rotina nesta lista.' ?>
