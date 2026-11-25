@@ -18,6 +18,7 @@ declare(strict_types=1);
 ?>
 
 <h1>Acompanhamento do aluno</h1>
+<?php if ($nutricaoPermitida): ?><p><a href="/nutricao?aluno=<?= (int)$alunoId ?>">Consultar alimentação do aluno</a></p><?php endif; ?>
 
 <a href="/alunos">
     Voltar para meus alunos

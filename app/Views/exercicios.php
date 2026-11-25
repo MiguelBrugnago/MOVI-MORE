@@ -12,7 +12,7 @@ $esc = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 <form method="get" class="filtros">
     <label>Buscar por nome<input name="q" maxlength="150" value="<?= $esc($filtros['q']) ?>"
             placeholder="Nome em português ou inglês"></label>
-    <?php foreach (['grupo' => 'Grupo muscular', 'equipamento' => 'Equipamento', 'modalidade' => 'Modalidade'] as $k => $label): ?>
+    <?php foreach (['grupo' => 'Grupo muscular', 'equipamento' => 'Equipamento', 'modalidade' => 'Modalidade', 'ambiente' => 'Ambiente'] as $k => $label): ?>
         <label><?= $label ?><select name="<?= $k ?>">
                 <option value="">Todos</option>
                 <?php foreach ($opcoes[$k] as $o): ?>
@@ -20,6 +20,7 @@ $esc = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
                         <?= $esc($o['nome']) ?>
                     </option><?php endforeach; ?>
             </select></label><?php endforeach; ?>
+    <label><input type="checkbox" name="favoritos" value="1" <?= $filtros['favoritos'] === '1' ? 'checked' : '' ?>> Somente favoritos</label>
     <label>Ordenar<select name="ordem">
             <option value="az">Nome A–Z</option>
             <option value="za" <?= $filtros['ordem'] === 'za' ? 'selected' : '' ?>>Nome Z–A</option>

@@ -37,7 +37,8 @@ final class AlunoController
             return;
         }
 
-        $alunos = $repository->listarAlunosAtivos($usuarioId);
+        $busca = is_string($_GET['q'] ?? null) ? mb_substr(trim($_GET['q']), 0, 150) : '';
+        $alunos = $repository->listarAlunosAtivos($usuarioId, $busca);
 
         $titulo = 'MOVI+ | Meus Alunos';
         $viewPath = __DIR__ . '/../Views/alunos.php';
@@ -94,6 +95,7 @@ final class AlunoController
         $fisicoPermitido = $repository->autorizado($usuarioId, $alunoId, 'fisico');
         $saudePermitida = $repository->autorizado($usuarioId, $alunoId, 'saude');
         $treinosPermitidos = $repository->autorizado($usuarioId, $alunoId, 'treinos');
+        $nutricaoPermitida = $repository->autorizado($usuarioId, $alunoId, 'nutricao');
         $periodo = $_GET['periodo'] ?? 'todos';
         try {
             $inicio = \App\Services\PerfilFisicoService::inicioPeriodo($periodo);
@@ -110,7 +112,7 @@ final class AlunoController
         if ($fisicoPermitido) {
             $perfil = $fisico->perfil($alunoId);
             $avaliacoes = $fisico->historico($alunoId, $inicio);
-            $recente = $fisico->historico($alunoId)[0] ?? null;
+            $recente = $avaliacoes[0] ?? ($inicio === null ? null : $fisico->recente($alunoId));
             $repository->registrarLeitura($usuarioId, $alunoId, 'perfil_avaliacoes');
         }
         if ($saudePermitida) {

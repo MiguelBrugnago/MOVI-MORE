@@ -25,6 +25,7 @@ $menuAtivo = match (true) {
     str_starts_with($caminhoAtual, '/rotinas'),
     str_starts_with($caminhoAtual, '/treinos') => 'treinos',
     str_starts_with($caminhoAtual, '/perfil') => 'perfil',
+    $caminhoAtual === '/nutricao' => 'nutricao',
     default => '',
 };
 ?>
@@ -61,18 +62,19 @@ $menuAtivo = match (true) {
         'inicio' => ['/painel', 'Início'],
         'exercicios' => ['/exercicios', 'Exercícios'],
         'treinos' => ['/rotinas', 'Rotinas e treinos'],
+        'nutricao' => ['/nutricao', 'Nutrição'],
         'perfil' => ['/perfil', 'Perfil físico'],
     ];
 
-    foreach ($itensMenu as $id => [$url, $nome]):
-        $ativo = $menuAtivo === $id;
+    foreach ($itensMenu as $chaveMenu => [$urlMenu, $rotuloMenu]):
+        $itemAtivo = $menuAtivo === $chaveMenu;
     ?>
         <a
-            href="<?= $url ?>"
-            class="menu-link <?= $ativo ? 'ativo' : '' ?>"
-            <?= $ativo ? 'aria-current="page"' : '' ?>
+            href="<?= $urlMenu ?>"
+            class="menu-link <?= $itemAtivo ? 'ativo' : '' ?>"
+            <?= $itemAtivo ? 'aria-current="page"' : '' ?>
         >
-            <?= htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') ?>
+            <?= htmlspecialchars($rotuloMenu, ENT_QUOTES, 'UTF-8') ?>
         </a>
     <?php endforeach; ?>
 </nav>

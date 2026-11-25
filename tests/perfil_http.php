@@ -35,29 +35,7 @@ foreach (['aluno', 'outro', 'profissional'] as $papel) {
     $email = "$papel-$sufixo@example.test";
     $usuarios[$papel] = $db->inserir('usuario', ['nome' => $papel, 'email' => $email, 'senha_hash' => password_hash($senha, PASSWORD_DEFAULT)]);
 }
-// O cliente conserva os cookies entre chamadas e exige o status esperado antes de verificar o conteúdo do perfil.
-/** Cria um cliente que mantém a sessão entre chamadas e confere o status esperado de cada resposta. */
-$cliente = static function () {
-    $ch = curl_init();
-    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEFILE => '', CURLOPT_HEADER => true, CURLOPT_TIMEOUT => 15]);
-    return static function (string $url, int $esperado, ?array $post = null) use ($ch): string {
-        curl_setopt($ch, CURLOPT_URL, 'http://127.0.0.1' . $url);
-        if ($post === null) {
-            curl_setopt($ch, CURLOPT_HTTPGET, true);
-        } else {
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
-        }
-        $res = curl_exec($ch);
-        conferir(curl_getinfo($ch, CURLINFO_RESPONSE_CODE) === $esperado, "$url esperado $esperado: " . substr((string)$res, 0, 900));
-        return (string)$res;
-    };
-};
-/** Obtém o token do HTML da própria sessão para as alterações de perfil testadas. */
-$token = static function (string $html): string {
-    preg_match('/name="csrf_token" value="([a-f0-9]+)"/', $html, $m);
-    return $m[1] ?? throw new RuntimeException('Sem CSRF');
-};
+require __DIR__ . '/cliente_http.php';
 $anon = $cliente();
 foreach (['/perfil', '/perfil/avaliacoes', '/perfil/evolucao', '/perfil/avaliacoes/nova', '/perfil/avaliacoes/ver?id=1'] as $url) {
     $anon($url, 303);

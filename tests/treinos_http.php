@@ -85,6 +85,10 @@ $http('/rotinas/adicionar', 303, $csrf + ['rotina_id' => $r, 'exercicio_id' => $
 $x = $db->itens((int)$r, true)[0];
 $http('/rotinas/salvar', 303, $csrf + ['rotina_id' => $r, 'item_id' => $x['id'], 'acao' => 'serie_adicionar', 'repeticoes_min' => 8, 'repeticoes_max' => 10, 'carga_alvo' => 30]);
 [, $treino] = $http('/treinos/iniciar', 303, $csrf + ['rotina_id' => $r]);
+[$paginaRotinas] = $http('/rotinas', 200);
+if (!str_contains($paginaRotinas, 'Retomar:') || !str_contains($paginaRotinas, $treino)) {
+    throw new RuntimeException('Sessão ativa não pode ser retomada na lista de rotinas.');
+}
 $http($treino, 200);
 parse_str(parse_url($treino, PHP_URL_QUERY), $ids);
 $t = (int)$ids['id'];
@@ -158,6 +162,10 @@ $salvarModelo = '/profissional/modelos/salvar';
 [, $editor] = $http($salvarModelo, 303, $csrf + ['acao' => 'criar', 'nome' => $nome, 'objetivo' => 'Força']);
 parse_str(parse_url($editor, PHP_URL_QUERY), $modelo);
 $dadosModelo = ['rotina_id' => $modelo['id']];
+[$detalhesExercicio] = $http('/exercicios/ver?id=' . $e['id'], 200);
+if (str_contains($detalhesExercicio, '<option value="' . $modelo['id'] . '">')) {
+    throw new RuntimeException('Modelo profissional apareceu como destino em uma rotina pessoal.');
+}
 $http('/treinos/exercicios?rotina=' . $modelo['id'], 200);
 $http($salvarModelo, 303, $csrf + $dadosModelo + ['acao' => 'adicionar', 'exercicio_id' => $e['id']]);
 [$htmlModelo] = $http($editor, 200);
@@ -198,7 +206,10 @@ $novoEmail = 'cadastro-' . bin2hex(random_bytes(6)) . '@example.test';
 foreach (["senha\0invalida", str_repeat('🔐', 19)] as $invalida) {
     $novo('/cadastro', 422, ['csrf_token' => $token($cadastro), 'nome' => 'Cadastro HTTP', 'email' => $novoEmail, 'senha' => $invalida, 'confirmar_senha' => $invalida]);
 }
-$novo('/cadastro', 201, ['csrf_token' => $token($cadastro), 'nome' => 'Cadastro HTTP', 'email' => $novoEmail, 'senha' => $senha, 'confirmar_senha' => $senha]);
+[$sucessoCadastro] = $novo('/cadastro', 201, ['csrf_token' => $token($cadastro), 'nome' => 'Cadastro HTTP', 'email' => $novoEmail, 'senha' => $senha, 'confirmar_senha' => $senha]);
+if (!str_contains($sucessoCadastro, 'href="/login"')) {
+    throw new RuntimeException('Cadastro concluído sem acesso ao login.');
+}
 $login($novo, $novoEmail);
 
 // MySQL e PHP em fusos diferentes: a janela deve usar o relógio que gravou a tentativa.

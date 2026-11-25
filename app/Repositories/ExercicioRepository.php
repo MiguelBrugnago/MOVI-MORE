@@ -15,6 +15,36 @@ final class ExercicioRepository
 {
     private PDO $pdo;
 
+    public function ambientes(int $id): array
+    {
+        $s = $this->pdo->prepare('SELECT a.nome FROM ambiente a JOIN exercicio_ambiente ea ON ea.ambiente_id=a.id WHERE ea.exercicio_id=? ORDER BY a.nome');
+        $s->execute([$id]);
+        return $s->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function equipamentosAdicionais(int $id): array
+    {
+        $s = $this->pdo->prepare('SELECT q.nome,a.observacao FROM exercicio_equipamento_adicional a
+            JOIN equipamento q ON q.id=a.equipamento_id WHERE a.exercicio_id=? ORDER BY q.nome');
+        $s->execute([$id]);
+        return $s->fetchAll();
+    }
+
+    public function favorito(int $usuario, int $id): bool
+    {
+        $s = $this->pdo->prepare('SELECT 1 FROM exercicio_favorito WHERE usuario_id=? AND exercicio_id=?');
+        $s->execute([$usuario, $id]);
+        return (bool) $s->fetchColumn();
+    }
+
+    public function salvarFavorito(int $usuario, int $id, bool $marcado): void
+    {
+        $sql = $marcado
+            ? 'INSERT INTO exercicio_favorito (usuario_id,exercicio_id) VALUES (?,?) ON DUPLICATE KEY UPDATE id=id'
+            : 'DELETE FROM exercicio_favorito WHERE usuario_id=? AND exercicio_id=?';
+        $this->pdo->prepare($sql)->execute([$usuario, $id]);
+    }
+
     /**
      * Obtém a conexão comum ao catálogo e às consultas dos filtros.
      */
@@ -44,7 +74,12 @@ final class ExercicioRepository
             $where[count($where) - 1] = str_replace(['LIKE :nome', 'LIKE :ingles', 'LIKE :alternativo'], ["LIKE :nome ESCAPE '!'", "LIKE :ingles ESCAPE '!'", "LIKE :alternativo ESCAPE '!'"], $where[count($where) - 1]);
             $params += ['nome' => $termo, 'ingles' => $termo, 'alternativo' => $termo];
         }
-        foreach (['grupo' => 'grupo_muscular_id', 'equipamento' => 'equipamento_id', 'modalidade' => 'modalidade'] as $chave => $coluna) {
+        if ($filtros['equipamento'] !== '') {
+            $where[] = '(e.equipamento_id=:principal OR EXISTS (SELECT 1 FROM exercicio_equipamento_adicional a
+                WHERE a.exercicio_id=e.id AND a.equipamento_id=:adicional))';
+            $params += ['principal' => $filtros['equipamento'], 'adicional' => $filtros['equipamento']];
+        }
+        foreach (['grupo' => 'grupo_muscular_id', 'modalidade' => 'modalidade'] as $chave => $coluna) {
             if ($filtros[$chave] !== '') {
                 $where[] = "e.$coluna=:$chave";
                 $params[$chave] = $filtros[$chave];
@@ -55,6 +90,10 @@ final class ExercicioRepository
                 $where[] = "EXISTS (SELECT 1 FROM $tabela f WHERE f.exercicio_id=e.id AND f.{$chave}_id=:$chave)";
                 $params[$chave] = $filtros[$chave];
             }
+        }
+        if (($filtros['favoritos'] ?? '') === '1') {
+            $where[] = 'EXISTS (SELECT 1 FROM exercicio_favorito f WHERE f.exercicio_id=e.id AND f.usuario_id=:dono)';
+            $params['dono'] = $usuarioId;
         }
         $condicao = implode(' AND ', $where);
         $s = $this->pdo->prepare('SELECT COUNT(*) FROM exercicio e WHERE ' . $condicao);
@@ -98,11 +137,12 @@ final class ExercicioRepository
     /**
      * Monta os valores de grupo, equipamento e modalidade oferecidos na pesquisa.
      *
-     * @return array{grupo:array,equipamento:array,modalidade:array}
+     * @return array{grupo:array,equipamento:array,modalidade:array,ambiente:array}
      */
     public function filtros(): array
     {
-        return ['grupo' => $this->pdo->query('SELECT id,nome FROM grupo_muscular ORDER BY ordem,nome')->fetchAll(), 'equipamento' => $this->pdo->query('SELECT DISTINCT eq.id,eq.nome FROM equipamento eq JOIN exercicio e ON e.equipamento_id=eq.id WHERE e.ativo=1 AND e.usuario_id IS NULL ORDER BY eq.nome')->fetchAll(), 'modalidade' => $this->pdo->query('SELECT DISTINCT modalidade AS id,modalidade AS nome FROM exercicio WHERE ativo=1 AND usuario_id IS NULL ORDER BY modalidade')->fetchAll()];
+        return ['ambiente' => $this->pdo->query('SELECT id,nome FROM ambiente ORDER BY nome')->fetchAll(),
+            'grupo' => $this->pdo->query('SELECT id,nome FROM grupo_muscular ORDER BY ordem,nome')->fetchAll(), 'equipamento' => $this->pdo->query('SELECT id,nome FROM equipamento ORDER BY nome')->fetchAll(), 'modalidade' => $this->pdo->query('SELECT DISTINCT modalidade AS id,modalidade AS nome FROM exercicio WHERE ativo=1 AND usuario_id IS NULL ORDER BY modalidade')->fetchAll()];
     }
 
     /**

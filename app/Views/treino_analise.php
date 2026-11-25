@@ -104,6 +104,12 @@ foreach (['0 — sem registro', 'Acima de 0 e abaixo de ' . $faixas[0], $faixas[
 <?php foreach ($m['volumes'] as $v): ?><p><?= $esc($v['nome'] . ' · ' . $v['lado']) ?>: <?= $num($v['volume']) ?> kg × rep.</p><?php endforeach ?>
 <?php $barras('Séries equivalentes por semana', $m['semanas'], 'séries'); ?>
 </details><?php endforeach ?></div></article>
+<details class="treino-card"><summary>Séries planejadas e realizadas por grupo</summary>
+<p>Nas sessões concluídas do período, cada série copiada da rotina conta como planejada. Uma série concluída sem meta copiada conta como extra. Esta comparação inclui aquecimento e preparatórias.</p>
+<?php if (!$planejamento): ?><p>Sem séries no período.</p><?php endif; ?>
+<?php foreach ($planejamento as $grupo): ?>
+    <p><?= $esc($grupo['grupo']) ?> · Planejadas: <?= (int)$grupo['planejadas'] ?> · Realizadas do plano: <?= (int)$grupo['realizadas'] ?> · Extras realizadas: <?= (int)$grupo['extras'] ?></p>
+<?php endforeach; ?></details>
 <?php $barras('Distribuição de séries por grupo do exercício', $dados['grupos'], 'séries'); ?>
 <p>Uma série conta uma vez no grupo cadastrado do exercício. Na análise por músculo ela pode aparecer em várias regiões. Diferenças entre grupos descrevem os registros e não constituem diagnóstico.</p>
 <?php $barras('Frequência de treino por semana', array_map(static fn ($s) => $s['treinos'], $dados['semanas']), 'sessões'); ?>

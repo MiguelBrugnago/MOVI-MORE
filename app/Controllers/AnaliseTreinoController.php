@@ -49,6 +49,7 @@ final class AnaliseTreinoController
                 throw new InvalidArgumentException('Métrica inválida.');
             }
             $repo = new AnaliseTreinoRepository(new TreinoRepository(Database::conectar()));
+            $planejamento = $repo->planejamentoExecutado($u, $p['inicio'], $p['fim']);
             $catalogo = $repo->catalogo();
             $relacoes = $repo->relacoes($u, $p['anterior_inicio'], $p['fim']);
             $execucoes = $repo->execucoes($u, $p['inicio'], $p['fim']);

@@ -15,6 +15,12 @@ final class ProfissionalRepository
 {
     private PDO $pdo;
 
+    public function atualizarPerfil(int $usuario, ?string $especialidade, ?string $descricao): void
+    {
+        $s = $this->pdo->prepare('UPDATE profissional SET especialidade=?,descricao=? WHERE usuario_id=? AND ativo=1');
+        $s->execute([$especialidade, $descricao, $usuario]);
+    }
+
     /**
      * Obtém a conexão usada para consultar e cadastrar perfis profissionais.
      */
