@@ -1857,3 +1857,110 @@ main:has(> .perfil-fisico-form, > .perfil-avaliacao-form),
 .editor-rotinas .catalogo article > h2 {
     margin-top: 0;
 }
+.movi-conteudo:has(> .perfil-fisico-form) > .treino-nav {
+    margin: 0 0 24px;
+}
+
+.perfil-resumo,
+.perfil-saude {
+    margin-block: 24px 32px;
+}
+
+.perfil-resumo-cabecalho,
+.perfil-declaracao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.perfil-resumo-cabecalho {
+    margin-bottom: 16px;
+}
+
+.perfil-resumo-cabecalho h2,
+.perfil-declaracoes article > h3 {
+    margin-top: 0;
+}
+
+.perfil-resumo-cabecalho h2 {
+    margin-bottom: 4px;
+}
+
+.perfil-resumo-cabecalho p,
+.perfil-nota {
+    color: var(--movi-texto-secundario);
+}
+
+.perfil-resumo-cabecalho p,
+.perfil-declaracao :is(p, form) {
+    margin: 0;
+}
+
+.movi-conteudo .perfil-resumo-cabecalho .perfil-acao-avaliacao {
+    background-color: var(--movi-verde);
+    border-color: var(--movi-verde);
+    color: #0b0d11;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.movi-conteudo .perfil-resumo-cabecalho .perfil-acao-avaliacao:hover {
+    background-color: #82e6b4;
+    border-color: #82e6b4;
+}
+
+.perfil-indicadores {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+
+.perfil-indicadores .perfil-indicador {
+    --perfil-acento: var(--movi-verde);
+
+    padding: clamp(16px, 3vw, 24px);
+    border-top: 3px solid var(--perfil-acento);
+}
+
+.perfil-indicadores .perfil-indicador--gordura {
+    --perfil-acento: #b69af8;
+}
+
+.perfil-indicadores .perfil-indicador--massa_magra {
+    --perfil-acento: #53cee9;
+}
+
+.perfil-indicador h3 {
+    margin: 0 0 10px;
+    color: var(--perfil-acento);
+}
+
+.perfil-indicador p {
+    margin: 0;
+}
+
+.perfil-indicador strong {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.perfil-fisico-form > button {
+    justify-self: start;
+    min-width: min(100%, 12rem);
+}
+
+.perfil-declaracoes {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+}
+
+.perfil-declaracao {
+    padding-block: 12px;
+    border-top: 1px solid var(--movi-borda);
+}
+
+.perfil-declaracao .perfil-acao-remover {
+    background-color: var(--movi-fundo-campo);
+    border-color: #ae6763;
+    color: #ffb4ad;
+}
