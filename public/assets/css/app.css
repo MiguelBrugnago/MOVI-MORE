@@ -1130,7 +1130,7 @@ body.auth-page {
     }
 }
 :root:has(.biblioteca-exercicios, .exercicio-detalhes, .editor-rotinas),
-:root:has(.perfil-fisico-form) {
+:root:has(.perfil-fisico-form, .nutricao-consulta-dia) {
     background-color: #0b0d11;
 }
 
@@ -1297,4 +1297,56 @@ main:has(> .perfil-fisico-form) .fisico-erro {
     background-color: #351f23;
     border-color: #ffb4ad;
     color: #ffdad6;
+}
+main:has(> .nutricao-consulta-dia) {
+    color-scheme: dark;
+    color: #e8edf2;
+}
+
+main:has(> .nutricao-consulta-dia) .treino-card {
+    background-color: #20242d;
+    border-color: #383e4b;
+    border-radius: 16px;
+}
+
+main:has(> .nutricao-consulta-dia) :is(input, select, textarea, button) {
+    background-color: #161a21;
+    border-color: #717e90;
+}
+
+main:has(> .nutricao-consulta-dia) fieldset {
+    min-width: 0;
+    border: 1px solid #717e90;
+    border-radius: 10px;
+}
+
+.nutricao-consulta-dia {
+    align-items: flex-end;
+}
+
+.nutricao-consulta-dia > button {
+    background-color: #65d9a0;
+    border-color: #65d9a0;
+    color: #0b0d11;
+    font-weight: 700;
+}
+
+main:has(> .nutricao-consulta-dia) summary {
+    min-height: 44px;
+    padding-block: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+main:has(> .nutricao-consulta-dia) dl {
+    margin-block: 16px;
+}
+
+main:has(> .nutricao-consulta-dia) dt {
+    font-weight: 700;
+}
+
+main:has(> .nutricao-consulta-dia) dd {
+    margin: 0 0 12px;
+    color: #c4cbd4;
 }
