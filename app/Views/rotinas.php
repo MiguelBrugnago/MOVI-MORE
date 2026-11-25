@@ -98,12 +98,7 @@ $tituloRotinas = match (true) {
         </p>
     <?php endif; ?>
 
-    <div class="catalogo">
-       <?php if (!$rotinas): ?>
-        <p class="treino-card rotinas-vazio">
-            <?= $modelo ? 'Nenhum modelo nesta lista.' : 'Nenhuma rotina nesta lista.' ?>
-        </p>
-    <?php endif; ?>
+    <?php foreach ($rotinas as $r): ?>
         <?php foreach ($rotinas as $r): ?>
             <article>
                 <h2><a href="<?= $base ?>?id=<?= (int)$r['id'] ?><?= $arquivadas ? '&amp;arquivadas=1' : '' ?>"><?= $esc($r['nome']) ?></a></h2>
