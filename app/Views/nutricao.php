@@ -39,7 +39,7 @@ $plano = $diario['plano'];
 $rascunho = $diario['rascunho'];
 ?>
 <h1><?= $pessoal ? 'Minha alimentação' : 'Acompanhamento alimentar do aluno #' . (int)$titular ?></h1>
-<form method="get" class="treino-acoes">
+<form method="get" class="treino-acoes nutricao-consulta-dia">
     <?php if (!$pessoal): ?><input type="hidden" name="aluno" value="<?= (int)$titular ?>"><?php endif; ?>
     <label>Dia do diário<input type="date" name="data" value="<?= $esc($data) ?>" max="<?= $hoje ?>" required></label>
     <button>Consultar dia</button>
