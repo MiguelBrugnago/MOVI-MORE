@@ -1646,3 +1646,99 @@ main:has(> .perfil-fisico-form, > .perfil-avaliacao-form),
         grid-template-columns: minmax(0, 1fr);
     }
 }
+.movi-app .vinculos-nav a[aria-current="page"] {
+    background-color: var(--movi-verde);
+    border-color: var(--movi-verde);
+    color: #0b0d11;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.vinculos-conteudo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    align-items: start;
+    gap: clamp(16px, 3vw, 28px);
+    margin-block: 24px;
+}
+
+.vinculos-conteudo .vinculos-solicitacao,
+.vinculos-conteudo h2 {
+    margin-top: 0;
+}
+
+.vinculos-solicitacao form {
+    margin-bottom: 0;
+}
+
+.vinculo-identificacao,
+.vinculo-acoes,
+.vinculo-permissao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.vinculo-identificacao,
+.vinculo-permissao {
+    justify-content: space-between;
+}
+
+.vinculo-identificacao h3,
+.vinculo-identificacao p,
+.vinculo-permissao p {
+    margin: 0;
+}
+
+.vinculo-identificacao p,
+.vinculo-permissoes > p {
+    color: var(--movi-texto-secundario);
+}
+
+.vinculo-status {
+    padding: 4px 10px;
+    background-color: var(--movi-fundo-campo);
+    border: 1px solid var(--movi-borda);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.vinculo-status[data-status="ativo"] {
+    color: var(--movi-verde);
+}
+
+.vinculo-status[data-status="pendente"] {
+    color: #ffb35e;
+}
+
+.vinculo-permissoes,
+.vinculo-permissao {
+    margin-block: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--movi-borda);
+}
+
+.vinculo-permissao p {
+    flex: 1 1 14rem;
+}
+
+.vinculo-cartao .vinculo-acao-secundaria {
+    background-color: var(--movi-fundo-campo);
+    border-color: #717e90;
+    color: var(--movi-texto);
+}
+
+.vinculo-cartao .vinculo-acao-perigo {
+    background-color: var(--movi-fundo-campo);
+    border-color: #ae6763;
+    color: #ffb4ad;
+}
+
+@media (max-width: 760px) {
+    .vinculos-conteudo {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
