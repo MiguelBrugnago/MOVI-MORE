@@ -1129,3 +1129,66 @@ body.auth-page {
         transform: none;
     }
 }
+:root:has(.biblioteca-exercicios) {
+    background-color: #0b0d11;
+}
+
+.biblioteca-exercicios {
+    color-scheme: dark;
+    color: #e8edf2;
+}
+
+.biblioteca-exercicios a {
+    color: #65d9a0;
+}
+
+.biblioteca-exercicios .filtros,
+.biblioteca-exercicios .catalogo article {
+    background-color: #161a21;
+    border: 1px solid #383f4c;
+    border-radius: 14px;
+}
+
+.biblioteca-exercicios .filtros {
+    padding: clamp(16px, 3vw, 24px);
+}
+
+.biblioteca-exercicios .filtros input[type="search"],
+.biblioteca-exercicios .filtros select {
+    background-color: #20252e;
+    border-color: #717e90;
+}
+
+.biblioteca-exercicios .biblioteca-filtro-favoritos {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    cursor: pointer;
+}
+
+.biblioteca-exercicios .biblioteca-filtro-favoritos input {
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    accent-color: #65d9a0;
+}
+
+.biblioteca-exercicios .filtros button,
+.biblioteca-exercicios .paginacao [aria-current="page"] {
+    background-color: #65d9a0;
+    border-color: #65d9a0;
+    color: #0b0d11;
+    font-weight: 700;
+}
+
+.biblioteca-exercicios .filtros > a {
+    align-self: center;
+    justify-self: start;
+}
+
+.biblioteca-exercicios .catalogo p {
+    color: #c4cbd4;
+}
