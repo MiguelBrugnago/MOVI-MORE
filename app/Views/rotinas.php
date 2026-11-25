@@ -24,7 +24,7 @@ use App\Services\RegistroTreino;
 
 require __DIR__ . '/treinos/comum.php';
 ?>
-<section class="treino-area">
+<section class="treino-area editor-rotinas">
     <h1><?= $modelo ? ($arquivadas ? 'Modelos arquivados' : 'Modelos de treino') : ($arquivadas ? 'Rotinas arquivadas' : 'Minhas rotinas') ?></h1>
     <?php if ($modelo): ?>
         <p><a href="/profissional/propostas?pendentes=1">Propostas pendentes</a></p>
