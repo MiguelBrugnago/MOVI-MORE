@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 <h1>Meus alunos</h1>
 
-<p>Alunos com acompanhamento ativo.</p>
+<form method="get"><label>Buscar aluno por nome<input name="q" maxlength="150" value="<?= htmlspecialchars($busca, ENT_QUOTES, 'UTF-8') ?>"></label><button>Filtrar alunos</button></form>
 
 <a href="/painel?modo=profissional">
     Voltar ao painel profissional
@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 <?php if (empty($alunos)): ?>
 
-    <p>Você ainda não possui alunos vinculados.</p>
+    <p>Nenhum aluno com acompanhamento ativo corresponde à consulta.</p>
 
     <a href="/vinculos?modo=profissional">
         Gerenciar solicitações de vínculo

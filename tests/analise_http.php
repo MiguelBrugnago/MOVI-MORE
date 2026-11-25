@@ -50,7 +50,7 @@ $cliente = static function () {
 };
 /** Obtém o token da página que antecede o POST sem misturar usuários de teste. */
 $token = static function (string $h): string {
-    preg_match('/name="csrf_token" value="([a-f0-9]+)"/', $h, $m);
+    preg_match('/name="csrf_token"\s+value="([a-f0-9]+)"/', $h, $m);
     return $m[1] ?? throw new RuntimeException('Token ausente');
 };
 $anon = $cliente();

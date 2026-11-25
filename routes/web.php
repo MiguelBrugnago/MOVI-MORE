@@ -14,6 +14,8 @@ use App\Controllers\RotinaController;
 
 return [
     'GET' => [
+        '/nutricao' => [\App\Controllers\NutricaoController::class, 'index'],
+        '/perfil/metas' => [\App\Controllers\ProgressoController::class, 'index'],
         '/profissional/modelos' => [RotinaController::class, 'modelos'],
         '/profissional/propostas' => [RotinaController::class, 'enviadas'],
         '/propostas' => [RotinaController::class, 'propostas'],
@@ -30,6 +32,7 @@ return [
         '/cadastro' => [HomeController::class, 'cadastro'],
         '/painel' => [PainelController::class, 'index'],
         '/profissional/cadastro' => [ProfissionalController::class, 'cadastro'],
+        '/profissional/perfil' => [ProfissionalController::class, 'perfil'],
         '/vinculos' => [\App\Controllers\VinculoController::class, 'index'],
         '/alunos' => [AlunoController::class, 'index'],
         '/alunos/visualizar' => [AlunoController::class, 'visualizar'],
@@ -44,6 +47,9 @@ return [
         '/treinos/ver' => [RotinaController::class, 'treino'],
     ],
     'POST' => [
+        '/exercicios/favorito' => [ExercicioController::class, 'salvarFavorito'],
+        '/nutricao' => [\App\Controllers\NutricaoController::class, 'salvar'],
+        '/perfil/metas' => [\App\Controllers\ProgressoController::class, 'salvar'],
         '/profissional/modelos/salvar' => [RotinaController::class, 'salvarModelo'],
         '/profissional/propostas/enviar' => [RotinaController::class, 'enviarProposta'],
         '/propostas/responder' => [RotinaController::class, 'responderProposta'],
@@ -61,6 +67,7 @@ return [
         '/login' => [AuthController::class, 'login'],
         '/logout' => [LogoutController::class, 'sair'],
         '/profissional/cadastro' => [ProfissionalController::class, 'cadastro'],
+        '/profissional/perfil' => [ProfissionalController::class, 'perfil'],
         '/vinculos/solicitar' => [\App\Controllers\VinculoController::class, 'solicitar'],
         '/vinculos/responder' => [\App\Controllers\VinculoController::class, 'responder'],
         '/vinculos/encerrar' => [\App\Controllers\VinculoController::class, 'encerrar'],

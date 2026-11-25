@@ -74,6 +74,7 @@ verificar($a['total'] > 0 && count($a['itens']) <= 24, 'Paginação do catálogo
 $e = $db->um("SELECT e.id,e.equipamento_id,e.grupo_muscular_id,e.tipo_registro_id FROM exercicio e JOIN tipo_registro tr ON tr.id=e.tipo_registro_id
     WHERE e.usuario_id IS NULL AND e.ativo=1 AND tr.natureza_carga='externa' AND tr.usa_repeticoes=1 ORDER BY e.id LIMIT 1", []);
 $privado = $svc->personalizado($u, ['nome' => 'Exercício privado', 'id' => null] + $e);
+rejeitar(fn () => $svc->personalizado($u, ['nome' => 'Exercício privado', 'id' => null] + $e), 409);
 verificar($catalogo->buscarPorId($privado, $outro) === null, 'Exercício privado exposto');
 rejeitar(fn () => $svc->personalizado($outro, ['id' => $privado, 'nome' => 'Invasão']), 404);
 $svc->personalizado($u, ['id' => $privado, 'nome' => 'Exercício privado atualizado'] + $e);
@@ -158,6 +159,10 @@ $svc->sessao($u, ['treino_id' => $livre, 'item_id' => $exec['id'], 'chave' => bi
 $porTempo = $db->series($livre, false)[$exec['id']][0];
 verificar($porTempo['duracao_segundos'] === 45 && $porTempo['peso'] === null && $porTempo['repeticoes'] === null, 'Métricas incompatíveis foram registradas');
 $svc->sessao($u, ['treino_id' => $livre], 'finalizar');
+
+rejeitar(fn () => $svc->sessao($u, ['treino_id' => $livre, 'item_id' => $exec['id'],
+    'serie_id' => $porTempo['id'], 'estado' => 'ignorada'], 'serie'), 409);
+verificar($db->possuiSerieConcluida($livre), 'Rollback preserva a última série realizada');
 
 // Os registros de desempenho ficam exclusivamente no banco descartável de teste.
 $db->consultar("INSERT INTO treino (usuario_id,nome,status,iniciado_em,finalizado_em)

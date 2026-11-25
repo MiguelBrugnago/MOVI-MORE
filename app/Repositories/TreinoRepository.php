@@ -316,7 +316,7 @@ final class TreinoRepository
      */
     public function personalizado(int $exercicio, int $usuario): ?array
     {
-        return $this->um('SELECT id,tipo_registro_id FROM exercicio
+        return $this->um('SELECT id,nome,tipo_registro_id FROM exercicio
             WHERE id=? AND usuario_id=? AND ativo=1 FOR UPDATE', [$exercicio, $usuario]);
     }
 

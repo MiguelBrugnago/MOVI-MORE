@@ -122,10 +122,7 @@ class VinculoController
             ->profissionalDoUsuario($usuarioId) !== null;
 
         // As permissões são agrupadas por vínculo, pois o mesmo aluno pode conceder categorias diferentes a cada profissional.
-        $permissoes = [];
-        foreach ($vinculos as $vinculo) {
-            $permissoes[$vinculo['id']] = $this->repository->permissoes((int)$vinculo['id']);
-        }
+        $permissoes = $modoProfissional ? [] : $this->repository->permissoesDoAluno($usuarioId);
 
         $mensagem = $_SESSION['mensagem_vinculo'] ?? '';
         unset($_SESSION['mensagem_vinculo']);

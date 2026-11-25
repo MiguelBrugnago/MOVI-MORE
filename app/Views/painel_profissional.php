@@ -21,7 +21,7 @@ declare(strict_types=1);
         <li><a href="/profissional/propostas">Propostas enviadas</a></li>
         <li><a href="/alunos">Acompanhar evolução dos alunos</a></li>
         <li><a href="/perfil">Meu perfil físico</a></li>
-        <li>Meu perfil profissional</li>
+        <li><a href="/profissional/perfil">Meu perfil profissional</a></li>
     </ul>
 </nav>
 

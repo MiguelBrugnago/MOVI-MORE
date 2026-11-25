@@ -1,4 +1,3 @@
-
 <?php
 
 declare(strict_types=1);
@@ -84,16 +83,15 @@ $recursos = [
 
                 <a
                     href="<?= htmlspecialchars(
-                        $recurso['url'],
-                        ENT_QUOTES,
-                        'UTF-8'
-                    ) ?>"
+                                $recurso['url'],
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ) ?>"
                     class="painel-card <?= htmlspecialchars(
-                        $recurso['cor'],
-                        ENT_QUOTES,
-                        'UTF-8'
-                    ) ?>"
-                >
+                                            $recurso['cor'],
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ) ?>">
                     <h3>
                         <?= htmlspecialchars(
                             $recurso['titulo'],

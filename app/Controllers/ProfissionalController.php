@@ -15,6 +15,41 @@ use PDOException;
  */
 final class ProfissionalController
 {
+    public function perfil(): void
+    {
+        $usuario = (int)Auth::usuario()['id'];
+        header('Cache-Control: no-store, private');
+        $repository = new ProfissionalRepository();
+        $perfil = $repository->buscarPorUsuarioId($usuario);
+        if (empty($perfil['ativo'])) {
+            http_response_code(403);
+            return;
+        }
+        $erro = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!Csrf::validarToken($_POST['csrf_token'] ?? null)) {
+                http_response_code(403);
+                return;
+            }
+            try {
+                $especialidade = \App\Support\Validacao::texto($_POST['especialidade'] ?? null, 120);
+                $descricao = \App\Support\Validacao::texto($_POST['descricao'] ?? null, 65535);
+                if (strlen($descricao ?? '') > 65535) {
+                    throw new \InvalidArgumentException('Descrição profissional muito longa.');
+                }
+                $repository->atualizarPerfil($usuario, $especialidade, $descricao);
+                header('Location: /profissional/perfil', true, 303);
+                return;
+            } catch (\InvalidArgumentException $e) {
+                http_response_code(422);
+                $erro = $e->getMessage();
+            }
+        }
+        $titulo = 'MOVI+ | Perfil profissional';
+        $viewPath = __DIR__ . '/../Views/perfil_profissional.php';
+        require __DIR__ . '/../Views/layouts/app.php';
+    }
+
     /**
      * Verifica se o perfil já existe. No POST valida CSRF e os campos, grava o cadastro e redireciona ao
      * painel profissional se houver sucesso.
@@ -54,12 +89,14 @@ final class ProfissionalController
             }
             [$tipo, $registro, $especialidade, $descricao] = $campos;
 
-            if ($tipo === '' || strlen($tipo) > 60) {
+            if ($tipo === '' || mb_strlen($tipo) > 60) {
+                http_response_code(422);
                 $erro = 'Informe um tipo de profissional válido.';
             } elseif (
-                strlen($registro) > 80 ||
-                strlen($especialidade) > 120 || strlen($descricao) > 65535
+                mb_strlen($registro) > 80 ||
+                mb_strlen($especialidade) > 120 || strlen($descricao) > 65535
             ) {
+                http_response_code(422);
                 $erro = 'Um dos campos excedeu o tamanho permitido.';
             } else {
                 try {

@@ -65,6 +65,18 @@ final class AnaliseTreinoRepository
             AND finalizado_em<FROM_UNIXTIME(?) ORDER BY finalizado_em,id", [$u, $inicio, $fim]);
     }
 
+    public function planejamentoExecutado(int $usuario, int $inicio, int $fim): array
+    {
+        return $this->db->todos("SELECT COALESCE(g.nome,'Sem grupo') grupo,
+            SUM(s.metas IS NOT NULL) planejadas,
+            SUM(s.metas IS NOT NULL AND s.concluida=1 AND s.ignorada=0) realizadas,
+            SUM(s.metas IS NULL AND s.concluida=1 AND s.ignorada=0) extras
+            FROM treino t JOIN treino_exercicio x ON x.treino_id=t.id JOIN serie s ON s.treino_exercicio_id=x.id
+            JOIN exercicio e ON e.id=x.exercicio_id LEFT JOIN grupo_muscular g ON g.id=e.grupo_muscular_id
+            WHERE t.usuario_id=? AND t.status='concluido' AND t.finalizado_em>=FROM_UNIXTIME(?)
+            AND t.finalizado_em<FROM_UNIXTIME(?) GROUP BY g.id,g.nome ORDER BY grupo", [$usuario, $inicio, $fim]);
+    }
+
     /**
      * Agrupa séries de trabalho concluídas por sessão, exercício e lado para contar séries e somar
      * repetições e volume compatíveis.

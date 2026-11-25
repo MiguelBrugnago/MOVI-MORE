@@ -10,7 +10,7 @@ $csrf = $esc(\App\Security\Csrf::gerarToken());
 ?>
 <?php if (!($somenteLeitura ?? false)): ?>
 <nav class="treino-nav" aria-label="Perfil físico">
-    <a href="/perfil">Meu perfil</a><a href="/perfil/avaliacoes">Avaliações</a><a href="/perfil/evolucao">Evolução corporal</a><a href="/vinculos">Compartilhamento</a>
+    <a href="/perfil">Meu perfil</a><a href="/perfil/avaliacoes">Avaliações</a><a href="/perfil/evolucao">Evolução corporal</a><a href="/perfil/metas">Metas e conquistas</a><a href="/vinculos">Compartilhamento</a>
 </nav>
 <?php endif; ?>
 <?php if (!empty($mensagem)): ?><p class="treino-destaque" role="status"><?= $esc($mensagem) ?></p><?php endif; ?>

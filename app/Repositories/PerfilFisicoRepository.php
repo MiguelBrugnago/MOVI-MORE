@@ -102,13 +102,13 @@ final class PerfilFisicoRepository
      * @param ?string $inicio Data inicial inclusiva em AAAA-MM-DD, ou null para o histórico completo.
      * @return list<array{id:int,profissional_id:?int,avaliado_em:string,observacao:?string,medidas:array<string,?float>}>
      */
-    public function historico(int $usuario, ?string $inicio = null): array
+    public function historico(int $usuario, ?string $inicio = null, ?int $id = null): array
     {
         $rows = $this->consultar(
             'SELECT a.id,a.profissional_id,a.avaliado_em,a.observacao,m.tipo,m.valor,m.unidade
             FROM avaliacao a LEFT JOIN medida m ON m.avaliacao_id=a.id AND m.usuario_id=a.usuario_id
-            WHERE a.usuario_id=?' . ($inicio ? ' AND a.avaliado_em>=?' : '') . ' ORDER BY a.avaliado_em DESC,a.id DESC,m.id',
-            $inicio ? [$usuario, $inicio] : [$usuario]
+            WHERE a.usuario_id=?' . ($inicio !== null ? ' AND a.avaliado_em>=?' : '') . ($id !== null ? ' AND a.id=?' : '') . ' ORDER BY a.avaliado_em DESC,a.id DESC,m.id',
+            array_values(array_filter([$usuario, $inicio, $id], static fn ($v) => $v !== null))
         )->fetchAll();
         $avaliacoes = [];
         foreach ($rows as $r) {
@@ -126,7 +126,7 @@ final class PerfilFisicoRepository
     }
 
     /**
-     * Seleciona uma avaliação pelo ID dentro do histórico da conta. Rejeita registros ausentes ou de
+     * Seleciona uma avaliação pelo ID e pela conta na consulta SQL. Rejeita registros ausentes ou de
      * outra pessoa.
      *
      * @param int $usuario ID da conta cujos dados delimitam a operação.
@@ -136,12 +136,13 @@ final class PerfilFisicoRepository
      */
     public function avaliacao(int $usuario, int $id): array
     {
-        foreach ($this->historico($usuario) as $a) {
-            if ((int)$a['id'] === $id) {
-                return $a;
-            }
-        }
-        throw new DomainException('Avaliação não encontrada.', 404);
+        return $this->historico($usuario, null, $id)[0] ?? throw new DomainException('Avaliação não encontrada.', 404);
+    }
+
+    public function recente(int $usuario): ?array
+    {
+        $id = $this->consultar('SELECT id FROM avaliacao WHERE usuario_id=? ORDER BY avaliado_em DESC,id DESC LIMIT 1', [$usuario])->fetchColumn();
+        return $id ? ($this->historico($usuario, null, (int)$id)[0] ?? null) : null;
     }
 
     /**

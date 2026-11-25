@@ -219,6 +219,7 @@ final class TreinoService
     {
         $id = RegistroTreino::numero($p['id'] ?? null, 1, 2147483647);
         return $this->db->transacao(function () use ($u, $p, $id) {
+            $this->db->bloquearUsuario($u);
             $atual = $id ? $this->db->personalizado($id, $u) : null;
             if ($id && !$atual) {
                 throw new DomainException('Exercício não encontrado.', 404);
@@ -228,6 +229,12 @@ final class TreinoService
                 'descricao' => RegistroTreino::texto($p['descricao'] ?? null, 4000) ?? '',
                 'instrucoes' => RegistroTreino::texto($p['instrucoes'] ?? null, 4000),
             ];
+            if ((!$atual || $atual['nome'] !== $dados['nome']) && $this->db->um(
+                'SELECT id FROM exercicio WHERE ativo=1 AND (usuario_id IS NULL OR usuario_id=?)
+                 AND nome=? AND id<>? LIMIT 1', [$u, $dados['nome'], $id ?? 0]
+            )) {
+                throw new DomainException('Já existe um exercício com esse nome na sua biblioteca.', 409);
+            }
             foreach (['equipamento', 'grupo_muscular', 'tipo_registro'] as $tabela) {
                 $campo = $tabela . '_id';
                 // Preserva a modalidade dos históricos e das metas já registradas.
@@ -386,6 +393,9 @@ final class TreinoService
                 throw new DomainException('O estado da série mudou. Reabra o treino para atualizar.', 409);
             }
             $this->db->atualizar('serie', $s, $dados);
+            if ($status === 'concluido' && !$dados['concluida'] && !$this->db->possuiSerieConcluida($id)) {
+                throw new DomainException('Mantenha uma série concluída ou exclua o treino do histórico.', 409);
+            }
             // Editar uma série já concluída não reinicia o descanso. O cronômetro depende da passagem para concluída.
             $novaConclusao = !$antiga['concluida'];
         } else {

@@ -18,16 +18,18 @@ use PDO;
 class VinculoProfissionalRepository
 {
     /**
-     * Carrega o valor de permitido por categoria no vínculo indicado.
-     *
-     * @param int $vinculo Identificador da relação entre profissional e aluno.
-     * @return array<string,int>
+     * Agrupa as categorias dos vínculos ativos que aparecem na tela de compartilhamento.
      */
-    public function permissoes(int $vinculo): array
+    public function permissoesDoAluno(int $aluno): array
     {
-        $s = $this->pdo->prepare('SELECT categoria_dados,permitido FROM permissao_acesso WHERE vinculo_profissional_id=?');
-        $s->execute([$vinculo]);
-        return $s->fetchAll(PDO::FETCH_KEY_PAIR);
+        $s = $this->pdo->prepare("SELECT v.id,p.categoria_dados,p.permitido FROM vinculo_profissional v
+            JOIN permissao_acesso p ON p.vinculo_profissional_id=v.id WHERE v.aluno_id=? AND v.status='ativo'");
+        $s->execute([$aluno]);
+        $permissoes = [];
+        foreach ($s as $linha) {
+            $permissoes[$linha['id']][$linha['categoria_dados']] = (int)$linha['permitido'];
+        }
+        return $permissoes;
     }
 
     /**
@@ -43,7 +45,7 @@ class VinculoProfissionalRepository
      */
     public function permitir(int $aluno, int $vinculo, string $categoria, bool $permitir): void
     {
-        if (!in_array($categoria, ['fisico', 'saude', 'treinos'], true)) {
+        if (!in_array($categoria, ['fisico', 'saude', 'treinos', 'nutricao'], true)) {
             throw new InvalidArgumentException('Categoria inválida.');
         }
         $this->transacao(function () use ($aluno, $vinculo, $categoria, $permitir) {
@@ -351,9 +353,12 @@ class VinculoProfissionalRepository
         bool $modoProfissional,
         bool $aceitar
     ): string {
-        $sql = "SELECT v.*, p.usuario_id AS usuario_profissional
+        $sql = "SELECT v.*, p.usuario_id AS usuario_profissional, p.ativo AS perfil_ativo,
+                       u.ativo AS profissional_ativo, a.ativo AS aluno_ativo
                 FROM vinculo_profissional v
                 JOIN profissional p ON p.id = v.profissional_id
+                JOIN usuario u ON u.id = p.usuario_id
+                JOIN usuario a ON a.id = v.aluno_id
                 WHERE v.id = :id FOR UPDATE";
 
         $stmt = $this->pdo->prepare($sql);
@@ -378,6 +383,9 @@ class VinculoProfissionalRepository
             return 'Você não pode responder esta solicitação.';
         }
 
+        if ($aceitar && (!$vinculo['perfil_ativo'] || !$vinculo['profissional_ativo'] || !$vinculo['aluno_ativo'])) {
+            return 'Um dos participantes está inativo. Não foi possível iniciar o vínculo.';
+        }
         if ($aceitar) {
             $sql = "UPDATE vinculo_profissional
                     SET status = 'ativo',
@@ -476,7 +484,7 @@ class VinculoProfissionalRepository
      * @param int $usuarioId ID da conta de usuário, distinto do ID do perfil profissional.
      * @return list<array<string,scalar|null>>
      */
-    public function listarAlunosAtivos(int $usuarioId): array
+    public function listarAlunosAtivos(int $usuarioId, string $busca = ''): array
     {
         $sql = "SELECT
                 v.id AS vinculo_id,
@@ -491,10 +499,11 @@ class VinculoProfissionalRepository
               AND p.ativo = 1
               AND a.ativo = 1
               AND v.status = 'ativo'
+              AND LOCATE(:busca, a.nome) > 0
             ORDER BY a.nome ASC";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['usuario_id' => $usuarioId]);
+        $stmt->execute(['usuario_id' => $usuarioId, 'busca' => $busca]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

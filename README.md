@@ -12,6 +12,7 @@ Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UN
 
 - [Funcionalidades](#funcionalidades)
 - [Modelos e propostas de treino](#modelos-e-propostas-de-treino)
+- [Nutrição, metas e conquistas](#nutrição-metas-e-conquistas)
 - [Stack](#stack)
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Executando com Docker](#executando-com-docker)
@@ -31,9 +32,21 @@ Projeto desenvolvido na disciplina Prática IV de Ciência da Computação da UN
 
 | Situação | Recursos |
 |---|---|
-| Implementadas | Cadastro e login; cadastro profissional; gerenciamento de alunos e solicitações/vínculos; biblioteca pública e exercícios personalizados; pesquisa, filtros e detalhes; modelos profissionais e propostas de treino com aceite pelo aluno; criação, edição, arquivamento e restauração de rotinas; configuração de séries, repetições, cargas e descanso; execução de sessões e treinos livres; histórico paginado e estatísticas de evolução; mapa muscular e análise de treinamento por período; perfil físico, avaliações corporais, gráficos e comparação; acompanhamento profissional com permissões por categoria. |
+| Implementadas | Cadastro e login; cadastro profissional; gerenciamento de alunos e solicitações/vínculos; biblioteca pública e exercícios personalizados; pesquisa, filtros de ambiente e favoritos pessoais; modelos profissionais e propostas de treino com aceite pelo aluno; criação, edição, arquivamento e restauração de rotinas; configuração de séries, repetições, cargas e descanso; execução de sessões e treinos livres; histórico paginado e estatísticas de evolução; mapa muscular e análise de treinamento por período; perfil físico, avaliações corporais, gráficos e comparação; perfil profissional editável, busca de alunos e acompanhamento com permissões por categoria; plano alimentar, diário e metas nutricionais; metas de sessões e de peso, XP, níveis e conquistas pessoais. |
 | Parciais | A mídia aparece quando existe cadastro válido de imagem ou GIF. O descanso tem alerta visual enquanto a página está aberta. Rascunhos pendentes sobrevivem a falhas na mesma aba, mas não há sincronização offline depois de fechá-la. |
-| Planejadas | Recomendações automáticas, gamificação com ranking e conquistas, espaços públicos e recursos ampliados de comunidade e acessibilidade. |
+| Planejadas | Recomendações automáticas, ranking, espaços públicos e recursos ampliados de comunidade e acessibilidade. |
+
+## Nutrição, metas e conquistas
+
+Em **Nutrição** (`/nutricao`), cadastre a composição do rótulo por 100 g ou selecione um alimento já disponível. A conta vê seus alimentos e o catálogo compartilhado. A instalação limpa começa sem alimentos. Registre o consumo em gramas no dia selecionado. Cada lançamento guarda o nome e os quatro totais calculados naquela ocasião. Por exemplo, 125 g de um alimento de 140 kcal por 100 g registram 175 kcal. Reenviar o mesmo formulário conserva um único lançamento.
+
+Em **Planejar refeições**, crie um rascunho, informe as metas diárias desejadas e distribua as porções entre as refeições. A publicação exige alimento em cada refeição, guarda a composição dos alimentos e passa a valer no dia atual. Uma nova publicação substitui o plano a partir desse dia. A consulta de datas anteriores usa o plano vigente naquela data. As metas são informadas pelo usuário. O sistema calcula os totais a partir das quantidades registradas.
+
+O aluno pode liberar **alimentação** em **Vínculos**. Essa permissão dá ao profissional com vínculo ativo leitura do plano vigente, diário e preferências e restrições. A consulta gera auditoria. O aluno continua responsável pela edição. As permissões de treino, medidas e saúde funcionam de forma independente.
+
+Em **Perfil físico → Metas e conquistas** (`/perfil/metas`), defina uma meta de sessões ou de peso e o intervalo inclusivo de datas. As metas de peso usam a avaliação com peso em kg mais recente do período e mostram a distância ao alvo. As metas de treino usam o calendário de São Paulo e as sessões concluídas com pelo menos uma série realizada. Cada sessão elegível vale 10 XP. O nível inicial é 1, com avanço a cada 100 XP e conquistas em 1, 5 e 20 sessões. A consulta calcula o saldo com o histórico atual, inclusive para treinos antigos. Cancelar ou excluir uma sessão retira sua contribuição das metas e conquistas.
+
+Em **Análise de treinamento**, a comparação por grupo mostra, nas sessões concluídas do período, quantas séries foram copiadas da rotina, quantas delas foram realizadas e quantas séries extras foram realizadas. Ela inclui aquecimento e preparatórias. O mapa mantém o critério de séries de trabalho documentado abaixo.
 
 ## Stack
 
@@ -72,7 +85,7 @@ MOVI+/
 │   ├── movi-plus-logo-mono.png
 │   └── social-preview-1280x640.jpg
 ├── database/
-│   ├── migrations/    # 001–018, evolução do schema
+│   ├── migrations/    # 001–020, evolução do schema
 │   ├── scripts/       # Migrador, importação e validação do catálogo
 │   └── seeds/         # 37 arquivos SQL de dados oficiais e relações
 ├── public/
@@ -154,7 +167,7 @@ O banco usa MySQL 8.4, `utf8mb4` e PDO. No Compose, o host de conexão da aplica
 
 ### Histórico de migrations
 
-O repositório possui migrations sequenciais **001–018**:
+O repositório possui migrations sequenciais **001–020**:
 
 | Faixa | Conteúdo |
 |---|---|
@@ -165,6 +178,8 @@ O repositório possui migrations sequenciais **001–018**:
 | 016 | Ajuste do evento de limpeza de tentativas para calcular o corte usando o relógio do MySQL. |
 | 017 | Campos complementares do perfil físico e índices para avaliações/medidas. Preserva registros e estruturas anteriores. |
 | 018 | Identificação dos modelos profissionais, propostas por vínculo e cópia dos exercícios e séries enviados. |
+| 019 | Titularidade dos alimentos pessoais, rascunhos de planos, preferências, índices do diário e chave de reenvio de consumo. Alimentos anteriores continuam compartilhados. |
+| 020 | Preserva o nome e a composição por 100 g de cada porção quando o plano é publicado. Para planos legados, usa os valores disponíveis no momento da atualização. |
 
 Execute o migrador pela aplicação:
 
@@ -246,7 +261,9 @@ docker compose -p movi-treinos-verificacao -f tests/compose.yml exec app php tes
 docker compose -p movi-treinos-verificacao -f tests/compose.yml down
 ```
 
-O executor usa o Apache do contêiner para as suítes HTTP de perfil e análise e inicia um servidor PHP na porta 8088 para a suíte de treinos. Ao encerrar o ambiente de teste, o banco em memória é descartado.
+A verificação da versão 020 executou 12 suítes. Em uma instalação limpa, as 37 seeds produziram 623 exercícios públicos ativos com códigos distintos. A atualização também foi exercitada em banco de teste populado na versão 018, passando pela 019 e pela 020. A suíte `acompanhamento_http.php` confere cálculo por porção, preservação dos planos e do diário, isolamento, consentimento, revogação, favoritos, metas e atualização do XP.
+
+O executor usa o Apache do contêiner para as suítes HTTP de perfil, análise e acompanhamento (nutrição, metas, favoritos e permissões) e inicia um servidor PHP na porta 8088 para a suíte de treinos. Ao encerrar o ambiente de teste, o banco em memória é descartado.
 
 Para verificar a sintaxe do PHP em um shell Unix, execute `find app public routes database tests -name '*.php' -exec php -l {} +`. Para validar a configuração do Composer e os requisitos da plataforma, use os comandos da seção de desenvolvimento local.
 
@@ -309,7 +326,7 @@ O repositório não contém arquivo de licença. Portanto, não há uma licença
 
 A estrutura anterior já continha `usuario.data_nascimento`, `perfil` (gênero, objetivo, experiência, frequência e biografia), `avaliacao`, `medida`, `condicao`, `usuario_condicao`, `restricao`, `usuario_restricao`, `meta`, `permissao_acesso` e `auditoria_acesso`. Não havia fluxo de perfil/avaliações nem uso das permissões nas telas de acompanhamento. O vínculo e a autenticação existentes foram reutilizados. `Auth::usuario()` valida sessão e conta ativa; os IDs de proprietário vêm exclusivamente da sessão. O layout comum e os estilos de cartões/formulários foram mantidos.
 
-A migration **017**, dependente de 001–016, acrescenta somente `perfil.altura_cm`, `tempo_treinamento_meses`, `disponibilidade`, `ambiente_preferido` e dois índices. Não duplica peso, gordura, massa magra, metas ou condições. As migrations anteriores permanecem intactas. Nutrição, gamificação e mapa muscular continuam fora desta etapa.
+A migration **017**, dependente de 001–016, acrescenta somente `perfil.altura_cm`, `tempo_treinamento_meses`, `disponibilidade`, `ambiente_preferido` e dois índices. Não duplica peso, gordura, massa magra, metas ou condições. As migrations anteriores permanecem intactas. Essa etapa corresponde à entrega do perfil físico na migration 017.
 
 ### Uso
 
@@ -436,9 +453,9 @@ Medições locais (não são garantia de carga de produção): nova integração
 
 ### Pendências e continuidade
 
-A implementação foi validada no esquema atual, mas o banco de desenvolvimento principal precisa de reconciliação antes do uso local completo. Não execute as migrations históricas indiscriminadamente nesse legado: o migrador recusa schema preenchido sem histórico e existem mudanças históricas de catálogo. Faça backup restaurável, ensaie a atualização em cópia, compare estrutura e catálogo e resolva o histórico conforme a seção de recuperação. Nenhuma adoção fictícia de migrations foi feita nesta etapa.
+Na entrega do mapa muscular foi identificada uma instalação de desenvolvimento que precisava de reconciliação de histórico. Não execute as migrations históricas indiscriminadamente nesse legado: o migrador recusa schema preenchido sem histórico e existem mudanças históricas de catálogo. Faça backup restaurável, ensaie a atualização em cópia, compare estrutura e catálogo e resolva o histórico conforme a seção de recuperação. Nenhuma adoção fictícia de migrations foi feita nesta etapa.
 
-Limitações intencionais: estimativa por heurística; ausência de semântica confiável para `peso_estimado`; SVG esquemático; relações musculares sem lado; sem recomendação automática de volume ou 1RM. Nutrição e gamificação não foram implementadas. Próximos passos recomendados: reconciliar o banco legado, revisar fatores com profissionais e documentar sua fonte, aprimorar o desenho anatômico e testar toque/leitores de tela, além de medir desempenho com históricos densos antes de considerar cache.
+Limitações intencionais: estimativa por heurística; ausência de semântica confiável para `peso_estimado`; SVG esquemático; relações musculares sem lado; sem recomendação automática de volume ou 1RM. Próximos passos recomendados: reconciliar o banco legado, revisar fatores com profissionais e documentar sua fonte, aprimorar o desenho anatômico e testar toque/leitores de tela, além de medir desempenho com históricos densos antes de considerar cache.
 
 ## Modelos e propostas de treino
 
@@ -479,7 +496,7 @@ docker compose -p movi-propostas-verificacao -f tests/compose.yml exec -T app ph
 
 A suíte `propostas_integracao.php` cobre alteração do modelo após envio, aceite, recusa, cancelamento, vínculos encerrados e reabertos, isolamento entre contas, reenvios e cópia de metas. Ela provoca uma falha na segunda série para verificar que o MySQL desfaz a cópia inteira. A suíte `treinos_http.php` cobre o editor, os formulários, a proteção CSRF, a exibição de texto escapado e o acesso à rotina aceita. O executor também inclui as regressões de treinos, perfil e análise.
 
-Na verificação desta entrega, as 18 migrations e as 37 seeds rodaram em um MySQL 8.4 isolado e as 11 suítes passaram. A consulta ao banco principal mostrou a 016 como última migration registrada. Nesse banco, as migrations pendentes para esta versão são a 017 e a 018.
+Na verificação desta entrega, as 18 migrations e as 37 seeds rodaram em um MySQL 8.4 isolado e as 11 suítes passaram. Essa verificação corresponde à entrega da migration 018.
 
 A consulta de propostas oferece filtros de aluno e estado. Ela carrega todos os registros correspondentes. Para históricos extensos, a próxima melhoria sugerida é paginar a lista.
 

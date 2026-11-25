@@ -398,7 +398,6 @@ final class RotinaController
         $catalogo = $repo->pesquisar($modelo ? null : $u, $f);
         $opcoes = $repo->filtros() + [
             'musculo' => $db->todos('SELECT id,nome FROM musculo ORDER BY nome', []),
-            'ambiente' => $db->todos('SELECT id,nome FROM ambiente ORDER BY nome', []),
         ];
         $this->view('treino_seletor', compact('r', 't', 'item', 'f', 'catalogo', 'opcoes', 'modelo'));
     }

@@ -2,7 +2,7 @@
 // O mapa e as tabelas usam os mesmos totais por músculo. A métrica selecionada determina o valor comparado com o período anterior.
 /**
  * @var array $p
- * @var string $metrica
+ * @var string $metricaSelecionada
  * @var int|null $aluno
  * @var bool $profissional
  * @var int $u
@@ -42,7 +42,7 @@ $barras = static function (string $titulo, array $linhas, string $unidade) use (
     <?php endforeach; ?></details><?php
 };
 // Todos os links carregam a janela e a métrica atuais para que a mudança de seção preserve a comparação.
-$base = ['periodo' => $p['periodo'], 'de' => $p['de'], 'ate' => $p['ate'], 'metrica' => $metrica];
+$base = ['periodo' => $p['periodo'], 'de' => $p['de'], 'ate' => $p['ate'], 'metrica' => $metricaSelecionada];
 if ($aluno) {
     $base['aluno'] = $aluno;
 }
@@ -61,7 +61,7 @@ $link = static fn ($caminho, $extra = []) => $esc($caminho . '?' . http_build_qu
 <label>Período<select name="periodo"><?php foreach (['7' => 'Últimos 7 dias', '30' => 'Últimos 30 dias', '90' => 'Últimos 90 dias', 'semana' => 'Semana atual', 'personalizado' => 'Personalizado'] as $k => $v): ?><option value="<?= $k ?>" <?= (string)$k === $p['periodo'] ? 'selected' : '' ?>><?= $v ?></option><?php endforeach ?></select></label>
 <label>De (personalizado)<input type="date" name="de" value="<?= $esc($p['de']) ?>"></label>
 <label>Até (personalizado)<input type="date" name="ate" value="<?= $esc($p['ate']) ?>"></label>
-<label>Coloração<select name="metrica"><?php foreach (['equivalentes' => 'Séries equivalentes estimadas', 'series' => 'Séries registradas por músculo', 'diretas' => 'Séries diretas', 'indiretas' => 'Séries indiretas'] as $k => $v): ?><option value="<?= $k ?>" <?= $metrica === $k ? 'selected' : '' ?>><?= $v ?></option><?php endforeach ?></select></label>
+<label>Coloração<select name="metrica"><?php foreach (['equivalentes' => 'Séries equivalentes estimadas', 'series' => 'Séries registradas por músculo', 'diretas' => 'Séries diretas', 'indiretas' => 'Séries indiretas'] as $k => $v): ?><option value="<?= $k ?>" <?= $metricaSelecionada === $k ? 'selected' : '' ?>><?= $v ?></option><?php endforeach ?></select></label>
 <?php if ($exercicio): ?><input type="hidden" name="exercicio" value="<?= (int)$exercicio ?>"><?php endif ?>
 <button>Aplicar filtros</button></form>
 <p><?= $esc($p['de']) ?> a <?= $esc($p['ate']) ?> · comparação: <?= A::data($p['anterior_inicio']) ?> a <?= A::data($p['anterior_fim'] - 1) ?> (São Paulo).</p>
@@ -88,14 +88,14 @@ foreach (['0 — sem registro', 'Acima de 0 e abaixo de ' . $faixas[0], $faixas[
     if (!$regiao || $regiao['vista'] !== $vista) {
         continue;
     } ?>
-<a href="#musculo-<?= (int)$m['id'] ?>" aria-label="<?= $esc($m['nome'] . ': ' . $num($m[$metrica]) . ' séries') ?>" class="regiao calor-<?= A::nivel((float)$m[$metrica]) ?>" id="<?= $esc($chave) ?>" data-musculo="<?= (int)$m['id'] ?>">
-<title><?= $esc($m['nome']) ?>: <?= $num($m[$metrica]) ?></title>
+<a href="#musculo-<?= (int)$m['id'] ?>" aria-label="<?= $esc($m['nome'] . ': ' . $num($m[$metricaSelecionada]) . ' séries') ?>" class="regiao calor-<?= A::nivel((float)$m[$metricaSelecionada]) ?>" id="<?= $esc($chave) ?>" data-musculo="<?= (int)$m['id'] ?>">
+<title><?= $esc($m['nome']) ?>: <?= $num($m[$metricaSelecionada]) ?></title>
 <?php foreach ([1, -1] as $sinal): ?><polygon transform="scale(<?= $sinal ?> 1)" points="<?= $esc($regiao['pontos']) ?>"/><?php endforeach ?></a>
 <?php endforeach ?></g></svg><?php endforeach ?></div>
 <p id="mapa-status" role="status" aria-live="polite">As faixas representam quantidade registrada no período, não metas de treino.</p>
 <div class="analise-musculos">
 <?php foreach ($dados['musculos'] as $id => $m): ?>
-<details id="musculo-<?= (int)$id ?>" class="musculo-detalhe"><summary><i class="calor-<?= A::nivel((float)$m[$metrica]) ?>"></i><?= $esc($m['nome']) ?> · <?= $num($m[$metrica]) ?></summary>
+<details id="musculo-<?= (int)$id ?>" class="musculo-detalhe"><summary><i class="calor-<?= A::nivel((float)$m[$metricaSelecionada]) ?>"></i><?= $esc($m['nome']) ?> · <?= $num($m[$metricaSelecionada]) ?></summary>
 <p>Grupo: <?= $esc($m['grupo_visual']) ?><?= MapaMuscular::chave($m) === null ? ' · Sem região SVG correspondente' : '' ?></p>
 <dl><dt>Séries registradas</dt><dd><?= (int)$m['series'] ?></dd><dt>Diretas estimadas / indiretas estimadas</dt><dd><?= (int)$m['diretas'] ?> / <?= (int)$m['indiretas'] ?></dd><dt>Estabilizadoras</dt><dd><?= (int)$m['estabilizadoras'] ?></dd><dt>Séries equivalentes estimadas</dt><dd><?= $num($m['equivalentes']) ?></dd><dt>Frequência (dias com estímulo / semana)</dt><dd><?= $num($m['frequencia']) ?></dd><dt>Variação de séries equivalentes</dt><dd><?= $delta($m['equivalentes'], $anterior['musculos'][$id]['equivalentes']) ?></dd></dl>
 <p>Exercícios realizados: <?= $esc(implode(', ', $m['exercicios']) ?: 'Nenhum no período') ?></p>
@@ -104,6 +104,12 @@ foreach (['0 — sem registro', 'Acima de 0 e abaixo de ' . $faixas[0], $faixas[
 <?php foreach ($m['volumes'] as $v): ?><p><?= $esc($v['nome'] . ' · ' . $v['lado']) ?>: <?= $num($v['volume']) ?> kg × rep.</p><?php endforeach ?>
 <?php $barras('Séries equivalentes por semana', $m['semanas'], 'séries'); ?>
 </details><?php endforeach ?></div></article>
+<details class="treino-card"><summary>Séries planejadas e realizadas por grupo</summary>
+<p>Nas sessões concluídas do período, cada série copiada da rotina conta como planejada. Uma série concluída sem meta copiada conta como extra. Esta comparação inclui aquecimento e preparatórias.</p>
+<?php if (!$planejamento): ?><p>Sem séries no período.</p><?php endif; ?>
+<?php foreach ($planejamento as $grupo): ?>
+    <p><?= $esc($grupo['grupo']) ?> · Planejadas: <?= (int)$grupo['planejadas'] ?> · Realizadas do plano: <?= (int)$grupo['realizadas'] ?> · Extras realizadas: <?= (int)$grupo['extras'] ?></p>
+<?php endforeach; ?></details>
 <?php $barras('Distribuição de séries por grupo do exercício', $dados['grupos'], 'séries'); ?>
 <p>Uma série conta uma vez no grupo cadastrado do exercício. Na análise por músculo ela pode aparecer em várias regiões. Diferenças entre grupos descrevem os registros e não constituem diagnóstico.</p>
 <?php $barras('Frequência de treino por semana', array_map(static fn ($s) => $s['treinos'], $dados['semanas']), 'sessões'); ?>

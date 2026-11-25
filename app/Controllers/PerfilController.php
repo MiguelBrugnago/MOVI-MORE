@@ -79,7 +79,7 @@ final class PerfilController
     {
         $u = $this->usuario();
         $r = $this->repo();
-        $this->view('perfil', ['perfil' => $r->perfil($u), 'declaracoes' => $r->declaracoes($u), 'recente' => $r->historico($u)[0] ?? null]);
+        $this->view('perfil', ['perfil' => $r->perfil($u), 'declaracoes' => $r->declaracoes($u), 'recente' => $r->recente($u)]);
     }
 
     /**
@@ -205,7 +205,7 @@ final class PerfilController
             // Na resposta 422, os valores válidos para HTML voltam ao formulário para o usuário corrigir o campo indicado.
             $entrada = array_filter($_POST, static fn ($v) => is_string($v) && mb_check_encoding($v, 'UTF-8'));
             if ($acao === 'perfil') {
-                $this->view('perfil', ['perfil' => $entrada, 'erro' => $e->getMessage(), 'declaracoes' => $this->repo()->declaracoes($u), 'recente' => $this->repo()->historico($u)[0] ?? null]);
+                $this->view('perfil', ['perfil' => $entrada, 'erro' => $e->getMessage(), 'declaracoes' => $this->repo()->declaracoes($u), 'recente' => $this->repo()->recente($u)]);
             } elseif ($acao === 'avaliacao') {
                 $this->view('avaliacao_form', ['avaliacao' => $entrada + ['medidas' => $entrada], 'erro' => $e->getMessage()]);
             } else {
