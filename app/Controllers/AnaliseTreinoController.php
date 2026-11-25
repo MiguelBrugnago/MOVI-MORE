@@ -44,8 +44,8 @@ final class AnaliseTreinoController
             }
             $p = Analise::periodo($_GET);
             $exercicio = RegistroTreino::numero($_GET['exercicio'] ?? null, 1, 2147483647);
-            $metrica = $_GET['metrica'] ?? 'equivalentes';
-            if (!in_array($metrica, ['equivalentes', 'series', 'diretas', 'indiretas'], true)) {
+            $metricaSelecionada = $_GET['metrica'] ?? 'equivalentes';
+            if (!in_array($metricaSelecionada, ['equivalentes', 'series', 'diretas', 'indiretas'], true)) {
                 throw new InvalidArgumentException('Métrica inválida.');
             }
             $repo = new AnaliseTreinoRepository(new TreinoRepository(Database::conectar()));

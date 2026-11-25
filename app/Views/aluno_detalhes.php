@@ -78,7 +78,8 @@ require __DIR__ . '/fisico_comum.php'; ?>
 <article><h4>Perfil e avaliação mais recente</h4><dl>
 <?php foreach (['objetivo' => 'Objetivo', 'experiencia' => 'Experiência', 'frequencia_semanal' => 'Dias por semana', 'tempo_treinamento_meses' => 'Meses de treinamento', 'disponibilidade' => 'Disponibilidade', 'ambiente_preferido' => 'Ambiente preferido', 'altura_cm' => 'Altura (cm)'] as $chave => $rotulo): ?><dt><?= $rotulo ?></dt><dd><?= $esc($perfil[$chave] ?? 'Não informado') ?></dd><?php endforeach; ?>
 </dl><?php if ($recente): ?><p>Avaliação de <?= $esc($recente['avaliado_em']) ?></p><dl><?php foreach ($metricas as $chave => [$nome,$unidade]): ?><dt><?= $esc($nome) ?> (<?= $unidade ?>)</dt><dd><?= $numero($recente['medidas'][$chave] ?? null) ?></dd><?php endforeach; ?></dl><?php else: ?><p>Nenhuma avaliação registrada.</p><?php endif; ?></article>
-<?php require __DIR__ . '/fisico_evolucao.php';
+<?php $idAlunoAcompanhado = (int)$aluno['aluno_id'];
+require __DIR__ . '/fisico_evolucao.php';
     require __DIR__ . '/fisico_historico.php'; ?>
 <?php endif; ?>
 <?php if ($saudePermitida): ?><article><h3>Informações de saúde autorizadas</h3>

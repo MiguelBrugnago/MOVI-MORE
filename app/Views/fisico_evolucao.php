@@ -1,7 +1,7 @@
 <?php
 // A tabela chega do mais recente ao mais antigo. O gráfico percorre a ordem inversa para mostrar a evolução no tempo.
 /**
- * @var array $aluno
+ * @var int $idAlunoAcompanhado
  * @var array $avaliacoes
  * @var array $metricas
  * @var Closure $esc
@@ -10,7 +10,7 @@
  */
 ?>
 <form method="get" class="filtros">
-<?php if ($somenteLeitura ?? false): ?><input type="hidden" name="id" value="<?= (int)$aluno['aluno_id'] ?>"><?php endif; ?>
+<?php if ($somenteLeitura ?? false): ?><input type="hidden" name="id" value="<?= $idAlunoAcompanhado ?>"><?php endif; ?>
 <label>Período<select name="periodo"><?php foreach (['30' => '30 dias', '90' => '90 dias', '6m' => 'Seis meses', '1a' => 'Um ano', 'todos' => 'Histórico completo'] as $v => $label): ?><option value="<?= $v ?>" <?= (string)$v === $periodo ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label><button>Aplicar filtro</button></form>
 <p>Estimativas de composição corporal usam peso e gordura da mesma avaliação. Não são medições clínicas. Campos ausentes não são tratados como zero.</p>
 <?php if ($avaliacoes): ?>
