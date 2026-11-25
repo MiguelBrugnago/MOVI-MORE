@@ -104,7 +104,7 @@ final class AuthController
         }
 
         http_response_code(201);
-                require __DIR__ . '/../Views/cadastro_sucesso.php';
+        require __DIR__ . '/../Views/cadastro_sucesso.php';
     }
 
     /**
