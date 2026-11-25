@@ -1068,7 +1068,7 @@ body.auth-page {
     color: #aab4c3;
 }
 
-.auth-card input:focus-visible {
+.auth-card :is(input, select, textarea):focus-visible {
     border-color: #2ead70;
     outline: 2px solid #2ead70;
     outline-offset: 2px;
