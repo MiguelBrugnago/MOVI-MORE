@@ -771,7 +771,9 @@ body.home-publica {
 /* =========================================
    MOVI+ - PAINEL DO ALUNO
    ========================================= */
-
+:root:has(.painel-aluno) {
+    background-color: #0b0d11;
+}
 .painel-aluno {
     color: #ffffff;
     background: #111318;
