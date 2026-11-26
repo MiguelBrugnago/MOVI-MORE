@@ -76,9 +76,22 @@ $link = static fn ($caminho, $extra = []) => $esc($caminho . '?' . http_build_qu
 <div class="analise-legenda" aria-label="Faixas da métrica selecionada">
 <?php $faixas = A::FAIXAS;
 foreach (['0 — sem registro', 'Acima de 0 e abaixo de ' . $faixas[0], $faixas[0] . ' a menos de ' . $faixas[1], $faixas[1] . ' a menos de ' . $faixas[2], $faixas[2] . ' ou mais'] as $i => $texto): ?><span><i class="calor-<?= $i ?>"></i><?= $esc($texto) ?></span><?php endforeach ?></div>
+<fieldset class="mapa-vistas">
+    <legend>Vista do mapa muscular</legend>
+
+    <label>
+        <input type="radio" name="mapa-vista" value="frente" checked>
+        Frente
+    </label>
+
+    <label>
+        <input type="radio" name="mapa-vista" value="costas">
+        Costas
+    </label>
+</fieldset>
 <div class="analise-corpos">
 <?php foreach (['frente' => 'Frente', 'costas' => 'Costas'] as $vista => $rotulo): ?>
-<svg viewBox="0 0 200 430" class="analise-corpo" role="group" aria-label="Corpo: <?= $rotulo ?>">
+<svg viewBox="0 0 200 430" class="analise-corpo" data-vista="<?= $esc($vista) ?>" role="group" aria-label="Corpo: <?= $esc($rotulo) ?>">
 <title><?= $rotulo ?> — regiões musculares selecionáveis</title>
 <text x="100" y="20" text-anchor="middle"><?= $rotulo ?></text>
 <g transform="translate(100 12)"><ellipse cx="0" cy="36" rx="17" ry="22" class="corpo-base"/>

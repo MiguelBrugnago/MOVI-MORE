@@ -40,9 +40,9 @@ $menuAtivo = match (true) {
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 
-<body>
+<body class="movi-app">
 
-    <header>
+   <header class="movi-cabecalho">
         
 <a href="/painel" class="logo-link" aria-label="MOVI+ - Ir para o início">
     <img
@@ -82,7 +82,7 @@ $menuAtivo = match (true) {
         <?php require __DIR__ . '/../partials/conta_conectada.php'; ?>
     </header>
 
-    <main>
+    <main class="movi-conteudo">
         <?php require $viewPath; ?>
     </main>
 

@@ -1,84 +1,95 @@
 <?php
-// O formulário retorna à própria rota. O controller fornece a mensagem de validação quando algum campo precisa de correção.
 
 declare(strict_types=1);
 
 $erro = $erro ?? null;
+$escapar = static fn (string $valor): string => htmlspecialchars(
+    $valor,
+    ENT_QUOTES | ENT_SUBSTITUTE,
+    'UTF-8'
+);
 
+$tiposProfissionais = ['Personal Trainer', 'Educador Físico', 'Nutricionista'];
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOVI+ | Cadastro Profissional</title>
+    <title>Cadastro profissional - MOVI+</title>
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
+<body class="auth-page">
+    <main class="auth-container auth-container-profissional">
+        <a href="/painel?modo=aluno" class="auth-logo" aria-label="MOVI+ - Painel do aluno">
+            <img src="/assets/img/movi-plus-logo-horizontal.png" alt="MOVI+">
+        </a>
 
-<body>
+        <section class="auth-card auth-cadastro-profissional" aria-labelledby="titulo-cadastro-profissional">
+            <h1 id="titulo-cadastro-profissional">Cadastro profissional</h1>
+            <p class="auth-subtitulo">Crie seu perfil profissional para acompanhar alunos no MOVI+.</p>
 
-    <h1>MOVI+</h1>
-    <h2>Cadastro Profissional</h2>
+            <?php if ($erro !== null): ?>
+                <p class="auth-erro" role="alert"><?= $escapar($erro) ?></p>
+            <?php endif; ?>
 
-    <p>Cadastre seu perfil para acompanhar alunos.</p>
+            <form action="/profissional/cadastro" method="post">
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="<?= $escapar((string) ($_SESSION['csrf_token'] ?? '')) ?>"
+                >
 
-    <?php if ($erro !== null): ?>
-        <p>
-            <?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?>
-        </p>
-    <?php endif; ?>
+                <label for="tipo">
+                    Tipo de profissional
+                    <select name="tipo" id="tipo" required>
+                        <option value="">Selecione</option>
+                        <?php foreach ($tiposProfissionais as $tipoProfissional): ?>
+                            <option
+                                value="<?= $escapar($tipoProfissional) ?>"
+                                <?= ($tipo ?? '') === $tipoProfissional ? 'selected' : '' ?>
+                            ><?= $escapar($tipoProfissional) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
 
-    <form action="/profissional/cadastro" method="POST">
+                <label for="registro">
+                    Registro profissional
+                    <input
+                        type="text"
+                        name="registro"
+                        id="registro"
+                        maxlength="80"
+                        value="<?= $escapar($registro ?? '') ?>"
+                    >
+                </label>
 
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(
-            (string) $_SESSION['csrf_token'],
-            ENT_QUOTES,
-            'UTF-8'
-        ) ?>">
+                <label for="especialidade">
+                    Especialidade
+                    <input
+                        type="text"
+                        name="especialidade"
+                        id="especialidade"
+                        maxlength="120"
+                        value="<?= $escapar($especialidade ?? '') ?>"
+                    >
+                </label>
 
-        <label for="tipo">Tipo de profissional</label>
+                <label for="descricao">
+                    Descrição profissional
+                    <textarea name="descricao" id="descricao" rows="4"><?= $escapar($descricao ?? '') ?></textarea>
+                </label>
 
-        <select name="tipo" id="tipo" required>
-            <option value="">Selecione</option>
-            <option value="Personal Trainer">Personal Trainer</option>
-            <option value="Educador Físico">Educador Físico</option>
-            <option value="Nutricionista">Nutricionista</option>
-        </select>
+                <button type="submit" class="auth-btn">
+                    Cadastrar perfil profissional
+                </button>
+            </form>
 
-
-
-        <label for="registro">Registro profissional</label>
-
-        <input type="text" name="registro" id="registro" maxlength="80">
-
-
-
-        <label for="especialidade">Especialidade</label>
-
-        <input type="text" name="especialidade" id="especialidade" maxlength="120">
-
-
-
-        <label for="descricao">Descrição profissional</label>
-
-        <textarea name="descricao" id="descricao" rows="5"></textarea>
-
-
-
-        <button type="submit">
-            Cadastrar perfil profissional
-        </button>
-
-    </form>
-
-
-
-    <a href="/painel?modo=aluno">
-        Voltar ao painel do aluno
-    </a>
-
+            <p class="auth-rodape">
+                <a href="/painel?modo=aluno">Voltar ao painel do aluno</a>
+            </p>
+        </section>
+    </main>
 </body>
-
 </html>

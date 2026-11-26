@@ -104,7 +104,7 @@ final class AuthController
         }
 
         http_response_code(201);
-        echo '<p>Cadastro realizado com sucesso.</p><a href="/login">Entrar no MOVI+</a>';
+        require __DIR__ . '/../Views/cadastro_sucesso.php';
     }
 
     /**

@@ -4,7 +4,7 @@ require __DIR__ . '/fisico_comum.php';
 $editavel = empty($avaliacao['profissional_id']); ?>
 <h1><?= empty($avaliacao['id']) ? 'Nova avaliação' : 'Detalhes da avaliação' ?></h1>
 <p>Registre as medidas disponíveis. Ao criar uma avaliação, o histórico anterior é preservado.</p>
-<form method="post" action="/perfil/avaliacoes" class="fisico-form">
+<form method="post" action="/perfil/avaliacoes" class="fisico-form perfil-avaliacao-form">
 <input type="hidden" name="csrf_token" value="<?= $csrf ?>"><input type="hidden" name="acao" value="avaliacao">
 <?php if (!empty($avaliacao['id'])): ?><input type="hidden" name="id" value="<?= $esc($avaliacao['id']) ?>"><?php endif; ?>
 <fieldset <?= !$editavel ? 'disabled' : '' ?>><legend>Medidas corporais</legend>

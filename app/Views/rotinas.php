@@ -22,47 +22,82 @@
 
 use App\Services\RegistroTreino;
 
-require __DIR__ . '/treinos/comum.php';
+$tituloRotinas = match (true) {
+    $modelo && $arquivadas => 'Modelos arquivados',
+    $modelo => 'Modelos de treino',
+    $arquivadas => 'Rotinas arquivadas',
+    default => 'Minhas rotinas',
+};
 ?>
-<section class="treino-area">
-    <h1><?= $modelo ? ($arquivadas ? 'Modelos arquivados' : 'Modelos de treino') : ($arquivadas ? 'Rotinas arquivadas' : 'Minhas rotinas') ?></h1>
-    <?php if ($modelo): ?>
-        <p><a href="/profissional/propostas?pendentes=1">Propostas pendentes</a></p>
-    <?php elseif ($ativo): ?>
-        <p class="treino-destaque"><a href="/treinos/ver?id=<?= (int)$ativo['id'] ?>">Retomar: <?= $esc($ativo['nome']) ?></a></p>
-    <?php else: ?>
-        <form action="/treinos/iniciar" method="post" class="treino-acoes"><?php $hidden([]); ?><button>Iniciar treino livre</button></form>
-    <?php endif ?>
-    <p><a href="<?= $base ?><?= $arquivadas ? '' : '?arquivadas=1' ?>"><?= $arquivadas ? 'Ver lista ativa' : 'Ver lista arquivada' ?></a></p>
+
+<section class="treino-area editor-rotinas" aria-labelledby="titulo-rotinas">
+    <h1 id="titulo-rotinas"><?= $tituloRotinas ?></h1>
+
+    <?php require __DIR__ . '/treinos/comum.php'; ?>
+
+    <div class="rotinas-acoes">
+        <?php if ($modelo): ?>
+            <a href="/profissional/propostas?pendentes=1" class="treino-link rotinas-acao-principal">
+                Propostas pendentes
+            </a>
+        <?php elseif ($ativo): ?>
+            <a href="/treinos/ver?id=<?= (int) $ativo['id'] ?>" class="treino-link rotinas-acao-principal">
+                Retomar: <?= $esc($ativo['nome']) ?>
+            </a>
+        <?php else: ?>
+            <form action="/treinos/iniciar" method="post">
+                <?php $hidden([]); ?>
+                <button type="submit" class="rotinas-acao-principal">Iniciar treino livre</button>
+            </form>
+        <?php endif; ?>
+
+        <a class="treino-link" href="<?= $esc($base . ($arquivadas ? '' : '?arquivadas=1')) ?>">
+            <?= $arquivadas ? 'Ver lista ativa' : 'Ver lista arquivada' ?>
+        </a>
+    </div>
+
     <?php if (!$arquivadas): ?>
-        <details class="treino-card">
+        <details class="treino-card rotinas-criacao">
             <summary><?= $modelo ? 'Criar modelo' : 'Criar rotina' ?></summary>
-            <form method="post" action="<?= $modelo ? $base . '/salvar' : $base ?>">
+            <form method="post" action="<?= $esc($modelo ? $base . '/salvar' : $base) ?>">
                 <?php $hidden(['acao' => 'criar']); ?>
                 <label>Nome<input name="nome" minlength="2" maxlength="150" required></label>
                 <label>Objetivo<input name="objetivo" maxlength="80"></label>
-                <?php $texto('descricao', 'Descrição', null);
-        $select('dia_semana', 'Dia da semana', $dias, null); ?>
-                <button><?= $modelo ? 'Criar modelo' : 'Criar rotina' ?></button>
+                <?php
+                $texto('descricao', 'Descrição', null);
+                $select('dia_semana', 'Dia da semana', $dias, null);
+                ?>
+                <button type="submit" class="rotinas-acao-principal">
+                    <?= $modelo ? 'Criar modelo' : 'Criar rotina' ?>
+                </button>
             </form>
         </details>
-    <?php endif ?>
-    <?php if ($pessoais): ?>
+    <?php endif; ?>
+            <?php if ($pessoais): ?>
         <details class="treino-card">
             <summary>Criar modelo a partir de uma rotina minha</summary>
             <form method="post" action="/profissional/modelos/salvar">
                 <?php $hidden(['acao' => 'copiar_pessoal']); ?>
-                <label>Rotina de origem<select name="rotina_id" required>
-                    <option value="">Selecione uma rotina</option>
-                    <?php foreach ($pessoais as $pessoal): ?>
-                        <option value="<?= (int)$pessoal['id'] ?>"><?= $esc($pessoal['nome']) ?></option>
-                    <?php endforeach ?>
-                </select></label>
-                <button>Copiar como modelo</button>
+                <label>
+                    Rotina de origem
+                    <select name="rotina_id" required>
+                        <option value="">Selecione uma rotina</option>
+                        <?php foreach ($pessoais as $pessoal): ?>
+                            <option value="<?= (int) $pessoal['id'] ?>"><?= $esc($pessoal['nome']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <button type="submit">Copiar como modelo</button>
             </form>
         </details>
-    <?php endif ?>
-    <?php if (!$rotinas): ?><p><?= $modelo ? 'Nenhum modelo nesta lista.' : 'Nenhuma rotina nesta lista.' ?></p><?php endif ?>
+    <?php endif; ?>
+
+    <?php if (!$rotinas): ?>
+        <p class="treino-card rotinas-vazio">
+            <?= $modelo ? 'Nenhum modelo nesta lista.' : 'Nenhuma rotina nesta lista.' ?>
+        </p>
+    <?php endif; ?>
+
     <div class="catalogo">
         <?php foreach ($rotinas as $r): ?>
             <article>
