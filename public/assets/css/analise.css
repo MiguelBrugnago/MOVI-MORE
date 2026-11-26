@@ -295,3 +295,30 @@
 #mapa .musculo-detalhe:target > summary {
     color: var(--movi-verde);
 }
+@media (max-width: 700px) {
+    .analise {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+    }
+
+    .analise > .treino-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 8px;
+        margin: 0 0 16px;
+    }
+
+    .analise > .treino-nav a {
+        justify-content: center;
+        min-height: 44px;
+        padding: 8px;
+        line-height: 1.25;
+        text-align: center;
+    }
+
+    .analise > .treino-campos {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    }
+}
