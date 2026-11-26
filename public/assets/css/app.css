@@ -1958,7 +1958,51 @@ main:has(> .perfil-fisico-form, > .perfil-avaliacao-form),
     padding-block: 12px;
     border-top: 1px solid var(--movi-borda);
 }
+@media (max-width: 1080px) {
+    .movi-cabecalho {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 12px 16px;
+    }
 
+    .movi-cabecalho .menu-principal {
+        justify-content: flex-end;
+    }
+
+    .movi-cabecalho .conta-conectada {
+        grid-column: 1 / -1;
+        padding-top: 12px;
+        border-top: 1px solid var(--movi-borda);
+    }
+}
+
+@media (max-width: 700px) {
+    .movi-cabecalho {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 14px;
+        margin-bottom: 18px;
+    }
+
+    .movi-cabecalho .logo-link {
+        justify-self: start;
+    }
+
+    .movi-cabecalho .logo-img {
+        width: 140px;
+    }
+
+    .movi-cabecalho .menu-principal {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .movi-cabecalho .menu-principal .menu-link {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        padding: 8px 10px;
+        text-align: center;
+    }
+}
 .perfil-declaracao .perfil-acao-remover {
     background-color: var(--movi-fundo-campo);
     border-color: #ae6763;
