@@ -277,3 +277,21 @@
         }
     }
 }
+#mapa .regiao polygon {
+    vector-effect: non-scaling-stroke;
+}
+
+#mapa .regiao:focus-visible polygon,
+#mapa .regiao[aria-current="location"] polygon {
+    stroke: #f4f7fa;
+    stroke-width: 2.5px;
+    stroke-linejoin: round;
+}
+
+#mapa .musculo-detalhe > summary {
+    min-height: 44px;
+}
+
+#mapa .musculo-detalhe:target > summary {
+    color: var(--movi-verde);
+}
