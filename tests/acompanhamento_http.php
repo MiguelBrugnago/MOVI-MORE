@@ -23,6 +23,20 @@ function verificar(bool $condicao, string $mensagem): void
     }
 }
 
+/** Compara o conteúdo visível de um componente, independentemente das tags e quebras de linha. */
+function contemTexto(string $resposta, string $elemento, string $texto): bool
+{
+    $documento = new DOMDocument();
+    $documento->loadHTML(substr($resposta, strpos($resposta, '<!DOCTYPE')), LIBXML_NOERROR | LIBXML_NOWARNING | LIBXML_NONET);
+    $xpath = new DOMXPath($documento);
+    foreach ($xpath->query($elemento) as $no) {
+        if ($xpath->evaluate('normalize-space(.)', $no) === $texto) {
+            return true;
+        }
+    }
+    return false;
+}
+
 $anon = $cliente();
 foreach (['/nutricao', '/perfil/metas', '/profissional/perfil'] as $url) {
     $anon($url, 303);
@@ -89,7 +103,7 @@ verificar(str_contains($a($pagina, 200), 'Meta de 2.500,00'), 'Meta publicada');
 $db->consultar('UPDATE alimento SET calorias_100g=200 WHERE id=?', [$comida]);
 verificar(str_contains($a($pagina, 200), '100,00 g · 140,00 kcal'), 'Composição publicada preservada após mudança do rótulo');
 $historico = $a('/nutricao?data=' . $ontem, 200);
-verificar(str_contains($historico, '175,00 consumidos') && !str_contains($historico, 'Meta de 2.500,00'), 'Diário preserva data e valores do registro');
+verificar(contemTexto($historico, '//div[dt="Energia (kcal)"]/dd/strong', '175,00 kcal') && !str_contains($historico, 'Meta de 2.500,00'), 'Diário preserva data e valores do registro');
 
 // Simula a passagem de um dia e publica um novo plano com outra meta.
 $db->consultar('UPDATE plano_alimentar SET data_inicio=? WHERE id=?', [$ontem, $idPlano]);
@@ -136,10 +150,16 @@ verificar(str_contains($a('/exercicios?' . http_build_query(['equipamento' => $a
 $marcar = ['id' => $ex, 'favorito' => '1'];
 $salvar('/exercicios/favorito', 303, $marcar);
 $salvar('/exercicios/favorito', 303, $marcar);
-verificar(str_contains($a('/exercicios?favoritos=1', 200), '1 exercícios encontrados')
-    && str_contains($p('/exercicios?favoritos=1', 200), '0 exercícios encontrados'), 'Favoritos por conta');
+$favoritosAluno = $a('/exercicios?favoritos=1', 200);
+$favoritosProfissional = $p('/exercicios?favoritos=1', 200);
+$linkFavorito = '/exercicios/ver?id=' . $ex . '"';
+verificar(str_contains($favoritosAluno, '1 exercício encontrado') && str_contains($favoritosAluno, $linkFavorito)
+    && str_contains($favoritosProfissional, 'Nenhum exercício corresponde à busca')
+    && !str_contains($favoritosProfissional, $linkFavorito), 'Favoritos por conta');
 $salvar('/exercicios/favorito', 303, ['favorito' => '0'] + $marcar);
-verificar(str_contains($a('/exercicios?favoritos=1', 200), '0 exercícios encontrados'), 'Remoção de favorito');
+$aposRemocao = $a('/exercicios?favoritos=1', 200);
+verificar(str_contains($aposRemocao, 'Nenhum exercício corresponde à busca')
+    && !str_contains($aposRemocao, $linkFavorito), 'Remoção de favorito');
 
 $meta = ['alvo' => '1', 'inicio' => $hoje, 'fim' => $hoje];
 $salvar('/perfil/metas', 422, ['fim' => $ontem] + $meta);
@@ -155,14 +175,14 @@ $svc->sessao($u, ['treino_id' => $treino], 'finalizar');
 $svc->sessao($u, ['treino_id' => $treino], 'finalizar');
 for ($i = 0; $i < 2; $i++) {
     $html = $a('/perfil/metas', 200);
-    verificar(str_contains($html, '10 XP ·') && str_contains($html, 'Meta alcançada') && str_contains($html, 'Primeiro treino · Conquistado'), 'XP, metas e conquistas');
+    verificar(contemTexto($html, '//p[@class="metas-xp"]/strong', '10 XP') && str_contains($html, 'Meta alcançada') && contemTexto($html, '//li[@class="metas-conquista"]', 'Primeiro treino Conquistado'), 'XP, metas e conquistas');
 }
-verificar(str_contains($p('/perfil/metas', 200), '0 XP ·'), 'XP isolado');
+verificar(contemTexto($p('/perfil/metas', 200), '//p[@class="metas-xp"]/strong', '0 XP'), 'XP isolado');
 verificar(str_contains($a('/treinos/analise', 200), 'Extras realizadas: 1'), 'Séries extras na análise');
 $svc->sessao($u, ['treino_id' => $treino], 'excluir');
 $idCancelado = $svc->iniciar($u, []);
 $svc->sessao($u, ['treino_id' => $idCancelado], 'cancelar');
-verificar(str_contains($a('/perfil/metas', 200), '0 XP ·') && !str_contains($a('/perfil/metas', 200), 'Meta alcançada'), 'Estorno de progresso');
+verificar(contemTexto($a('/perfil/metas', 200), '//p[@class="metas-xp"]/strong', '0 XP') && !str_contains($a('/perfil/metas', 200), 'Meta alcançada'), 'Estorno de progresso');
 for ($i = 0; $i < 10; $i++) {
     $t = $svc->iniciar($u, []);
     $svc->sessao($u, ['treino_id' => $t, 'exercicio_id' => $ex], 'exercicio');
@@ -171,7 +191,7 @@ for ($i = 0; $i < 10; $i++) {
     $svc->sessao($u, ['treino_id' => $t], 'finalizar');
 }
 $html = $a('/perfil/metas', 200);
-verificar(str_contains($html, 'Nível 2') && str_contains($html, '100 XP ·') && str_contains($html, 'Cinco treinos · Conquistado'), 'Mudança de nível e conquista');
+verificar(str_contains($html, 'Nível 2') && contemTexto($html, '//p[@class="metas-xp"]/strong', '100 XP') && contemTexto($html, '//li[@class="metas-conquista"]', 'Cinco treinos Conquistado'), 'Mudança de nível e conquista');
 $salvar('/perfil/metas', 303, ['tipo' => 'peso_maximo', 'alvo' => '80.5'] + $meta);
 verificar(str_contains($a('/perfil/metas', 200), 'Sem peso registrado no período'), 'Peso ausente');
 $salvar('/perfil/avaliacoes', 303, ['acao' => 'avaliacao', 'avaliado_em' => $hoje, 'peso' => '82.5']);

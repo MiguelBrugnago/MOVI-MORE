@@ -18,19 +18,31 @@ $destino = $r ? ['rotina' => $r, 'item' => $item] : ['treino' => $t];
 $baseRotina = $modelo ? '/profissional/modelos' : '/rotinas';
 // Só a inclusão na rotina aceita vários exercícios de uma vez.
 $multiplos = $r && !$item;
+$categorias = ['grupo' => 'Grupo muscular', 'musculo' => 'Músculo', 'equipamento' => 'Equipamento', 'ambiente' => 'Ambiente', 'modalidade' => 'Modalidade'];
+$filtrosAtivos = array_filter(array_intersect_key($f, $categorias));
 ?>
-<section class="treino-area">
+<section class="treino-area seletor-exercicios">
     <h1><?= $item ? 'Substituir exercício' : 'Selecionar exercícios' ?></h1>
-    <p><a href="<?= $r ? $baseRotina . '?id=' . $r : '/treinos/ver?id=' . $t ?>">Voltar ao editor</a></p>
+    <p><a href="<?= $r ? $baseRotina . '?id=' . $r . '#rotina-selecionada' : '/treinos/ver?id=' . $t ?>"><?= $r ? 'Voltar ao planejamento' : 'Voltar ao treino' ?></a></p>
     <form method="get" action="/treinos/exercicios" class="treino-campos">
         <?php foreach ($destino as $k => $v): ?><input type="hidden" name="<?= $esc($k) ?>" value="<?= (int)$v ?>"><?php endforeach ?>
-        <label>Nome ou nome alternativo<input name="q" value="<?= $esc($f['q']) ?>" maxlength="160"></label>
-        <?php foreach (['grupo' => 'Grupo muscular', 'musculo' => 'Músculo', 'equipamento' => 'Equipamento', 'ambiente' => 'Ambiente', 'modalidade' => 'Modalidade'] as $k => $label) {
-            $select($k, $label, ['' => 'Todos'] + array_column($opcoes[$k], 'nome', 'id'), $f[$k]);
-        } ?>
-        <button>Buscar</button>
+        <label>Buscar por nome ou nome alternativo<input type="search" name="q" value="<?= $esc($f['q']) ?>" maxlength="160"></label>
+        <details class="catalogo-filtros"<?= $filtrosAtivos ? ' open' : '' ?>>
+            <summary>Filtros</summary>
+            <div class="treino-campos">
+                <?php foreach ($categorias as $k => $label) {
+                    $select($k, $label, ['' => 'Todos'] + array_column($opcoes[$k], 'nome', 'id'), $f[$k]);
+                } ?>
+            </div>
+        </details>
+        <div class="treino-acoes">
+            <button>Buscar</button>
+            <?php if ($filtrosAtivos || $f['q'] !== ''): ?>
+                <a href="/treinos/exercicios?<?= $esc(http_build_query($destino)) ?>">Limpar filtros</a>
+            <?php endif ?>
+        </div>
     </form>
-    <p><?= (int)$catalogo['total'] ?> resultados</p>
+    <p><?= $catalogo['total'] ? (int) $catalogo['total'] . ($catalogo['total'] === 1 ? ' exercício encontrado' : ' exercícios encontrados') : 'Nenhum exercício encontrado.' ?></p>
     <?php if ($catalogo['itens']): ?>
         <form method="post" action="<?= $r ? $baseRotina . '/salvar' : '/treinos/salvar' ?>">
             <?php $hidden($r ? ['rotina_id' => $r, 'item_id' => $item, 'acao' => $item ? 'item_substituir' : 'adicionar'] : ['treino_id' => $t, 'acao' => 'exercicio']); ?>

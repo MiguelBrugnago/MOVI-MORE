@@ -4,6 +4,7 @@
 declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Services\PerfilFisicoService as F;
+use App\Support\PerfilFisicoConstantes;
 
 /**
  * Interrompe a suíte ao encontrar uma condição falsa, identificando o cenário que falhou.
@@ -33,6 +34,8 @@ function invalido(callable $fn): void
     }
     throw new RuntimeException('Entrada inválida aceita.');
 }
+conferir(F::OBJETIVOS === PerfilFisicoConstantes::OBJETIVOS && F::EXPERIENCIAS === PerfilFisicoConstantes::EXPERIENCIAS
+    && F::MEDIDAS === PerfilFisicoConstantes::MEDIDAS, 'Compatibilidade das constantes públicas do perfil');
 conferir(F::composicao(['peso' => 80, 'gordura' => 25]) === ['massa_gorda' => 20.0, 'massa_magra' => 60.0], 'Composição');
 conferir(F::composicao(['peso' => 80])['massa_magra'] === null, 'Não combinar avaliações incompletas');
 conferir(F::composicao(['peso' => 80, 'gordura' => 0])['massa_magra'] === 80.0, 'Zero é um valor');

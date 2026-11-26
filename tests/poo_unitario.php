@@ -6,6 +6,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Contracts\MetricaInterface;
+use App\Models\Alimento;
 use App\Models\Exercicio;
 use App\Models\Metricas\MetricaDecimal;
 use App\Models\Metricas\MetricaInteira;
@@ -15,6 +16,7 @@ use App\Models\SerieExecutada;
 use App\Models\Treino;
 use App\Services\RegistroTreino;
 use App\Services\AnaliseTreinoService;
+use App\Support\Validacao;
 
 $verificacoes = 0;
 /** Conta a verificação aprovada ou interrompe a suíte com o nome do caso. */
@@ -52,6 +54,23 @@ $rejeitar(fn () => new MetricaInteira('1.5', 0, 100));
 $rejeitar(fn () => new MetricaDecimal('1.234', 0, 100));
 $rejeitar(fn () => new MetricaDecimal(1, 0, 100, 0));
 $rejeitar(fn () => new MetricaInteira(1, 10, 0));
+
+foreach ([null, ''] as $ausente) {
+    $conferir(Validacao::idOpcional($ausente) === null, 'Filtro de ID ausente');
+}
+foreach (['0001', 1, 1.0] as $um) {
+    $conferir(Validacao::idOpcional($um) === 1, 'ID positivo normalizado');
+}
+$conferir(Validacao::idOpcional('2147483647') === 2147483647, 'Maior ID aceito pelo banco');
+foreach ([[], false, '0', '-1', '+1', '1.0', '1e1', ' 1', '2147483648'] as $idInvalido) {
+    $rejeitar(fn () => Validacao::idOpcional($idInvalido));
+}
+
+$alimento = new Alimento(1, 'Alimento de teste', 140, 4, 22.25, 0);
+$conferir($alimento->totaisDaPorcao(125) === [
+    'calorias' => 175.0, 'proteinas' => 5.0, 'carboidratos' => 27.81, 'gorduras' => 0.0,
+], 'Porção calculada pelo rótulo com arredondamento e nutriente zero');
+$rejeitar(fn () => $alimento->totaisDaPorcao(10_000_000), DomainException::class, 422);
 
 $registro = ['usa_carga' => 1, 'usa_repeticoes' => 1];
 $entrada = ['peso' => '25.50', 'repeticoes' => '8', 'duracao_segundos' => '-99'];

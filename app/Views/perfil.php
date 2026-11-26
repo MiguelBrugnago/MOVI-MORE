@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\PerfilFisicoService;
+use App\Support\PerfilFisicoConstantes;
 
 ?>
 
@@ -25,14 +26,14 @@ use App\Services\PerfilFisicoService;
     </div>
 
     <div class="catalogo perfil-indicadores">
-        <?php foreach (['peso', 'gordura', 'massa_magra'] as $chaveMetrica): ?>
+        <?php foreach ($indicadoresResumo as $chaveMetrica => [$nomeMetrica, $unidade]): ?>
             <?php $valorMedida = $recente['medidas'][$chaveMetrica] ?? null; ?>
             <article class="perfil-indicador perfil-indicador--<?= $esc($chaveMetrica) ?>">
-                <h3><?= $esc($metricas[$chaveMetrica][0]) ?></h3>
+                <h3><?= $esc($nomeMetrica) ?></h3>
                 <p>
                     <strong><?= $numero($valorMedida) ?></strong>
                     <?php if ($valorMedida !== null): ?>
-                        <span><?= $esc($metricas[$chaveMetrica][1]) ?></span>
+                        <span><?= $esc($unidade) ?></span>
                     <?php endif; ?>
                 </p>
             </article>
@@ -77,8 +78,8 @@ use App\Services\PerfilFisicoService;
         <div class="treino-campos">
             <?php
             $camposTreinamento = [
-                'objetivo' => ['Objetivo principal', PerfilFisicoService::OBJETIVOS],
-                'experiencia' => ['Experiência', PerfilFisicoService::EXPERIENCIAS],
+                'objetivo' => ['Objetivo principal', PerfilFisicoConstantes::OBJETIVOS],
+                'experiencia' => ['Experiência', PerfilFisicoConstantes::EXPERIENCIAS],
             ];
             ?>
             <?php foreach ($camposTreinamento as $campoTreinamento => [$rotuloCampo, $opcoesCampo]): ?>

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Config\Database;
 use App\Repositories\ProfissionalRepository;
+use App\Repositories\TreinoRepository;
 use App\Security\Auth;
 
 /**
@@ -36,6 +38,13 @@ final class PainelController
             $titulo = 'MOVI+ | Painel Profissional';
             $viewPath = __DIR__ . '/../Views/painel_profissional.php';
         } else {
+            $treinos = new TreinoRepository(Database::conectar());
+            $ativo = $treinos->ativo($usuarioId);
+            $recente = $treinos->ultimoConcluido($usuarioId);
+            if ($recente) {
+                $dataRecente = (new \DateTimeImmutable('@' . $recente['fim']))
+                    ->setTimezone(new \DateTimeZone('America/Sao_Paulo'))->format('d/m/Y');
+            }
             $titulo = 'MOVI+ | Painel do Aluno';
             $viewPath = __DIR__ . '/../Views/painel_aluno.php';
         }

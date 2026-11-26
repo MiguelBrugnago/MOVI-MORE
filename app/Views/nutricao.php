@@ -46,7 +46,6 @@ $rascunho = $diario['rascunho'];
 </form>
 <section class="treino-card nutricao-resumo" aria-labelledby="titulo-consumo-diario">
     <h2 id="titulo-consumo-diario">Consumo e metas do dia</h2>
-    <p>Veja o total das porções registradas e compare com suas metas.</p>
 
     <dl class="nutricao-metricas">
         <?php foreach ($nutrientes as $campoNutriente => $rotuloNutriente): ?>
@@ -54,11 +53,15 @@ $rascunho = $diario['rascunho'];
             $totalConsumido = array_sum(array_column($diario['registros'], $campoNutriente . '_total'));
             $metaNutriente = $plano[$campoNutriente . '_alvo'] ?? null;
             ?>
-            <div class="nutricao-metrica nutricao-metrica--<?= $esc($campoNutriente) ?>">
+            <div class="nutricao-metrica">
                 <dt><?= $esc($rotuloNutriente) ?></dt>
                 <dd>
-                    <strong><?= $numero($totalConsumido) ?></strong>
-                    <span><?= $metaNutriente === null ? 'Sem meta' : 'Meta de ' . $numero($metaNutriente) ?></span>
+                    <?php $unidade = $campoNutriente === 'calorias' ? 'kcal' : 'g'; ?>
+                    <strong><?= $numero($totalConsumido) ?> <?= $unidade ?></strong>
+                    <span><?= $metaNutriente === null ? 'Sem meta' : 'Meta de ' . $numero($metaNutriente) . ' ' . $unidade ?></span>
+                    <?php if ((float)$metaNutriente > 0): ?>
+                        <progress max="<?= $esc($metaNutriente) ?>" value="<?= $esc(min($totalConsumido, $metaNutriente)) ?>" aria-label="<?= $esc('Consumo em relação à meta de ' . $rotuloNutriente) ?>"></progress>
+                    <?php endif ?>
                 </dd>
             </div>
         <?php endforeach; ?>

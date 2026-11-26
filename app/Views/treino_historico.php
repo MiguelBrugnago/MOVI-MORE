@@ -9,20 +9,31 @@
  * @var Closure $dataHora
  * @var Closure $duracao
  */
-require __DIR__ . '/treinos/comum.php'; ?>
-<section class="treino-area">
+require __DIR__ . '/treinos/comum.php';
+$temFiltros = $f['de'] !== '' || $f['ate'] !== '' || $f['exercicio'] !== '';
+?>
+<section class="treino-area historico-treinos">
     <h1>Histórico de treinos</h1>
     <form action="/treinos/historico" method="get" class="treino-campos">
         <label>De<input type="date" name="de" value="<?= $esc($f['de']) ?>"></label>
         <label>Até<input type="date" name="ate" value="<?= $esc($f['ate']) ?>"></label>
-        <label>Nome do exercício<input name="exercicio" value="<?= $esc($f['exercicio']) ?>"></label>
-        <button>Filtrar</button>
+        <label>Nome do exercício<input type="search" name="exercicio" maxlength="120" value="<?= $esc($f['exercicio']) ?>"></label>
+        <div class="treino-acoes">
+            <button>Filtrar</button>
+            <?php if ($temFiltros): ?><a href="/treinos/historico">Limpar filtros</a><?php endif ?>
+        </div>
     </form>
-    <?php if (!$rows): ?><p>Nenhum treino concluído encontrado.</p><?php endif ?>
+    <?php if (!$rows): ?>
+        <?php if ($temFiltros): ?>
+            <p>Nenhum treino concluído corresponde aos filtros. Tente outro período ou exercício.</p>
+        <?php else: ?>
+            <p>Os treinos aparecem aqui depois da finalização. <a href="/rotinas">Abrir rotinas</a></p>
+        <?php endif ?>
+    <?php endif ?>
     <?php foreach ($rows as $t): ?>
         <article class="treino-card">
             <h2><a href="/treinos/ver?id=<?= (int)$t['id'] ?>"><?= $esc($t['nome'] ?? 'Treino') ?></a></h2>
-            <p><?= $esc($dataHora($t['fim'])) ?> · <?= $duracao($t['duracao']) ?></p>
+            <p>Concluído em <?= $esc($dataHora($t['fim'])) ?> · Duração <?= $duracao($t['duracao']) ?></p>
             <?php if ($t['exercicios']): ?>
                 <p><?= $esc(implode(' · ', array_column($t['exercicios'], 'nome'))) ?></p>
                 <p><?= (int)array_sum(array_column($t['exercicios'], 'series')) ?> séries concluídas

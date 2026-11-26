@@ -57,7 +57,7 @@ $tituloRotinas = match (true) {
     </div>
 
     <?php if (!$arquivadas): ?>
-        <details class="treino-card rotinas-criacao">
+        <details class="treino-card rotinas-criacao"<?= !$rotinas && !$rotina ? ' open' : '' ?>>
             <summary><?= $modelo ? 'Criar modelo' : 'Criar rotina' ?></summary>
             <form method="post" action="<?= $esc($modelo ? $base . '/salvar' : $base) ?>">
                 <?php $hidden(['acao' => 'criar']); ?>
@@ -73,7 +73,7 @@ $tituloRotinas = match (true) {
             </form>
         </details>
     <?php endif; ?>
-            <?php if ($pessoais): ?>
+    <?php if ($pessoais): ?>
         <details class="treino-card">
             <summary>Criar modelo a partir de uma rotina minha</summary>
             <form method="post" action="/profissional/modelos/salvar">
@@ -101,7 +101,7 @@ $tituloRotinas = match (true) {
     <div class="catalogo">
         <?php foreach ($rotinas as $r): ?>
             <article>
-                <h2><a href="<?= $base ?>?id=<?= (int)$r['id'] ?><?= $arquivadas ? '&amp;arquivadas=1' : '' ?>"><?= $esc($r['nome']) ?></a></h2>
+                <h2><a href="<?= $base ?>?id=<?= (int)$r['id'] ?><?= $arquivadas ? '&amp;arquivadas=1' : '' ?>#rotina-selecionada"><?= $esc($r['nome']) ?></a></h2>
                 <p><?= $esc($dias[$r['dia_semana'] ?? '']) ?></p>
                 <?php if (!$modelo && $r['ativa'] && !$ativo): ?>
                     <form method="post" action="/treinos/iniciar"><?php $hidden(['rotina_id' => $r['id']]); ?><button>Iniciar treino</button></form>
@@ -111,7 +111,7 @@ $tituloRotinas = match (true) {
     </div>
 
     <?php if ($rotina): ?>
-        <h2><?= $esc($rotina['nome']) ?></h2>
+        <h2 id="rotina-selecionada"><?= $esc($rotina['nome']) ?></h2>
         <?php if ($modelo && $rotina['ativa']): ?>
             <?php // O aluno só recebe a rotina depois de revisar a proposta e aceitar. ?>
             <h3>Propor a um aluno</h3>

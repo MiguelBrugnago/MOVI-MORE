@@ -33,12 +33,7 @@ session_write_close();
 
         <section class="auth-card">
 
-            <h1>Bem-vindo de volta!</h1>
-
-            <p class="auth-subtitulo">
-                Entre na sua conta para continuar
-                acompanhando sua evolução.
-            </p>
+            <h1>Entrar no MOVI+</h1>
 
             <form method="POST" action="/login">
 

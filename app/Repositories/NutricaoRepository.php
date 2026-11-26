@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Models\Alimento;
 use DomainException;
 use PDO;
 use PDOStatement;
@@ -93,20 +94,13 @@ final class NutricaoRepository
                     }
                     break;
                 case 'consumo':
-                    $a = $this->alimento($usuario, $dados['alimento']);
-                    $totais = [];
-                    foreach (['calorias', 'proteinas', 'carboidratos', 'gorduras'] as $campo) {
-                        $valor = round($dados['gramas'] * $a[$campo . '_100g'] / 100, 2);
-                        if ($valor < 0 || $valor > 9999999.99) {
-                            throw new DomainException('O total da porção excede o intervalo permitido.', 422);
-                        }
-                        $totais[] = $valor;
-                    }
+                    $alimento = $this->alimento($usuario, $dados['alimento']);
+                    $totais = $alimento->totaisDaPorcao($dados['gramas']);
                     $this->consulta('INSERT INTO registro_alimentar (usuario_id,alimento_id,alimento_nome_snapshot,
                         quantidade_gramas,consumido_em,nome_refeicao,chave,calorias_total,proteinas_total,carboidratos_total,
                         gorduras_total) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id=id',
-                        [$usuario, $a['id'], $a['nome'], $dados['gramas'], $dados['data'], $dados['refeicao'],
-                        $dados['chave'], ...$totais]);
+                        [$usuario, $alimento->id, $alimento->nome, $dados['gramas'], $dados['data'], $dados['refeicao'],
+                        $dados['chave'], $totais['calorias'], $totais['proteinas'], $totais['carboidratos'], $totais['gorduras']]);
                     break;
                 case 'corrigir_diario':
                     $s = $this->consulta('DELETE FROM registro_alimentar WHERE id=? AND usuario_id=?',
@@ -127,11 +121,17 @@ final class NutricaoRepository
         }
     }
 
-    private function alimento(int $usuario, int $id): array
+    private function alimento(int $usuario, int $id): Alimento
     {
-        return $this->consulta('SELECT * FROM alimento WHERE id=? AND ativo=1 AND
+        $linha = $this->consulta('SELECT id,nome,calorias_100g,proteinas_100g,carboidratos_100g,gorduras_100g
+            FROM alimento WHERE id=? AND ativo=1 AND
             (usuario_id IS NULL OR usuario_id=?)', [$id, $usuario])->fetch()
             ?: throw new DomainException('Alimento indisponível.', 404);
+
+        return new Alimento(
+            (int)$linha['id'], $linha['nome'], (float)$linha['calorias_100g'],
+            (float)$linha['proteinas_100g'], (float)$linha['carboidratos_100g'], (float)$linha['gorduras_100g'],
+        );
     }
 
     private function editarPlano(int $usuario, string $acao, array $dados, string $hoje): void

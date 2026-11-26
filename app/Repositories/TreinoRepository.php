@@ -509,6 +509,12 @@ final class TreinoRepository
         return $this->um("SELECT id,nome FROM treino WHERE usuario_id=? AND status='em_andamento' ORDER BY id DESC LIMIT 1", [$u]);
     }
 
+    public function ultimoConcluido(int $usuario): ?array
+    {
+        return $this->um("SELECT id, nome, UNIX_TIMESTAMP(finalizado_em) fim FROM treino
+            WHERE usuario_id=? AND status='concluido' ORDER BY finalizado_em DESC, id DESC LIMIT 1", [$usuario]);
+    }
+
     /**
      * Lista os exercícios em ordem de execução, opcionalmente só um item. Nas sessões, prefere o nome
      * salvo no início.

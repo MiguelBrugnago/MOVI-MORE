@@ -10,7 +10,8 @@ use InvalidArgumentException;
 use App\Config\Database;
 use App\Repositories\{TreinoRepository, AnaliseTreinoRepository, VinculoProfissionalRepository};
 use App\Security\Auth;
-use App\Services\{AnaliseTreinoService as Analise, RegistroTreino};
+use App\Services\AnaliseTreinoService as Analise;
+use App\Support\Validacao;
 
 /**
  * Entrega a análise por período, o mapa muscular e a progressão por exercício. Coordena sessão,
@@ -29,9 +30,9 @@ final class AnaliseTreinoController
         $usuario = Auth::usuario();
         header('Cache-Control: no-store, private');
         try {
-            $aluno = isset($_GET['aluno']) ? RegistroTreino::numero($_GET['aluno'], 1, 2147483647) : null;
-            if (isset($_GET['aluno']) && $aluno === null) {
-                throw new InvalidArgumentException('Aluno inválido.');
+            $aluno = null;
+            if (isset($_GET['aluno'])) {
+                $aluno = Validacao::idOpcional($_GET['aluno']) ?? throw new InvalidArgumentException('Aluno inválido.');
             }
             $u = $aluno ?? (int)$usuario['id'];
             $profissional = $u !== (int)$usuario['id'];
@@ -43,7 +44,7 @@ final class AnaliseTreinoController
                 $vinculos->registrarLeitura((int)$usuario['id'], $u, 'analise_muscular');
             }
             $p = Analise::periodo($_GET);
-            $exercicio = RegistroTreino::numero($_GET['exercicio'] ?? null, 1, 2147483647);
+            $exercicio = Validacao::idOpcional($_GET['exercicio'] ?? null);
             $metricaSelecionada = $_GET['metrica'] ?? 'equivalentes';
             if (!in_array($metricaSelecionada, ['equivalentes', 'series', 'diretas', 'indiretas'], true)) {
                 throw new InvalidArgumentException('Métrica inválida.');

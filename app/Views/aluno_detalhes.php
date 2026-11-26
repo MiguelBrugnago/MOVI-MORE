@@ -18,7 +18,6 @@ declare(strict_types=1);
 ?>
 
 <h1>Acompanhamento do aluno</h1>
-<?php if ($nutricaoPermitida): ?><p><a href="/nutricao?aluno=<?= (int)$alunoId ?>">Consultar alimentação do aluno</a></p><?php endif; ?>
 
 <a href="/alunos">
     Voltar para meus alunos
@@ -88,5 +87,7 @@ require __DIR__ . '/fisico_evolucao.php';
 <?php foreach ($declaracoes as $grupo): foreach ($grupo as $d): ?><p><?= $esc($d['nome']) ?> <?= $esc($d['observacao'] ?? '') ?></p><?php endforeach; endforeach; ?>
 <?php if (empty($declaracoes['condicoes']) && empty($declaracoes['restricoes'])): ?><p>Nenhuma condição ou restrição informada.</p><?php endif; ?></article><?php endif; ?>
 
-<h3>Alimentação</h3>
-<p>Funcionalidade prevista para uma próxima etapa.</p>
+<?php if ($nutricaoPermitida): ?>
+    <h3>Alimentação</h3>
+    <p><a href="/nutricao?aluno=<?= (int)$alunoId ?>">Consultar alimentação do aluno</a></p>
+<?php endif; ?>

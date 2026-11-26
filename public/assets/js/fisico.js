@@ -26,7 +26,7 @@ document.querySelectorAll('[data-pontos]').forEach((container) => {
         fim === inicio ? 220 : 60 + ((datas[i] - inicio) / (fim - inicio)) * 310,
         170 - ((Number(p.valor) - min) / amplitude) * 130,
     ]);
-    add('path', { d: 'M60 25 V180 H380', fill: 'none', stroke: '#98aeb9' });
+    add('path', { d: 'M60 25 V180 H380', fill: 'none', stroke: 'var(--movi-contorno)' });
     add('text', { x: 55, y: 174, 'text-anchor': 'end', 'font-size': 12 }, min.toLocaleString('pt-BR'));
     if (max !== min) add('text', { x: 55, y: 44, 'text-anchor': 'end', 'font-size': 12 }, max.toLocaleString('pt-BR'));
     add('text', { x: 60, y: 205, 'font-size': 12 }, pontos[0].data);
@@ -34,11 +34,11 @@ document.querySelectorAll('[data-pontos]').forEach((container) => {
     add('polyline', {
         points: coords.map((c) => c.join(',')).join(' '),
         fill: 'none',
-        stroke: '#075d72',
+        stroke: 'var(--movi-verde)',
         'stroke-width': 2,
     });
     coords.forEach(([cx, cy], i) => {
-        const circle = add('circle', { cx, cy, r: 4, fill: '#075d72' });
+        const circle = add('circle', { cx, cy, r: 4, fill: 'var(--movi-verde)' });
         const title = document.createElementNS(svg.namespaceURI, 'title');
         title.textContent = pontos[i].data + ': ' + valores[i].toLocaleString('pt-BR');
         circle.append(title);

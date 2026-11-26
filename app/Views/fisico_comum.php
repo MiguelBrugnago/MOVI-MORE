@@ -4,8 +4,13 @@
 $esc = static fn ($v) => htmlspecialchars((string)($v ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 /** Formata a medida com duas casas decimais e apresenta a ausência de informação separadamente de zero. */
 $numero = static fn ($v) => $v === null ? 'Não informado' : number_format((float)$v, 2, ',', '.');
-$medidas = \App\Services\PerfilFisicoService::MEDIDAS;
-$metricas = ['peso' => $medidas['peso'], 'gordura' => $medidas['gordura'], 'massa_magra' => ['Massa magra estimada', 'kg'], 'massa_gorda' => ['Massa gorda estimada', 'kg']] + $medidas;
+$medidas = \App\Support\PerfilFisicoConstantes::MEDIDAS;
+$indicadoresResumo = [
+    'peso' => $medidas['peso'],
+    'gordura' => $medidas['gordura'],
+    'massa_magra' => ['Massa magra estimada', 'kg'],
+];
+$metricas = $indicadoresResumo + ['massa_gorda' => ['Massa gorda estimada', 'kg']] + $medidas;
 $csrf = $esc(\App\Security\Csrf::gerarToken());
 ?>
 <?php if (!($somenteLeitura ?? false)): ?>

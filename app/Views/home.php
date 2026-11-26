@@ -7,7 +7,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>MOVI+ | Sua evolução começa aqui</title>
+    <title>MOVI+ | Rotinas e registro de treinos</title>
 
     <link rel="stylesheet"
           href="/assets/css/app.css">
@@ -29,7 +29,7 @@
             <a href="/login">Entrar</a>
 
             <a href="/cadastro"
-               class="home-btn-cadastro">
+               class="botao-secundario">
                 Criar conta
             </a>
         </nav>
@@ -39,14 +39,7 @@
 
         <section class="home-hero">
 
-            <span class="home-tag">
-                SEU TREINO. SUA EVOLUÇÃO.
-            </span>
-
-            <h1>
-                Sua evolução começa
-                <span>aqui.</span>
-            </h1>
+            <h1>Seu caderno de treinos</h1>
 
             <p>
                 Organize seus treinos, registre
@@ -57,12 +50,12 @@
             <div class="home-acoes">
 
                 <a href="/cadastro"
-                   class="home-btn-principal">
-                    Começar agora
+                   class="botao-principal">
+                    Criar minha conta
                 </a>
 
                 <a href="/login"
-                   class="home-btn-secundario">
+                   class="botao-secundario">
                     Já tenho uma conta
                 </a>
 

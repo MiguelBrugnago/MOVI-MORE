@@ -461,8 +461,8 @@ Limitações intencionais: estimativa por heurística; ausência de semântica c
 
 1. No painel profissional, abra **Gerenciar modelos de treino**. Crie um modelo, informe o objetivo e use o editor para organizar exercícios do catálogo público, séries, metas, grupos e descanso. O editor também permite duplicar, arquivar e restaurar modelos. A opção **Criar modelo a partir de uma rotina minha** também aceita rotinas pessoais cujos exercícios estejam ativos no catálogo público.
 2. Abra o modelo ativo, selecione um aluno vinculado e clique em **Enviar proposta**. O profissional pode acompanhar as pendências, cancelar um envio e consultar o histórico de cada aluno.
-3. No painel do aluno, abra **Propostas de treino recebidas** para conferir o profissional, os exercícios e cada série. Aceitar cria uma rotina pessoal com a identificação do profissional. Recusar encerra a proposta e mantém o conteúdo disponível no histórico.
-4. A rotina aceita aparece em **Meus treinos**. O aluno pode editá-la e iniciar sessões pelo fluxo habitual, inclusive após o encerramento do vínculo.
+3. No painel do aluno, abra **Meu acompanhamento → Propostas de treino** para conferir o profissional, os exercícios e cada série. Aceitar cria uma rotina pessoal com a identificação do profissional. Recusar encerra a proposta e mantém o conteúdo disponível no histórico.
+4. A rotina aceita aparece em **Treinos → Minhas rotinas**. O aluno pode editá-la e iniciar sessões pelo fluxo habitual, inclusive após o encerramento do vínculo. Quando há uma sessão em andamento, o painel oferece **Retomar treino**. Após finalizar a sessão, **Ver sessão** abre o último treino concluído.
 
 ### Rotas do módulo
 

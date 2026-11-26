@@ -69,9 +69,14 @@ $b = $clientes['outro'];
 $p = $clientes['profissional'];
 $html = $a('/treinos/analise', 200);
 checkAnalise(str_contains($html, 'Nenhum treino concluído neste período'), 'Estado vazio HTTP');
-foreach (['periodo[]=7', 'periodo=x', 'periodo=personalizado&de=2026-02-30&ate=2026-03-01', 'aluno[]=1', 'aluno=0', 'aluno=', 'exercicio[]=1', 'metrica[]=series'] as $query) {
+foreach (['periodo[]=7', 'periodo=x', 'periodo=personalizado&de=2026-02-30&ate=2026-03-01',
+    'aluno[]=1', 'aluno=0', 'aluno=', 'aluno=2147483648', 'aluno=%2B1', 'aluno=1.0',
+    'exercicio[]=1', 'exercicio=2147483648', 'metrica[]=series'] as $query) {
     $a('/treinos/analise?' . $query, 422);
 }
+$a('/treinos/analise?exercicio=', 200);
+$a('/treinos/analise?exercicio=2147483647', 200);
+$a('/treinos/analise?aluno=00' . $usuarios['aluno'], 200);
 $url = '/treinos/analise?aluno=' . $usuarios['aluno'];
 $b($url, 403);
 $p($url, 403);

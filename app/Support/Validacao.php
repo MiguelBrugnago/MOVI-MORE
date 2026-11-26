@@ -14,6 +14,12 @@ use InvalidArgumentException;
  */
 final class Validacao
 {
+    /** IDs de aluno e exercício usam INT no MySQL. Um filtro em branco continua opcional. */
+    public static function idOpcional(mixed $valor): ?int
+    {
+        return (new MetricaInteira($valor, 1, 2_147_483_647))->valor();
+    }
+
     /**
      * Remove espaços nas pontas e mede o comprimento em caracteres Unicode. Um texto opcional vazio
      * resulta em null.

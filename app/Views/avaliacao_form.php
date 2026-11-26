@@ -1,4 +1,4 @@
-<?php // Avaliações vinculadas a um profissional são exibidas para leitura. Os limites e as unidades vêm do serviço de perfil físico.
+<?php // Avaliações vinculadas a um profissional são exibidas para leitura.
 /** @var array $avaliacao Valores da avaliação, da nova ficha ou do formulário reapresentado após erro. */
 require __DIR__ . '/fisico_comum.php';
 $editavel = empty($avaliacao['profissional_id']); ?>
@@ -10,7 +10,7 @@ $editavel = empty($avaliacao['profissional_id']); ?>
 <fieldset <?= !$editavel ? 'disabled' : '' ?>><legend>Medidas corporais</legend>
 <label>Data da avaliação<input type="date" name="avaliado_em" required min="1900-01-01" max="<?= \App\Services\PerfilFisicoService::hoje() ?>" value="<?= $esc($avaliacao['avaliado_em'] ?? '') ?>"></label>
 <div class="treino-campos">
-<?php foreach (\App\Services\PerfilFisicoService::MEDIDAS as $chave => [$nome,$unidade,$min,$max]): ?>
+<?php foreach ($medidas as $chave => [$nome,$unidade,$min,$max]): ?>
 <label><?= $esc($nome) ?> (<?= $unidade ?>)<input type="number" name="<?= $chave ?>" step="0.001" min="<?= $min ?>" max="<?= $max ?>" value="<?= $esc($avaliacao['medidas'][$chave] ?? '') ?>"></label>
 <?php endforeach; ?></div>
 <label>Observações (compartilhadas somente com permissão de saúde)<textarea name="observacao" maxlength="4000" rows="3"><?= $esc($avaliacao['observacao'] ?? '') ?></textarea></label>

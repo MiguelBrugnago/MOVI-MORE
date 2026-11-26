@@ -33,12 +33,7 @@ session_write_close();
 
         <section class="auth-card">
 
-            <h1>Comece sua evolução</h1>
-
-            <p class="auth-subtitulo">
-                Crie sua conta e organize seus
-                treinos em um só lugar.
-            </p>
+            <h1>Criar conta</h1>
 
             <form method="POST" action="/cadastro">
 
@@ -84,11 +79,12 @@ session_write_close();
                         minlength="8"
                         maxlength="32"
                         autocomplete="new-password"
-                        placeholder="Mínimo de 8 caracteres"
+                        aria-describedby="requisitos-senha"
                         required
                     >
                 </label>
 
+                <small id="requisitos-senha">Use de 8 a 32 caracteres.</small>
                 <label for="confirmar_senha">
                     Confirmar senha
                     <input

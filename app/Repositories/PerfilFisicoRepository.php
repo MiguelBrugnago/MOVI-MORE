@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Services\PerfilFisicoService;
+use App\Support\PerfilFisicoConstantes;
 use DomainException;
 use PDO;
 use Throwable;
@@ -115,7 +116,8 @@ final class PerfilFisicoRepository
             $id = $r['id'];
             // O JOIN repete a avaliação para cada medida. O ID agrupa todas as medições em uma entrada do histórico.
             $avaliacoes[$id] ??= ['id' => $id, 'profissional_id' => $r['profissional_id'], 'avaliado_em' => substr($r['avaliado_em'], 0, 10), 'observacao' => $r['observacao'], 'medidas' => []];
-            if (isset(PerfilFisicoService::MEDIDAS[$r['tipo'] ?? '']) && $r['unidade'] === PerfilFisicoService::MEDIDAS[$r['tipo']][1]) {
+            $definicao = PerfilFisicoConstantes::MEDIDAS[$r['tipo'] ?? ''] ?? null;
+            if ($definicao !== null && $r['unidade'] === $definicao[1]) {
                 $avaliacoes[$id]['medidas'][$r['tipo']] = (float)$r['valor'];
             }
         }
@@ -162,14 +164,14 @@ final class PerfilFisicoRepository
                 $this->propria($usuario, $id);
                 $this->consultar('UPDATE avaliacao SET avaliado_em=?,observacao=? WHERE id=? AND usuario_id=?', [$dados['avaliado_em'], $dados['observacao'], $id, $usuario]);
                 // Preserva tipos legados desconhecidos; substitui somente métricas deste módulo.
-                $tipos = array_keys(PerfilFisicoService::MEDIDAS);
+                $tipos = array_keys(PerfilFisicoConstantes::MEDIDAS);
                 $params = implode(',', array_fill(0, count($tipos), '?'));
                 $this->consultar("DELETE FROM medida WHERE avaliacao_id=? AND usuario_id=? AND tipo IN ($params)", [$id, $usuario, ...$tipos]);
             } else {
                 $this->consultar("INSERT INTO avaliacao (usuario_id,avaliado_em,observacao,metodo) VALUES (?,?,?,'Autodeclarada')", [$usuario, $dados['avaliado_em'], $dados['observacao']]);
                 $id = (int)$this->pdo->lastInsertId();
             }
-            foreach (PerfilFisicoService::MEDIDAS as $tipo => [, $unidade]) {
+            foreach (PerfilFisicoConstantes::MEDIDAS as $tipo => [, $unidade]) {
                 $valor = $dados['medidas'][$tipo] ?? null;
                 if ($valor !== null) {
                     $this->consultar('INSERT INTO medida (usuario_id,avaliacao_id,tipo,valor,unidade,registrado_em) VALUES (?,?,?,?,?,?)', [$usuario, $id, $tipo, $valor, $unidade, $dados['avaliado_em']]);

@@ -14,9 +14,9 @@ if (!$avaliacoes): ?>
         <thead>
             <tr>
                 <th>Data</th>
-                <th>Peso (kg)</th>
-                <th>Gordura (%)</th>
-                <th>Massa magra estimada (kg)</th>
+                <?php foreach ($indicadoresResumo as [$nome, $unidade]): ?>
+                    <th><?= $esc($nome) ?> (<?= $esc($unidade) ?>)</th>
+                <?php endforeach; ?>
                 <th>Detalhes</th>
             </tr>
         </thead>
@@ -24,7 +24,7 @@ if (!$avaliacoes): ?>
             <?php foreach ($avaliacoes as $a): ?>
                 <tr>
                     <td><?= $esc($a['avaliado_em']) ?></td>
-                    <?php foreach (['peso', 'gordura', 'massa_magra'] as $chave): ?>
+                    <?php foreach (array_keys($indicadoresResumo) as $chave): ?>
                         <td><?= $numero($a['medidas'][$chave] ?? null) ?></td>
                     <?php endforeach; ?>
                     <td>
