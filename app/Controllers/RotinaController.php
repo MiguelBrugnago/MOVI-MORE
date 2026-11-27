@@ -13,6 +13,7 @@ use App\Security\Auth;
 use App\Security\Csrf;
 use App\Services\TreinoService;
 use App\Services\PropostaService;
+use App\Support\Validacao;
 use DomainException;
 use InvalidArgumentException;
 
@@ -528,7 +529,7 @@ final class RotinaController
         $f = [];
         foreach (['de', 'ate'] as $k) {
             $valor = filter_input(INPUT_GET, $k) ?: '';
-            $f[$k] = preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $valor, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]) ? $valor : '';
+            $f[$k] = Validacao::dataCivilValida($valor) ? $valor : '';
         }
         $f['exercicio'] = mb_substr(trim(filter_input(INPUT_GET, 'exercicio') ?: ''), 0, 120, 'UTF-8');
         [$rows, $mais] = $db->historico($u, $f, $this->get('antes'));

@@ -91,7 +91,13 @@ final class AnaliseTreinoService
         if (count($faixas) !== 3 || $faixas[0] <= 0 || $faixas[1] <= $faixas[0] || $faixas[2] <= $faixas[1]) {
             throw new InvalidArgumentException('Faixas inválidas.');
         }
-        return $valor <= 0 ? 0 : ($valor < $faixas[0] ? 1 : ($valor < $faixas[1] ? 2 : ($valor < $faixas[2] ? 3 : 4)));
+        return match (true) {
+            $valor <= 0 => 0,
+            $valor < $faixas[0] => 1,
+            $valor < $faixas[1] => 2,
+            $valor < $faixas[2] => 3,
+            default => 4,
+        };
     }
 
     /**
@@ -140,56 +146,32 @@ final class AnaliseTreinoService
             $total['minutos'] += (float)$s['duracao'] / 60;
             $total['dias'][self::data((int)$s['fim'], 'Y-m-d')] = true;
         }
-        foreach ($execucoes as $x) {
-            $n = (int)$x['series'];
-            $semana = self::data((int)$x['fim'], 'o-\WW');
-            $total['series'] += $n;
-            if ($x['repeticoes'] !== null) {
-                $total['repeticoes'] = ($total['repeticoes'] ?? 0) + (int)$x['repeticoes'];
+        foreach ($execucoes as $execucao) {
+            $quantidade = (int)$execucao['series'];
+            $semana = self::data((int)$execucao['fim'], 'o-\WW');
+            $total['series'] += $quantidade;
+            if ($execucao['repeticoes'] !== null) {
+                $total['repeticoes'] = ($total['repeticoes'] ?? 0) + (int)$execucao['repeticoes'];
             }
-            $grupos[$x['grupo']] = ($grupos[$x['grupo']] ?? 0) + $n;
-            $semanas[$semana]['series'] += $n;
-            // Não combina exercícios, lados ou equipamentos diferentes como cargas comparáveis.
-            $chave = $x['exercicio_id'] . ':' . $x['lado'];
-            $volume = ['nome' => $x['nome'], 'lado' => $x['lado'], 'equipamento' => $x['equipamento'], 'volume' => 0.0, 'series' => 0];
-            if ($x['volume'] !== null) {
-                $volumes[$chave] ??= $volume;
-                $volumes[$chave]['volume'] += (float)$x['volume'];
-                $volumes[$chave]['series'] += $n;
-                $semanas[$semana]['grupos'][$x['grupo']][$chave] ??= $volume;
-                $semanas[$semana]['grupos'][$x['grupo']][$chave]['volume'] += (float)$x['volume'];
-                $semanas[$semana]['grupos'][$x['grupo']][$chave]['series'] += $n;
+            $grupos[$execucao['grupo']] = ($grupos[$execucao['grupo']] ?? 0) + $quantidade;
+            $semanas[$semana]['series'] += $quantidade;
+            if ($execucao['volume'] !== null) {
+                self::somarVolume($volumes, $execucao);
+                $semanas[$semana]['grupos'][$execucao['grupo']] ??= [];
+                self::somarVolume($semanas[$semana]['grupos'][$execucao['grupo']], $execucao);
             }
-            if (empty($porExercicio[$x['exercicio_id']])) {
-                $semRelacao[$x['exercicio_id']] = $x['nome'];
+            if (empty($porExercicio[$execucao['exercicio_id']])) {
+                $semRelacao[$execucao['exercicio_id']] = $execucao['nome'];
             }
-            foreach ($porExercicio[$x['exercicio_id']] ?? [] as $r) {
-                if (!isset($musculos[$r['musculo_id']])) {
+            foreach ($porExercicio[$execucao['exercicio_id']] ?? [] as $relacao) {
+                if (!isset($musculos[$relacao['musculo_id']])) {
                     continue;
                 }
-                $m = &$musculos[$r['musculo_id']];
-                $f = self::FATORES[$r['papel']] ?? null;
-                // Um papel desconhecido ou um peso estimado cadastrado sinaliza revisão. O cálculo continua usando a tabela de fatores.
-                if ($f === null || $r['peso_estimado'] !== null) {
-                    $revisao[$x['exercicio_id'] . ':' . $m['id']] = $x['nome'] . ' / ' . $m['nome'];
+                self::atribuirSeries($musculos[$relacao['musculo_id']], $execucao, $relacao['papel'], $semana);
+                if (!isset(self::FATORES[$relacao['papel']]) || $relacao['peso_estimado'] !== null) {
+                    $musculo = $musculos[$relacao['musculo_id']];
+                    $revisao[$execucao['exercicio_id'] . ':' . $musculo['id']] = $execucao['nome'] . ' / ' . $musculo['nome'];
                 }
-                $m['series'] += $n;
-                $campo = match($r['papel']) {
-                    'primario' => 'diretas','secundario' => 'indiretas',default => 'estabilizadoras'
-                };
-                $m[$campo] += $n;
-                // Cada série conta 1 para o músculo primário, 0,5 para o secundário e 0 para o estabilizador. É uma estimativa por papel.
-                $m['equivalentes'] += $n * ($f ?? 0);
-                $m['semanas'][$semana] = ($m['semanas'][$semana] ?? 0) + $n * ($f ?? 0);
-                $m['sessoes'][$x['treino_id']] = true;
-                $m['dias'][self::data((int)$x['fim'], 'Y-m-d')] = true;
-                $m['exercicios'][$x['exercicio_id']] = $x['nome'];
-                if ($x['volume'] !== null && $f !== null && $f > 0) {
-                    $m['volumes'][$chave] ??= $volume;
-                    $m['volumes'][$chave]['volume'] += (float)$x['volume'] * $f;
-                    $m['volumes'][$chave]['series'] += $n;
-                }
-                unset($m);
             }
         }
         // Normaliza os dias treinados para uma frequência média semanal no período.
@@ -202,5 +184,39 @@ final class AnaliseTreinoService
         // Aqui o numerador conta sessões. Na frequência acima ele conta datas distintas, por isso duas sessões no mesmo dia podem dar médias diferentes.
         $total['sessoes_semana'] = $total['treinos'] * 7 / $dias;
         return compact('musculos', 'total', 'grupos', 'semanas', 'volumes', 'semRelacao', 'revisao');
+    }
+
+    private static function atribuirSeries(array &$musculo, array $execucao, string $papel, string $semana): void
+    {
+        $quantidade = (int) $execucao['series'];
+        $fator = self::FATORES[$papel] ?? 0;
+        $musculo['series'] += $quantidade;
+        $campo = match ($papel) {
+            'primario' => 'diretas',
+            'secundario' => 'indiretas',
+            default => 'estabilizadoras',
+        };
+        $musculo[$campo] += $quantidade;
+        // Cada série conta 1 para o músculo primário, 0,5 para o secundário e 0 para o estabilizador. É uma estimativa por papel.
+        $musculo['equivalentes'] += $quantidade * $fator;
+        $musculo['semanas'][$semana] = ($musculo['semanas'][$semana] ?? 0) + $quantidade * $fator;
+        $musculo['sessoes'][$execucao['treino_id']] = true;
+        $musculo['dias'][self::data((int)$execucao['fim'], 'Y-m-d')] = true;
+        $musculo['exercicios'][$execucao['exercicio_id']] = $execucao['nome'];
+        if ($execucao['volume'] !== null && $fator > 0) {
+            self::somarVolume($musculo['volumes'], $execucao, $fator);
+        }
+    }
+
+    private static function somarVolume(array &$volumes, array $execucao, float $fator = 1.0): void
+    {
+        // O volume é comparável dentro do mesmo exercício e lado.
+        $chave = $execucao['exercicio_id'] . ':' . $execucao['lado'];
+        $volumes[$chave] ??= [
+            'nome' => $execucao['nome'], 'lado' => $execucao['lado'], 'equipamento' => $execucao['equipamento'],
+            'volume' => 0.0, 'series' => 0,
+        ];
+        $volumes[$chave]['volume'] += (float) $execucao['volume'] * $fator;
+        $volumes[$chave]['series'] += (int) $execucao['series'];
     }
 }

@@ -66,4 +66,11 @@ final class Validacao
 
         return $metrica->valor();
     }
+
+    public static function dataCivilValida(mixed $valor): bool
+    {
+        return is_string($valor)
+            && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $valor, $partes)
+            && checkdate((int) $partes[2], (int) $partes[3], (int) $partes[1]);
+    }
 }

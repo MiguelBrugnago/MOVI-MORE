@@ -36,8 +36,7 @@ final class ProgressoController
 
     private function data(mixed $valor): string
     {
-        if (!is_string($valor) || !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $valor, $partes)
-            || !checkdate((int)$partes[2], (int)$partes[3], (int)$partes[1]) || $valor < '1900-01-01') {
+        if (!Validacao::dataCivilValida($valor) || $valor < '1900-01-01') {
             throw new InvalidArgumentException('Informe uma data válida para a meta.');
         }
         return $valor;
