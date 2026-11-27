@@ -78,7 +78,11 @@ $primeiraSerieAberta = false;
             <h2><?= $esc($x['nome']) ?><?= $x['grupo'] ? ' · Superset ' . (int)$x['grupo'] : '' ?></h2>
             <?php if ($x['descanso_segundos'] !== null): ?><p class="sessao-descanso-exercicio">Descanso entre séries · <?= (int) $x['descanso_segundos'] ?> s</p><?php endif ?>
             <?php if ($x['observacao']): ?><p class="treino-nota"><?= $esc($x['observacao']) ?></p><?php endif ?>
-            <?php foreach ($ativo ? [...($series[$x['id']] ?? []), []] : ($series[$x['id']] ?? []) as $s):
+            <?php
+            $seriesDoItem = $series[$x['id']] ?? [];
+            $proximoNumero = 1 + max([0, ...array_column($seriesDoItem, 'numero')]);
+            $anterioresPorNumero = array_column($anterior[$x['exercicio_id']] ?? [], null, 'numero');
+            foreach ($ativo ? [...$seriesDoItem, []] : $seriesDoItem as $s):
                 $abrirSerie = $ativo && !$primeiraSerieAberta && ($s ? !$s['concluida'] && !$s['ignorada'] : empty($series[$x['id']]));
                 $primeiraSerieAberta = $primeiraSerieAberta || $abrirSerie;
                 require __DIR__ . '/treinos/serie.php';

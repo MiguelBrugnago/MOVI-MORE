@@ -27,23 +27,25 @@ $lista = static function (array $refeicoes, ?int $rascunhoId = null) use ($esc, 
             proteínas <?= $numero($item['proteinas']) ?> g · carboidratos <?= $numero($item['carboidratos']) ?> g · gorduras <?= $numero($item['gorduras']) ?> g
             <?php if ($rascunhoId): ?><form method="post">
                 <?php $campos('remover_porcao', ['plano' => $rascunhoId, 'refeicao' => $id, 'alimento' => $item['alimento_id']]); ?>
-                <button>Remover <?= $esc($item['alimento']) ?></button>
+                <button class="botao-secundario">Remover <?= $esc($item['alimento']) ?></button>
             </form><?php endif; ?>
         </li>
     <?php endforeach; ?></ul>
     <?php if ($rascunhoId): ?><form method="post"><?php $campos('remover_refeicao', ['plano' => $rascunhoId, 'refeicao' => $id]); ?>
-        <button>Remover refeição <?= $esc($r['nome']) ?></button></form><?php endif; ?>
+        <button class="botao-secundario">Remover refeição <?= $esc($r['nome']) ?></button></form><?php endif; ?>
     <?php endforeach;
 };
 $plano = $diario['plano'];
 $rascunho = $diario['rascunho'];
 ?>
+<div class="nutricao-cabecalho">
 <h1><?= $pessoal ? 'Minha alimentação' : 'Acompanhamento alimentar do aluno #' . (int)$titular ?></h1>
 <form method="get" class="treino-acoes nutricao-consulta-dia">
     <?php if (!$pessoal): ?><input type="hidden" name="aluno" value="<?= (int)$titular ?>"><?php endif; ?>
     <label>Dia do diário<input type="date" name="data" value="<?= $esc($data) ?>" max="<?= $hoje ?>" required></label>
-    <button>Consultar dia</button>
+    <button class="botao-secundario">Consultar dia</button>
 </form>
+</div>
 <section class="treino-card nutricao-resumo" aria-labelledby="titulo-consumo-diario">
     <h2 id="titulo-consumo-diario">Consumo e metas do dia</h2>
 
@@ -67,9 +69,25 @@ $rascunho = $diario['rascunho'];
         <?php endforeach; ?>
     </dl>
 
+    <?php if ($pessoal && $diario['alimentos']): ?>
+        <details class="nutricao-lancamento"<?= !$diario['registros'] ? ' open' : '' ?>>
+        <summary>Registrar consumo</summary>
+        <form method="post" class="nutricao-formulario-consumo">
+            <?php
+            $campos('consumo', ['chave' => bin2hex(random_bytes(16))]);
+            $porcao();
+            ?>
+            <label>
+                Nome da refeição
+                <input name="refeicao" maxlength="120">
+            </label>
+            <button type="submit">Registrar consumo</button>
+        </form>
+        </details>
+    <?php endif; ?>
     <h3>Registros do dia</h3>
     <?php if (!$diario['registros']): ?>
-        <p>Nenhum consumo registrado neste dia.</p>
+        <p>Nenhum consumo registrado neste dia.<?php if ($pessoal && !$diario['alimentos']): ?> <a href="#catalogo-alimentar">Cadastre o primeiro alimento no catálogo.</a><?php endif; ?></p>
     <?php else: ?>
         <ul class="nutricao-registros">
             <?php foreach ($diario['registros'] as $registro): ?>
@@ -81,6 +99,7 @@ $rascunho = $diario['rascunho'];
                             <?= $numero($registro['quantidade_gramas']) ?> g ·
                             <?= $numero($registro['calorias_total']) ?> kcal
                         </span>
+                        <small>Proteínas <?= $numero($registro['proteinas_total']) ?> g · Carboidratos <?= $numero($registro['carboidratos_total']) ?> g · Gorduras <?= $numero($registro['gorduras_total']) ?> g</small>
                     </div>
 
                     <?php if ($pessoal): ?>
@@ -96,61 +115,55 @@ $rascunho = $diario['rascunho'];
         </ul>
     <?php endif; ?>
 
-    <?php if ($pessoal && $diario['alimentos']): ?>
-        <h3>Registrar consumo</h3>
-        <form method="post" class="nutricao-formulario-consumo">
-            <?php
-            $campos('consumo', ['chave' => bin2hex(random_bytes(16))]);
-            $porcao();
-            ?>
-            <label>
-                Nome da refeição
-                <input name="refeicao" maxlength="120">
-            </label>
-            <button type="submit">Registrar consumo</button>
-        </form>
-    <?php endif; ?>
 </section>
 <section class="treino-card">
-    <h2>Plano em <?= $esc($data) ?></h2>
+    <h2>Plano de <?= $esc((new DateTimeImmutable($data))->format('d/m/Y')) ?></h2>
     <?php if ($plano): ?><p><?= $esc($plano['nome']) ?></p><?php $lista($diario['refeicoes']); ?>
     <?php else: ?><p>Nenhum plano vigente neste dia.</p><?php endif; ?>
 </section>
 <?php if ($pessoal): ?>
-<details class="treino-card" <?= !$diario['alimentos'] ? 'open' : '' ?>><summary>Catálogo de alimentos</summary>
+<details class="treino-card" id="catalogo-alimentar" <?= !$diario['alimentos'] ? 'open' : '' ?>><summary>Catálogo de alimentos</summary>
     <?php if (!$diario['alimentos']): ?><p>Cadastre os valores de um rótulo para começar.</p><?php endif; ?>
     <ul><?php foreach ($diario['alimentos'] as $a): ?><li><?= $esc($a['nome']) ?> · <?= $numero($a['calorias_100g']) ?> kcal por 100 g</li><?php endforeach; ?></ul>
+    <details<?= !$diario['alimentos'] ? ' open' : '' ?>><summary>Cadastrar alimento</summary>
     <form method="post"><?php $campos('alimento'); ?>
         <label>Nome do alimento<input name="nome" maxlength="150" required></label>
         <fieldset><legend>Composição por 100 g</legend><div class="treino-campos">
         <?php foreach ($nutrientes as $campo => $rotulo): ?><label><?= $rotulo ?><input name="<?= $campo ?>" type="number" step="0.01" min="0" max="<?= $campo === 'calorias' ? 1000 : 100 ?>" required></label><?php endforeach; ?>
         </div></fieldset><button>Salvar alimento pessoal</button>
     </form>
+    </details>
 </details>
 <details class="treino-card" <?= $rascunho ? 'open' : '' ?>><summary>Planejar refeições</summary>
+    <details<?= !$rascunho ? ' open' : '' ?>><summary><?= $rascunho ? 'Editar nome e metas' : 'Novo plano alimentar' ?></summary>
     <form method="post"><?php $rascunho ? $campos('editar_plano', ['plano' => $rascunho['id']]) : $campos('plano'); ?>
         <label>Nome do plano<input name="nome" maxlength="150" value="<?= $esc($rascunho['nome'] ?? '') ?>" required></label>
         <fieldset><legend>Metas diárias opcionais</legend><div class="treino-campos">
         <?php foreach ($nutrientes as $campo => $rotulo): ?><label><?= $rotulo ?><input name="<?= $campo ?>" type="number" min="0" max="99999" step="0.01" value="<?= $esc($rascunho[$campo . '_alvo'] ?? '') ?>"></label><?php endforeach; ?>
         </div></fieldset><button><?= $rascunho ? 'Salvar nome e metas' : 'Criar rascunho' ?></button>
     </form>
+    </details>
 <?php if ($rascunho): $idPlano = ['plano' => $rascunho['id']]; ?>
     <h2><?= $esc($rascunho['nome']) ?></h2>
     <?php $lista($diario['emEdicao'], (int)$rascunho['id']); ?>
+    <details name="planejamento-edicao"<?= !$diario['emEdicao'] ? ' open' : '' ?>><summary>Adicionar refeição</summary>
     <form method="post"><?php $campos('refeicao', $idPlano); ?>
         <label>Nova refeição<input name="nome" maxlength="120" required></label><button>Adicionar refeição</button>
     </form>
+    </details>
     <?php if ($diario['emEdicao'] && $diario['alimentos']): ?>
+    <details name="planejamento-edicao"><summary>Adicionar porção a uma refeição</summary>
     <form method="post"><?php $campos('porcao', $idPlano); ?>
         <label>Refeição<select name="refeicao"><?php foreach ($diario['emEdicao'] as $id => $r): ?><option value="<?= (int)$id ?>"><?= $esc($r['nome']) ?></option><?php endforeach; ?></select></label>
         <?php $porcao(); ?><button>Salvar porção na refeição</button>
     </form>
+    </details>
     <?php endif; ?>
     <form method="post"><?php $campos('publicar', $idPlano); ?><button>Usar este plano a partir de hoje</button></form>
 <?php endif; ?>
 </details>
 <?php endif; ?>
-<section class="treino-card"><h2>Preferências e restrições alimentares</h2>
+<details class="treino-card"><summary>Preferências e restrições alimentares</summary>
 <?php foreach (array_diff_key($diario['preferencias'], array_flip(['Preferências pessoais', 'Restrições pessoais'])) as $nome => $observacao): ?>
     <p><?= $esc($nome) ?><?= $observacao !== null ? ' · ' . $esc($observacao) : '' ?></p>
 <?php endforeach; ?>
@@ -160,4 +173,4 @@ $rascunho = $diario['rascunho'];
     <?php else: ?><p><?= $nome ?> · <?= $esc($diario['preferencias'][$nome] ?? 'Sem informação') ?></p><?php endif; ?>
 <?php endforeach; ?>
 <?php if ($pessoal): ?><button>Salvar preferências e restrições</button></form><?php endif; ?>
-</section>
+</details>

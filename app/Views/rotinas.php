@@ -47,7 +47,7 @@ $tituloRotinas = match (true) {
         <?php else: ?>
             <form action="/treinos/iniciar" method="post">
                 <?php $hidden([]); ?>
-                <button type="submit" class="rotinas-acao-principal">Iniciar treino livre</button>
+                <button type="submit" class="<?= $rotinas ? 'botao-secundario' : 'rotinas-acao-principal' ?>">Iniciar treino livre</button>
             </form>
         <?php endif; ?>
 
@@ -98,17 +98,27 @@ $tituloRotinas = match (true) {
         </p>
     <?php endif; ?>
 
-    <div class="catalogo">
+    <ul class="rotinas-lista">
         <?php foreach ($rotinas as $r): ?>
-            <article>
-                <h2><a href="<?= $base ?>?id=<?= (int)$r['id'] ?><?= $arquivadas ? '&amp;arquivadas=1' : '' ?>#rotina-selecionada"><?= $esc($r['nome']) ?></a></h2>
-                <p><?= $esc($dias[$r['dia_semana'] ?? '']) ?></p>
-                <?php if (!$modelo && $r['ativa'] && !$ativo): ?>
-                    <form method="post" action="/treinos/iniciar"><?php $hidden(['rotina_id' => $r['id']]); ?><button>Iniciar treino</button></form>
-                <?php endif ?>
-            </article>
+            <li>
+                <div>
+                    <strong><?= $esc($r['nome']) ?></strong>
+                    <p><?= $esc($dias[$r['dia_semana'] ?? '']) ?> ·
+                        <?= (int)$r['exercicios'] ?> <?= (int)$r['exercicios'] === 1 ? 'exercício' : 'exercícios' ?> ·
+                        <?= (int)$r['series'] ?> <?= (int)$r['series'] === 1 ? 'série' : 'séries' ?></p>
+                </div>
+                <div class="treino-acoes">
+                    <a class="treino-link" href="<?= $base ?>?id=<?= (int)$r['id'] ?><?= $arquivadas ? '&amp;arquivadas=1' : '' ?>#rotina-selecionada" aria-label="<?= $esc(($arquivadas ? 'Consultar ' : 'Editar ') . $r['nome']) ?>"><?= $arquivadas ? 'Consultar' : 'Editar' ?></a>
+                    <?php if (!$modelo && $r['ativa'] && !$ativo): ?>
+                        <form method="post" action="/treinos/iniciar">
+                            <?php $hidden(['rotina_id' => $r['id']]); ?>
+                            <button>Iniciar treino</button>
+                        </form>
+                    <?php endif ?>
+                </div>
+            </li>
         <?php endforeach ?>
-    </div>
+    </ul>
 
     <?php if ($rotina): ?>
         <h2 id="rotina-selecionada"><?= $esc($rotina['nome']) ?></h2>
@@ -132,8 +142,8 @@ $tituloRotinas = match (true) {
         <?php endif ?>
         <form method="post" action="<?= $base ?>/salvar" class="treino-acoes">
             <?php $hidden(['rotina_id' => $rotina['id']]); ?>
-            <button name="acao" value="duplicar">Duplicar</button>
-            <button name="acao" value="<?= $rotina['ativa'] ? 'arquivar' : 'restaurar' ?>"><?= $rotina['ativa'] ? 'Arquivar' : 'Restaurar' ?></button>
+            <button class="botao-secundario" name="acao" value="duplicar">Duplicar</button>
+            <button class="botao-secundario" name="acao" value="<?= $rotina['ativa'] ? 'arquivar' : 'restaurar' ?>"><?= $rotina['ativa'] ? 'Arquivar' : 'Restaurar' ?></button>
         </form>
         <?php if ($rotina['ativa']): ?>
             <details class="treino-card">
@@ -149,23 +159,28 @@ $tituloRotinas = match (true) {
             </details>
             <p><a class="treino-link" href="/treinos/exercicios?rotina=<?= (int)$rotina['id'] ?>">Adicionar exercícios</a></p>
         <?php else: ?><p><?= $esc($rotina['descricao']) ?></p><?php endif ?>
-        <?php foreach ($itens as $x): $ids = ['rotina_id' => $rotina['id'], 'item_id' => $x['id']]; ?>
+        <?php foreach ($itens as $x):
+            $ids = ['rotina_id' => $rotina['id'], 'item_id' => $x['id']];
+            $seriesDoItem = $series[$x['id']] ?? [];
+            $quantidade = count($seriesDoItem);
+        ?>
             <article class="treino-card">
                 <h3><?= $esc($x['nome']) ?><?= $x['grupo'] ? ' · Superset ' . (int)$x['grupo'] : '' ?></h3>
                 <?php if (!$rotina['ativa']): ?>
                     <p><?= count($series[$x['id']] ?? []) ?> séries · <?= $esc($x['observacao']) ?></p>
             </article><?php continue;
                 endif ?>
-        <div class="treino-acoes">
-            <a href="/treinos/exercicios?rotina=<?= (int)$rotina['id'] ?>&amp;item=<?= (int)$x['id'] ?>">Substituir exercício</a>
-            <form method="post" action="<?= $base ?>/salvar" class="treino-acoes"><?php $hidden($ids); ?>
-                <button name="acao" value="item_subir" aria-label="Subir exercício">↑</button>
-                <button name="acao" value="item_descer" aria-label="Descer exercício">↓</button>
-                <button name="acao" value="item_remover" data-confirm="Remover o exercício e suas séries da rotina?">Remover</button>
-            </form>
-        </div>
-        <details>
-            <summary>Descanso, superset e observações</summary>
+        <p class="rotina-descanso"><?= $quantidade ?> <?= $quantidade === 1 ? 'série planejada' : 'séries planejadas' ?><?php if ($x['descanso_segundos'] !== null): ?> · Descanso de <?= (int)$x['descanso_segundos'] ?> s<?php endif ?></p>
+        <details class="rotina-opcoes">
+            <summary>Ajustar exercício</summary>
+            <div class="treino-acoes">
+                <a href="/treinos/exercicios?rotina=<?= (int)$rotina['id'] ?>&amp;item=<?= (int)$x['id'] ?>">Substituir exercício</a>
+                <form method="post" action="<?= $base ?>/salvar" class="treino-acoes"><?php $hidden($ids); ?>
+                    <button class="botao-secundario" name="acao" value="item_subir" aria-label="Subir exercício">↑</button>
+                    <button class="botao-secundario" name="acao" value="item_descer" aria-label="Descer exercício">↓</button>
+                    <button name="acao" value="item_remover" data-confirm="Remover o exercício e suas séries da rotina?">Remover</button>
+                </form>
+            </div>
             <form method="post" action="<?= $base ?>/salvar">
                 <?php $hidden($ids + ['acao' => 'item_salvar']); ?>
                 <div class="treino-campos">
@@ -178,11 +193,12 @@ $tituloRotinas = match (true) {
             </form>
         </details>
         <?php // A última posição vazia abre os campos para adicionar uma série ao exercício. ?>
-        <?php foreach ([...($series[$x['id']] ?? []), []] as $s): ?>
-            <details class="treino-serie">
+        <?php foreach ([...$seriesDoItem, []] as $s): ?>
+            <details class="treino-serie" name="series-do-item-<?= (int)$x['id'] ?>">
                 <summary><?= $s ? 'Série ' . (int)$s['numero'] . ' · ' . $esc(RegistroTreino::TIPOS[$s['tipo'] ?? ''] ?? 'Normal') : 'Adicionar série' ?>
                     <?php if ($s && $s['repeticoes_min'] !== null): ?> · <?= $esc($s['repeticoes_min']) ?><?= $s['repeticoes_max'] !== null && $s['repeticoes_max'] !== $s['repeticoes_min'] ? '–' . $esc($s['repeticoes_max']) : '' ?> rep.<?php endif ?>
-                        <?php if (isset($s['carga_alvo'])): ?> · <?= $esc($s['carga_alvo']) ?> kg<?php endif ?>
+                    <?php if (isset($s['carga_alvo'])): ?> · <?= $esc($s['carga_alvo']) ?> kg<?php endif ?>
+                    <?php if (isset($s['rir_alvo'])): ?> · RIR <?= (int)$s['rir_alvo'] ?><?php endif ?>
                 </summary>
                 <form method="post" action="<?= $base ?>/salvar">
                     <?php $hidden($ids + ($s ? ['serie_id' => $s['id']] : [])); ?>
@@ -197,9 +213,9 @@ $tituloRotinas = match (true) {
                     </div>
                     <div class="treino-acoes">
                         <button name="acao" value="<?= $s ? 'serie_salvar' : 'serie_adicionar' ?>"><?= $s ? 'Salvar série' : 'Adicionar série' ?></button>
-                        <?php if ($s): ?><button name="acao" value="serie_duplicar">Duplicar</button>
-                            <button name="acao" value="serie_subir" aria-label="Subir série">↑</button>
-                            <button name="acao" value="serie_descer" aria-label="Descer série">↓</button>
+                        <?php if ($s): ?><button class="botao-secundario" name="acao" value="serie_duplicar">Duplicar</button>
+                            <button class="botao-secundario" name="acao" value="serie_subir" aria-label="Subir série">↑</button>
+                            <button class="botao-secundario" name="acao" value="serie_descer" aria-label="Descer série">↓</button>
                             <button name="acao" value="serie_remover" data-confirm="Remover esta série planejada?">Remover</button><?php endif ?>
                     </div>
                 </form>

@@ -122,6 +122,21 @@ $http('/treinos/finalizar', 303, $csrf + ['treino_id' => $t]);
 if (!str_contains($html, 'Recordes na data da sessão')) {
     throw new RuntimeException('Recordes não apareceram na sessão.');
 }
+// A série avulsa deve consultar sua própria posição na última sessão concluída.
+[, $segundaSessao] = $http('/treinos/iniciar', 303, $csrf + ['rotina_id' => $r]);
+[$html] = $http($segundaSessao, 200);
+if (substr_count($html, 'Última sessão · série 1') !== 1 || !str_contains($html, 'Última sessão · série 2')) {
+    throw new RuntimeException('Referência incorreta na série planejada ou na próxima série.');
+}
+parse_str(parse_url($segundaSessao, PHP_URL_QUERY), $segunda);
+$itemAtual = $db->itens((int)$segunda['id'], false)[0];
+[$body] = $http('/treinos/serie', 200, ['treino_id' => $segunda['id'], 'item_id' => $itemAtual['id'],
+    'chave' => bin2hex(random_bytes(16))] + $nova, true);
+$fragmento = json_decode($body, true, 512, JSON_THROW_ON_ERROR)['novaSerie'];
+if (str_contains($fragmento, 'Usar valores anteriores')) {
+    throw new RuntimeException('A terceira série recebeu uma referência inexistente.');
+}
+$http('/treinos/salvar', 303, $csrf + ['treino_id' => $segunda['id'], 'acao' => 'cancelar']);
 [,, $hist] = $http('/treinos/historico', 200);
 [,, $stats] = $http('/treinos/estatisticas?exercicio=' . $e['id'], 200);
 $http('/treinos/personalizados', 200);

@@ -7,7 +7,8 @@
  * @var array $s
  * @var bool $ativo
  * @var bool $editavel
- * @var array $anterior
+ * @var array $anterioresPorNumero
+ * @var int $proximoNumero Usado no formulário de inclusão.
  * @var Closure $esc
  * @var Closure $resumo
  * @var Closure $hidden
@@ -25,7 +26,8 @@ $estado = !empty($s['concluida']) ? 'concluida' : (!empty($s['ignorada']) ? 'ign
 $tipo = $s['tipo'] ?? 'normal';
 $labelEstado = ['concluida' => 'Concluída', 'ignorada' => 'Ignorada', 'pendente' => 'Pendente'][$estado];
 $valoresRegistrados = $resumo($s, $x);
-$ref = $anterior[$x['exercicio_id']][max(0, (int) ($s['numero'] ?? 1) - 1)] ?? [];
+// Séries ignoradas podem deixar lacunas no histórico da última sessão.
+$ref = $anterioresPorNumero[$s['numero'] ?? $proximoNumero] ?? [];
 $valoresAnteriores = array_filter(array_intersect_key($ref, RegistroTreino::METRICAS), static fn ($v) => $v !== null);
 $valoresAlvo = array_filter([
     'peso' => $metas['carga_alvo'] ?? null,

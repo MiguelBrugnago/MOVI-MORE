@@ -44,26 +44,14 @@
     filter: brightness(1.25);
 }
 /* Cada nível usa a mesma cor no músculo do SVG e na legenda HTML. */
-.calor-0 {
-    fill: #737d78;
-    background: #737d78;
-}
-.calor-1 {
-    fill: #b7e4c7;
-    background: #b7e4c7;
-}
-.calor-2 {
-    fill: #74c69d;
-    background: #74c69d;
-}
-.calor-3 {
-    fill: #2dba83;
-    background: #2dba83;
-}
-.calor-4 {
-    fill: #087f5b;
-    background: #087f5b;
-}
+.calor-ausente { --tom-muscular: #505855; }
+.calor-0 { --tom-muscular: #334c3f; }
+.calor-1 { --tom-muscular: #3b7050; }
+.calor-2 { --tom-muscular: #4c9669; }
+.calor-3 { --tom-muscular: #62bb87; }
+.calor-4 { --tom-muscular: var(--movi-verde); }
+.regiao { fill: var(--tom-muscular); stroke-linejoin: round; }
+.analise i { background-color: var(--tom-muscular); }
 .analise-legenda {
     display: flex;
     flex-wrap: wrap;
@@ -81,6 +69,7 @@
 }
 .analise-musculos {
     display: grid;
+    align-items: start;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
     gap: 0.5rem;
 }
@@ -96,8 +85,15 @@
 .musculo-detalhe summary {
     cursor: pointer;
 }
+.musculo-detalhe dl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    font-size: .9rem;
+}
 .musculo-detalhe dd {
-    margin: 0 0 0.5rem;
+    margin: 0;
+    text-align: right;
     color: var(--movi-texto-secundario);
 }
 .analise-barra {
@@ -168,6 +164,7 @@
 #mapa .analise-corpos {
     align-items: start;
     margin-block: 16px;
+    padding-block: 8px;
 }
 
 #mapa .analise-corpo {
@@ -188,7 +185,7 @@
 
     #mapa .analise-corpo {
         width: 100%;
-        max-width: 17.5rem;
+        max-width: 19rem;
     }
 
     #mapa .analise-musculos {
@@ -240,14 +237,14 @@
         }
     }
 }
-#mapa .regiao polygon {
+#mapa .regiao path {
     vector-effect: non-scaling-stroke;
 }
 
-#mapa .regiao:focus-visible polygon,
-#mapa .regiao[aria-current="location"] polygon {
+#mapa .regiao:focus-visible path,
+#mapa .regiao[aria-current="location"] path {
     stroke: #f4f7fa;
-    stroke-width: 2.5px;
+    stroke-width: 2px;
     stroke-linejoin: round;
 }
 

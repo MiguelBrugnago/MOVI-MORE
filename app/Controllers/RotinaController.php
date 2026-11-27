@@ -170,6 +170,7 @@ final class RotinaController
             return [];
         }
         $anterior = $ativo && (!$serie || (!$s['concluida'] && !$s['ignorada'])) ? $db->anterior($u, $id) : [];
+        $anterioresPorNumero = array_column($anterior[$x['exercicio_id']] ?? [], null, 'numero');
         require __DIR__ . '/../Views/treinos/campos.php';
         require __DIR__ . '/../Views/treinos/resumo_serie.php';
         ob_start();
@@ -177,6 +178,8 @@ final class RotinaController
         // A resposta reaproveita o mesmo cartão da página inicial para manter regras de edição e escape de HTML.
         $resposta = ['serie' => ob_get_clean()];
         if (!$serie && $ativo) {
+            // Um reenvio pode devolver uma série que já não é a última do exercício.
+            $proximoNumero = 1 + (int)$db->consultar('SELECT MAX(numero) FROM serie WHERE treino_exercicio_id=?', [$item])->fetchColumn();
             $s = [];
             ob_start();
             require __DIR__ . '/../Views/treinos/serie.php';
@@ -219,8 +222,12 @@ final class RotinaController
             return;
         }
         $arquivadas = (bool) $this->get('arquivadas');
-        $rotinas = $db->todos('SELECT * FROM rotina WHERE usuario_id=? AND modelo_profissional=? AND ativa=?
-            ORDER BY COALESCE(dia_semana,8),id DESC', [$u, (int) $modelo, (int) !$arquivadas]);
+        $rotinas = $db->todos('SELECT r.id, r.nome, r.dia_semana, r.ativa,
+            COUNT(DISTINCT x.id) AS exercicios, COUNT(s.id) AS series
+            FROM rotina r LEFT JOIN rotina_exercicio x ON x.rotina_id=r.id
+            LEFT JOIN rotina_serie s ON s.rotina_exercicio_id=x.id
+            WHERE r.usuario_id=? AND r.modelo_profissional=? AND r.ativa=?
+            GROUP BY r.id ORDER BY COALESCE(r.dia_semana,8),r.id DESC', [$u, (int) $modelo, (int) !$arquivadas]);
         $pessoais = $modelo && !$arquivadas
             ? $db->todos('SELECT id,nome FROM rotina WHERE usuario_id=? AND modelo_profissional=0 ORDER BY nome,id', [$u]) : [];
         $ativo = $modelo ? null : $db->ativo($u);
